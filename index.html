@@ -541,11 +541,29 @@
 
     <footer>
       Powered by LeoLan Digital · <a href="https://ki.leolan.net" target="_blank" rel="noopener noreferrer">ki.leolan.net</a>
+      &nbsp;·&nbsp;
+      <button onclick="openSettings()" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:0.85rem;">⚙️ Einstellungen</button>
     </footer>
   </main>
 
+  <!-- Einstellungen Modal -->
+  <div id="settingsModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.75);z-index:999;align-items:center;justify-content:center;">
+    <div style="background:#1a2744;border-radius:16px;padding:2rem;max-width:420px;width:90%;border:1px solid rgba(255,255,255,0.1);">
+      <h3 style="margin:0 0 1.5rem;color:#f5a623;">⚙️ Einstellungen</h3>
+      <label style="display:block;margin-bottom:0.5rem;color:rgba(255,255,255,0.7);font-size:0.9rem;">Neues Passwort:</label>
+      <input id="newPassword" type="password" placeholder="Neues Passwort eingeben" style="width:100%;padding:0.75rem;border-radius:8px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.05);color:white;font-size:1rem;margin-bottom:1rem;">
+      <label style="display:block;margin-bottom:0.5rem;color:rgba(255,255,255,0.7);font-size:0.9rem;">Passwort bestätigen:</label>
+      <input id="confirmPassword" type="password" placeholder="Passwort wiederholen" style="width:100%;padding:0.75rem;border-radius:8px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.05);color:white;font-size:1rem;margin-bottom:1.5rem;">
+      <div id="settingsMsg" style="margin-bottom:1rem;font-size:0.9rem;"></div>
+      <div style="display:flex;gap:1rem;">
+        <button onclick="savePassword()" style="flex:1;padding:0.75rem;background:#f5a623;color:#1a2744;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:1rem;">💾 Speichern</button>
+        <button onclick="closeSettings()" style="flex:1;padding:0.75rem;background:rgba(255,255,255,0.1);color:white;border:none;border-radius:8px;cursor:pointer;font-size:1rem;">Abbrechen</button>
+      </div>
+    </div>
+  </div>
+
   <script>
-    const PASSWORD = 'LeoLan2026!';
+    let PASSWORD = localStorage.getItem('dashboard_password') || 'LeoLan2026!';
     const API_URL = 'https://n8n.leolan.net/webhook/dashboard-data';
 
     const fallbackData = {
@@ -729,6 +747,38 @@
     });
 
     passwordInput.focus();
+
+    // Einstellungen Modal
+    function openSettings() {
+      document.getElementById('settingsModal').style.display = 'flex';
+      document.getElementById('newPassword').focus();
+    }
+    function closeSettings() {
+      document.getElementById('settingsModal').style.display = 'none';
+      document.getElementById('newPassword').value = '';
+      document.getElementById('confirmPassword').value = '';
+      document.getElementById('settingsMsg').textContent = '';
+    }
+    function savePassword() {
+      const np = document.getElementById('newPassword').value;
+      const cp = document.getElementById('confirmPassword').value;
+      const msg = document.getElementById('settingsMsg');
+      if (!np || np.length < 6) {
+        msg.style.color = '#ff5c5c';
+        msg.textContent = 'Passwort muss mindestens 6 Zeichen haben!';
+        return;
+      }
+      if (np !== cp) {
+        msg.style.color = '#ff5c5c';
+        msg.textContent = 'Passwörter stimmen nicht überein!';
+        return;
+      }
+      PASSWORD = np;
+      localStorage.setItem('dashboard_password', np);
+      msg.style.color = '#2dd881';
+      msg.textContent = '✅ Passwort gespeichert!';
+      setTimeout(closeSettings, 1500);
+    }
   </script>
 </body>
 </html>
