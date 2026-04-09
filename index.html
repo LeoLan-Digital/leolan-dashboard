@@ -859,7 +859,7 @@
       try {
         const response = await fetch(AUTOMATION_CONTROL_URL, {
           method: 'POST', headers: authHeaders(),
-          body: JSON.stringify({ automation: key, active: !!toggle.checked, time: time.value || automationCatalog[key].defaultTime, requestedBy: currentUser?.email || currentUser?.name || 'admin' })
+          body: JSON.stringify({ automation: key, enabled: !!toggle.checked, time: time.value || automationCatalog[key].defaultTime, requestedBy: currentUser?.email || currentUser?.name || 'admin' })
         });
         const payload = await response.json().catch(() => ({}));
         if (!response.ok || payload.success === false) throw new Error(payload.error || 'Änderung konnte nicht gespeichert werden');
