@@ -77,11 +77,12 @@
     .role-pill strong { color: var(--accent); }
     .pulse { width: 10px; height: 10px; border-radius: 999px; background: var(--success); box-shadow: 0 0 0 0 rgba(45,216,129,0.6); animation: pulse 1.8s infinite; }
     @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(45,216,129,0.55); } 70% { box-shadow: 0 0 0 12px rgba(45,216,129,0); } 100% { box-shadow: 0 0 0 0 rgba(45,216,129,0); } }
-    .grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 18px; }
-    .card { grid-column: span 4; position: relative; overflow: hidden; padding: 22px; border-radius: var(--radius); background: linear-gradient(180deg, rgba(26,39,68,0.84), rgba(17,26,45,0.92)); border: 1px solid var(--card-border); box-shadow: var(--shadow); backdrop-filter: blur(10px); }
+    .grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 12px; }
+    .section, .panel, .admin-section { margin-top: 12px; padding-top: 0; }
+    .card { grid-column: span 4; position: relative; overflow: hidden; padding: 16px; border-radius: var(--radius); background: linear-gradient(180deg, rgba(26,39,68,0.84), rgba(17,26,45,0.92)); border: 1px solid var(--card-border); box-shadow: var(--shadow); backdrop-filter: blur(10px); }
     .card::after { content: ""; position: absolute; inset: auto -40px -40px auto; width: 120px; height: 120px; background: radial-gradient(circle, rgba(245,166,35,0.16), transparent 70%); pointer-events: none; }
     .card.wide { grid-column: span 6; } .card.full { grid-column: span 12; }
-    .card-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; margin-bottom: 18px; }
+    .card-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 12px; }
     .card-title { margin: 0; font-size: 1.15rem; font-weight: 700; }
     .card-subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.95rem; }
     .chip { padding: 8px 12px; border-radius: 999px; background: rgba(245,166,35,0.12); border: 1px solid rgba(245,166,35,0.18); color: #ffd487; font-size: 0.84rem; font-weight: 700; }
@@ -94,7 +95,7 @@
     .badge-success { background: rgba(45,216,129,0.14); color: #99f2c3; border: 1px solid rgba(45,216,129,0.22); }
     .badge-waiting { background: rgba(255,209,102,0.14); color: #ffe4a6; border: 1px solid rgba(255,209,102,0.24); }
     .badge-off { background: rgba(255,92,92,0.14); color: #ffabab; border: 1px solid rgba(255,92,92,0.24); }
-    .section-toggle { display:flex; gap:10px; flex-wrap:wrap; margin: 0 0 18px; }
+    .section-toggle { display:flex; gap:8px; flex-wrap:wrap; margin: 0 0 12px; }
     .tab-btn { padding:10px 14px; border-radius:999px; border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.05); color:var(--text); cursor:pointer; font-weight:700; }
     .tab-btn.active { background:rgba(245,166,35,0.16); border-color:rgba(245,166,35,0.35); color:#ffd487; }
     .panel.hidden, .hidden { display:none !important; }
@@ -103,17 +104,17 @@
     th, td { padding:14px 16px; text-align:left; border-bottom:1px solid rgba(255,255,255,0.06); }
     th { color:#ffd487; font-size:0.84rem; text-transform:uppercase; letter-spacing:.06em; }
     td { color:rgba(255,255,255,0.9); font-size:0.95rem; }
-    .toolbar { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:18px; flex-wrap:wrap; }
+    .toolbar { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:12px; flex-wrap:wrap; }
     .toolbar .hint, .subtle, footer { color: var(--muted); font-size: 0.95rem; }
-    .automation-grid { display:grid; gap:14px; }
-    .automation-control { display:grid; grid-template-columns: minmax(220px, 1.3fr) auto auto auto; gap:14px; align-items:center; padding:16px; border-radius:18px; background:rgba(255,255,255,0.045); border:1px solid rgba(255,255,255,0.06); }
-    .analytics-section { margin-top: 26px; }
-    .section-heading { display:flex; align-items:flex-end; justify-content:space-between; gap:14px; margin: 0 0 18px; }
+    .automation-grid { display:grid; gap:10px; }
+    .automation-control { display:grid; grid-template-columns: minmax(220px, 1.3fr) auto auto auto; gap:10px; align-items:center; padding:12px; border-radius:18px; background:rgba(255,255,255,0.045); border:1px solid rgba(255,255,255,0.06); }
+    .analytics-section { margin-top: 16px; }
+    .section-heading { display:flex; align-items:flex-end; justify-content:space-between; gap:10px; margin: 0 0 12px; }
     .section-heading h3 { margin:0; font-size: clamp(1.25rem, 2vw, 1.65rem); }
     .section-heading p { margin:6px 0 0; color: var(--muted); }
-    .chart-grid { display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:18px; }
-    .chart-card { min-height: 340px; }
-    .chart-card canvas { width: 100% !important; height: 260px !important; }
+    .charts-grid { display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:20px; }
+    .chart-card { min-height: 300px; }
+    .chart-card canvas { width: 100% !important; height: 220px !important; max-height: 220px; }
     .chart-note { color: var(--muted); font-size: 0.88rem; }
     .switch { position:relative; display:inline-block; width:58px; height:32px; }
     .switch input { opacity:0; width:0; height:0; }
@@ -136,7 +137,7 @@
     @media (max-width: 760px) {
       .topbar { position: static; flex-direction: column; align-items: flex-start; }
       .card, .card.wide, .card.full { grid-column: span 12; }
-      .chart-grid { grid-template-columns: 1fr; }
+      .charts-grid { grid-template-columns: 1fr; }
       .automation-control { grid-template-columns: 1fr; }
       .user-chip { right: 12px; bottom: 12px; }
       .modal-actions { flex-direction:column; }
@@ -185,7 +186,7 @@
           <div class="card-header"><div><h3 class="card-title">📸 Instagram @leolan_digital</h3><p class="card-subtitle">Performance & Aktivität</p></div><span class="chip">Social</span></div>
           <div class="stats">
             <div class="stat-row"><span class="label">Follower</span><span class="value loading" data-key="instagram.followers">Lade...</span></div>
-            <div class="stat-row"><span class="label">Posts heute</span><span class="value loading" data-key="instagram.postsToday">Lade...</span></div>
+            <div class="stat-row"><span class="label">Posts gesamt</span><span class="value loading" data-key="instagram.postsTotal">Lade...</span></div>
             <div class="stat-row"><span class="label">Likes heute</span><span class="value loading" data-key="instagram.likesToday">Lade...</span></div>
             <div class="stat-row"><span class="label">Story aktiv</span><span class="value loading" data-key="instagram.storyActive">Lade...</span></div>
           </div>
@@ -243,7 +244,7 @@
           <span class="chip">Chart.js</span>
         </div>
 
-        <div class="chart-grid">
+        <div class="charts-grid">
           <article class="card chart-card">
             <div class="card-header">
               <div>
@@ -379,7 +380,7 @@
     };
 
     const fallbackData = {
-      instagram: { followers: 'Lade...', postsToday: 'Lade...', likesToday: 'Lade...', storyActive: 'Lade...' },
+      instagram: { followers: 'Lade...', postsTotal: 3, likesToday: 'Lade...', storyActive: 'Lade...' },
       facebook: { pageLikes: 'Lade...', postsToday: 'Lade...', reach: 'Lade...' },
       whatsapp: { conversationsToday: 'Lade...', activeUsers: 'Lade...', stampsIssued: 'Lade...', activeCoupons: 'Lade...' },
       reviews: { average: 'Lade...', newReviews: 'Lade...', unanswered: 'Lade...' },
@@ -488,7 +489,7 @@
       return {
         instagram: {
           followers: payload?.instagram?.followers ?? payload?.instagramFollowers ?? fallbackData.instagram.followers,
-          postsToday: payload?.instagram?.postsToday ?? payload?.instagramPostsToday ?? fallbackData.instagram.postsToday,
+          postsTotal: payload?.instagram?.media_count ?? payload?.instagram?.mediaCount ?? payload?.instagram?.postsTotal ?? payload?.instagramPostsTotal ?? payload?.instagramPostsToday ?? fallbackData.instagram.postsTotal,
           likesToday: payload?.instagram?.likesToday ?? payload?.instagramLikesToday ?? fallbackData.instagram.likesToday,
           storyActive: payload?.instagram?.storyActive ?? payload?.instagramStoryActive ?? fallbackData.instagram.storyActive
         },
