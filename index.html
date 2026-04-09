@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>LeoLan Digital Dashboard</title>
-  <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/LeoLan-Digital/leolan-ki/main/logo_extract2/leolan%20logo-01.png" />
   <style>
     :root {
       --bg: #0f1729;
@@ -108,6 +107,14 @@
     .toolbar .hint, .subtle, footer { color: var(--muted); font-size: 0.95rem; }
     .automation-grid { display:grid; gap:14px; }
     .automation-control { display:grid; grid-template-columns: minmax(220px, 1.3fr) auto auto auto; gap:14px; align-items:center; padding:16px; border-radius:18px; background:rgba(255,255,255,0.045); border:1px solid rgba(255,255,255,0.06); }
+    .analytics-section { margin-top: 26px; }
+    .section-heading { display:flex; align-items:flex-end; justify-content:space-between; gap:14px; margin: 0 0 18px; }
+    .section-heading h3 { margin:0; font-size: clamp(1.25rem, 2vw, 1.65rem); }
+    .section-heading p { margin:6px 0 0; color: var(--muted); }
+    .chart-grid { display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:18px; }
+    .chart-card { min-height: 340px; }
+    .chart-card canvas { width: 100% !important; height: 260px !important; }
+    .chart-note { color: var(--muted); font-size: 0.88rem; }
     .switch { position:relative; display:inline-block; width:58px; height:32px; }
     .switch input { opacity:0; width:0; height:0; }
     .slider { position:absolute; cursor:pointer; inset:0; background:rgba(255,255,255,0.18); transition:.2s; border-radius:999px; }
@@ -129,6 +136,7 @@
     @media (max-width: 760px) {
       .topbar { position: static; flex-direction: column; align-items: flex-start; }
       .card, .card.wide, .card.full { grid-column: span 12; }
+      .chart-grid { grid-template-columns: 1fr; }
       .automation-control { grid-template-columns: 1fr; }
       .user-chip { right: 12px; bottom: 12px; }
       .modal-actions { flex-direction:column; }
@@ -225,6 +233,62 @@
           <div class="automation-list" id="automationStatusList"></div>
         </article>
       </div>
+
+      <section class="analytics-section">
+        <div class="section-heading">
+          <div>
+            <h3>📈 Analytics &amp; Trends</h3>
+            <p>Interaktive KPIs für Social, WhatsApp, Reviews und Umsatzentwicklung.</p>
+          </div>
+          <span class="chip">Chart.js</span>
+        </div>
+
+        <div class="chart-grid">
+          <article class="card chart-card">
+            <div class="card-header">
+              <div>
+                <h3 class="card-title">📈 Follower-Wachstum</h3>
+                <p class="card-subtitle">Instagram vs. Facebook · letzte 7 Tage</p>
+              </div>
+              <span class="chip">Social Trend</span>
+            </div>
+            <canvas id="followersChart"></canvas>
+          </article>
+
+          <article class="card chart-card">
+            <div class="card-header">
+              <div>
+                <h3 class="card-title">💬 WhatsApp Gespräche</h3>
+                <p class="card-subtitle">Konversationen pro Tag · letzte 7 Tage</p>
+              </div>
+              <span class="chip">Messaging</span>
+            </div>
+            <canvas id="whatsappChart"></canvas>
+          </article>
+
+          <article class="card chart-card">
+            <div class="card-header">
+              <div>
+                <h3 class="card-title">⭐ Bewertungen</h3>
+                <p class="card-subtitle">Sterne-Verteilung auf einen Blick</p>
+              </div>
+              <span class="chip">Reputation</span>
+            </div>
+            <canvas id="ratingsChart"></canvas>
+          </article>
+
+          <article class="card chart-card">
+            <div class="card-header">
+              <div>
+                <h3 class="card-title">📊 Umsatz</h3>
+                <p class="card-subtitle">Monatlicher Umsatz in EUR · letzte 6 Monate</p>
+              </div>
+              <span class="chip">Revenue</span>
+            </div>
+            <canvas id="revenueChart"></canvas>
+          </article>
+        </div>
+      </section>
     </section>
 
     <section id="panel-users" class="panel hidden admin-only">
@@ -297,6 +361,7 @@
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
     const API_URL = 'https://n8n.leolan.net/webhook/dashboard-data';
     const LOGIN_URL = 'https://n8n.leolan.net/webhook/dashboard-login';
@@ -319,6 +384,25 @@
       whatsapp: { conversationsToday: 'Lade...', activeUsers: 'Lade...', stampsIssued: 'Lade...', activeCoupons: 'Lade...' },
       reviews: { average: 'Lade...', newReviews: 'Lade...', unanswered: 'Lade...' },
       emails: { business: 'Lade...', knazari: 'Lade...', gmail: 'Lade...' },
+      charts: {
+        followers: {
+          labels: ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'],
+          instagram: [62, 63, 63, 64, 64, 64, 64],
+          facebook: [47, 47, 48, 48, 48, 48, 48]
+        },
+        whatsapp: {
+          labels: ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'],
+          conversations: [3, 7, 5, 12, 8, 4, 2]
+        },
+        ratings: {
+          labels: ['5★', '4★', '3★', '2★', '1★'],
+          data: [45, 30, 15, 7, 3]
+        },
+        revenue: {
+          labels: ['Nov', 'Dez', 'Jan', 'Feb', 'Mär', 'Apr'],
+          data: [0, 0, 0, 0, 0, 149]
+        }
+      },
       automation: {
         instagramFeed: { active: true, time: '10:00', label: 'Instagram Feed' },
         instagramStory: { active: true, time: '18:00', label: 'Instagram Story' },
@@ -349,6 +433,8 @@
 
     let currentUser = null;
     let automationState = structuredClone(fallbackData.automation);
+    let chartsState = structuredClone(fallbackData.charts);
+    let chartInstances = {};
 
     function formatDateTime(dateLike) {
       const date = dateLike ? new Date(dateLike) : new Date();
@@ -427,6 +513,25 @@
           knazari: payload?.emails?.knazari ?? payload?.emails?.kNazari ?? payload?.emailKNazari ?? fallbackData.emails.knazari,
           gmail: payload?.emails?.gmail ?? payload?.emailGmail ?? fallbackData.emails.gmail
         },
+        charts: {
+          followers: {
+            labels: payload?.charts?.followers?.labels ?? payload?.analytics?.followers?.labels ?? fallbackData.charts.followers.labels,
+            instagram: payload?.charts?.followers?.instagram ?? payload?.analytics?.followers?.instagram ?? fallbackData.charts.followers.instagram,
+            facebook: payload?.charts?.followers?.facebook ?? payload?.analytics?.followers?.facebook ?? fallbackData.charts.followers.facebook
+          },
+          whatsapp: {
+            labels: payload?.charts?.whatsapp?.labels ?? payload?.analytics?.whatsapp?.labels ?? fallbackData.charts.whatsapp.labels,
+            conversations: payload?.charts?.whatsapp?.conversations ?? payload?.analytics?.whatsapp?.conversations ?? fallbackData.charts.whatsapp.conversations
+          },
+          ratings: {
+            labels: payload?.charts?.ratings?.labels ?? payload?.analytics?.ratings?.labels ?? fallbackData.charts.ratings.labels,
+            data: payload?.charts?.ratings?.data ?? payload?.analytics?.ratings?.data ?? fallbackData.charts.ratings.data
+          },
+          revenue: {
+            labels: payload?.charts?.revenue?.labels ?? payload?.analytics?.revenue?.labels ?? fallbackData.charts.revenue.labels,
+            data: payload?.charts?.revenue?.data ?? payload?.analytics?.revenue?.data ?? fallbackData.charts.revenue.data
+          }
+        },
         automation: Object.keys(automationCatalog).reduce((acc, key) => {
           const source = payload?.automation?.[key] ?? payload?.automationControl?.[key] ?? payload?.[key];
           acc[key] = parseAutomationEntry(key, source);
@@ -444,8 +549,178 @@
         element.classList.remove('loading');
       });
       automationState = data.automation || automationState;
+      chartsState = data.charts || chartsState;
       renderAutomationStatus();
       renderAutomationControls();
+      renderCharts(chartsState);
+    }
+    function chartTextColor(opacity = 0.7) { return `rgba(255,255,255,${opacity})`; }
+    function createOrReplaceChart(key, config) {
+      if (chartInstances[key]) chartInstances[key].destroy();
+      chartInstances[key] = new Chart(document.getElementById(key), config);
+    }
+    function chartDefaults() {
+      return {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: {
+            labels: {
+              color: chartTextColor(0.76),
+              usePointStyle: true,
+              boxWidth: 8,
+              boxHeight: 8,
+              padding: 18
+            }
+          },
+          tooltip: {
+            backgroundColor: 'rgba(15,23,41,0.94)',
+            borderColor: 'rgba(255,255,255,0.08)',
+            borderWidth: 1,
+            titleColor: '#ffffff',
+            bodyColor: chartTextColor(0.86),
+            padding: 12,
+            displayColors: true
+          }
+        },
+        scales: {
+          x: {
+            grid: { color: 'rgba(255,255,255,0.05)', drawBorder: false },
+            ticks: { color: chartTextColor() }
+          },
+          y: {
+            grid: { color: 'rgba(255,255,255,0.05)', drawBorder: false },
+            ticks: { color: chartTextColor() }
+          }
+        }
+      };
+    }
+    function renderCharts(data) {
+      const defaults = chartDefaults();
+
+      createOrReplaceChart('followersChart', {
+        type: 'line',
+        data: {
+          labels: data.followers.labels,
+          datasets: [
+            {
+              label: 'Instagram Follower',
+              data: data.followers.instagram,
+              borderColor: '#f5a623',
+              backgroundColor: 'rgba(245,166,35,0.18)',
+              pointBackgroundColor: '#f5a623',
+              pointBorderColor: '#f5a623',
+              pointRadius: 4,
+              pointHoverRadius: 5,
+              borderWidth: 3,
+              tension: 0.38,
+              fill: false
+            },
+            {
+              label: 'Facebook Likes',
+              data: data.followers.facebook,
+              borderColor: '#4facfe',
+              backgroundColor: 'rgba(79,172,254,0.18)',
+              pointBackgroundColor: '#4facfe',
+              pointBorderColor: '#4facfe',
+              pointRadius: 4,
+              pointHoverRadius: 5,
+              borderWidth: 3,
+              tension: 0.38,
+              fill: false
+            }
+          ]
+        },
+        options: defaults
+      });
+
+      createOrReplaceChart('whatsappChart', {
+        type: 'bar',
+        data: {
+          labels: data.whatsapp.labels,
+          datasets: [{
+            label: 'Gespräche',
+            data: data.whatsapp.conversations,
+            backgroundColor: 'rgba(45,216,129,0.72)',
+            borderColor: '#2dd881',
+            borderWidth: 1.5,
+            borderRadius: 12,
+            borderSkipped: false,
+            maxBarThickness: 36
+          }]
+        },
+        options: {
+          ...defaults,
+          plugins: {
+            ...defaults.plugins,
+            legend: { display: false }
+          }
+        }
+      });
+
+      createOrReplaceChart('ratingsChart', {
+        type: 'doughnut',
+        data: {
+          labels: data.ratings.labels,
+          datasets: [{
+            data: data.ratings.data,
+            backgroundColor: ['#f5a623', '#4facfe', '#2dd881', '#f093fb', 'rgba(255,255,255,0.28)'],
+            borderColor: '#0f1729',
+            borderWidth: 4,
+            hoverOffset: 8
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '68%',
+          plugins: defaults.plugins
+        }
+      });
+
+      createOrReplaceChart('revenueChart', {
+        type: 'line',
+        data: {
+          labels: data.revenue.labels,
+          datasets: [{
+            label: 'Umsatz',
+            data: data.revenue.data,
+            borderColor: '#f093fb',
+            backgroundColor: 'rgba(240,147,251,0.2)',
+            fill: true,
+            pointBackgroundColor: '#f093fb',
+            pointBorderColor: '#f093fb',
+            pointRadius: 4,
+            pointHoverRadius: 6,
+            borderWidth: 3,
+            tension: 0.4
+          }]
+        },
+        options: {
+          ...defaults,
+          plugins: {
+            ...defaults.plugins,
+            legend: { display: false },
+            tooltip: {
+              ...defaults.plugins.tooltip,
+              callbacks: {
+                label: (context) => ` Umsatz: ${new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(context.parsed.y || 0)}`
+              }
+            }
+          },
+          scales: {
+            ...defaults.scales,
+            y: {
+              ...defaults.scales.y,
+              ticks: {
+                color: chartTextColor(),
+                callback: (value) => new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(value)
+              }
+            }
+          }
+        }
+      });
     }
     function getStoredUser() {
       try { return JSON.parse(sessionStorage.getItem(SESSION_USER_KEY) || 'null'); } catch { return null; }
