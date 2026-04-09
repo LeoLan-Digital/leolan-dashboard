@@ -112,7 +112,7 @@
     .section-heading { display:flex; align-items:flex-end; justify-content:space-between; gap:10px; margin: 0 0 12px; }
     .section-heading h3 { margin:0; font-size: clamp(1.25rem, 2vw, 1.65rem); }
     .section-heading p { margin:6px 0 0; color: var(--muted); }
-    .charts-grid { display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:20px; }.charts-grid .card { grid-column: unset !important; }
+    .charts-grid { display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:20px; }
     .chart-card { min-height: 300px; }
     .chart-card canvas { width: 100% !important; height: 220px !important; max-height: 220px; }
     .chart-note { color: var(--muted); font-size: 0.88rem; }
@@ -244,7 +244,7 @@
           <span class="chip">Chart.js</span>
         </div>
 
-        <div class="charts-grid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:20px;">
+        <div class="charts-grid">
           <article class="card chart-card">
             <div class="card-header">
               <div>
@@ -336,8 +336,17 @@
   <div id="settingsModal" class="modal-backdrop">
     <div class="modal">
       <h3>⚙️ Einstellungen</h3>
-      <p>Passwort-Änderungen wurden aus diesem Modal entfernt. Ein separates Settings-Panel folgt später.</p>
-      <div class="modal-actions"><button onclick="closeSettings()" class="ghost-btn" style="flex:1;">Schließen</button></div>
+      <div style="display:flex;flex-direction:column;gap:12px;margin-top:8px;">
+        <label style="color:var(--muted);font-size:0.9rem;">Neues Passwort:</label>
+        <input id="newPwInput" type="password" placeholder="Neues Passwort (min. 6 Zeichen)" class="input" style="width:100%;" />
+        <label style="color:var(--muted);font-size:0.9rem;">Passwort bestätigen:</label>
+        <input id="confirmPwInput" type="password" placeholder="Passwort wiederholen" class="input" style="width:100%;" />
+        <div id="pwMsg" style="font-size:0.85rem;min-height:18px;"></div>
+      </div>
+      <div class="modal-actions" style="margin-top:16px;display:flex;gap:10px;">
+        <button onclick="saveNewPassword()" class="primary-btn" style="flex:1;">💾 Speichern</button>
+        <button onclick="closeSettings()" class="ghost-btn" style="flex:1;">Abbrechen</button>
+      </div>
     </div>
   </div>
 
@@ -928,6 +937,26 @@
     }
     window.openSettings = openSettings;
     window.closeSettings = closeSettings;
+    window.saveNewPassword = async function() {
+      const np = document.getElementById('newPwInput').value;
+      const cp = document.getElementById('confirmPwInput').value;
+      const msg = document.getElementById('pwMsg');
+      if (!np || np.length < 6) { msg.style.color='#ff5c5c'; msg.textContent='Mindestens 6 Zeichen!'; return; }
+      if (np !== cp) { msg.style.color='#ff5c5c'; msg.textContent='Passwörter stimmen nicht überein!'; return; }
+      try {
+        const resp = await fetch('https://n8n.leolan.net/webhook/dashboard-change-password', {
+          method: 'POST', headers: {'Content-Type':'application/json', ...authHeaders()},
+          body: JSON.stringify({ newPassword: np, email: currentUser?.email })
+        });
+        const data = await resp.json().catch(()=>({}));
+        if (data.success !== false) {
+          msg.style.color='#2dd881'; msg.textContent='✅ Passwort gespeichert!';
+          document.getElementById('newPwInput').value='';
+          document.getElementById('confirmPwInput').value='';
+          setTimeout(closeSettings, 1500);
+        } else { msg.style.color='#ff5c5c'; msg.textContent=data.error||'Fehler beim Speichern'; }
+      } catch(e) { msg.style.color='#ff5c5c'; msg.textContent='Verbindungsfehler'; }
+    };
     window.closeAddUserModal = closeAddUserModal;
     window.logout = logout;
   </script>
