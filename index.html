@@ -338,9 +338,9 @@
       <h3>⚙️ Einstellungen</h3>
       <div style="display:flex;flex-direction:column;gap:12px;margin-top:8px;">
         <label style="color:var(--muted);font-size:0.9rem;">Neues Passwort:</label>
-        <input id="newPwInput" type="password" placeholder="Neues Passwort (min. 6 Zeichen)" class="input" style="width:100%;" />
+        <div style="position:relative;"><input id="newPwInput" type="password" placeholder="Neues Passwort (min. 6 Zeichen)" class="input" style="width:100%;padding-right:44px;" /><button type="button" onclick="togglePw('newPwInput',this)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;">👁</button></div>
         <label style="color:var(--muted);font-size:0.9rem;">Passwort bestätigen:</label>
-        <input id="confirmPwInput" type="password" placeholder="Passwort wiederholen" class="input" style="width:100%;" />
+        <div style="position:relative;"><input id="confirmPwInput" type="password" placeholder="Passwort wiederholen" class="input" style="width:100%;padding-right:44px;" /><button type="button" onclick="togglePw('confirmPwInput',this)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;">👁</button></div>
         <div id="pwMsg" style="font-size:0.85rem;min-height:18px;"></div>
       </div>
       <div class="modal-actions" style="margin-top:16px;display:flex;gap:10px;">
@@ -935,6 +935,7 @@
       document.getElementById('newUserRole').value = 'viewer';
       document.getElementById('addUserStatus').textContent = '';
     }
+    window.togglePw = function(id, btn) { const el = document.getElementById(id); el.type = el.type === "password" ? "text" : "password"; btn.textContent = el.type === "password" ? "👁" : "🙈"; };
     window.openSettings = openSettings;
     window.closeSettings = closeSettings;
     window.saveNewPassword = async function() {
