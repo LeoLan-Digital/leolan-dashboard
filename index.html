@@ -112,7 +112,7 @@
     .section-heading { display:flex; align-items:flex-end; justify-content:space-between; gap:10px; margin: 0 0 12px; }
     .section-heading h3 { margin:0; font-size: clamp(1.25rem, 2vw, 1.65rem); }
     .section-heading p { margin:6px 0 0; color: var(--muted); }
-    .charts-grid { display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:20px; }
+    .charts-grid { display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:20px; }.charts-grid .card { grid-column: unset !important; }
     .chart-card { min-height: 300px; }
     .chart-card canvas { width: 100% !important; height: 220px !important; max-height: 220px; }
     .chart-note { color: var(--muted); font-size: 0.88rem; }
@@ -244,7 +244,7 @@
           <span class="chip">Chart.js</span>
         </div>
 
-        <div class="charts-grid">
+        <div class="charts-grid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:20px;">
           <article class="card chart-card">
             <div class="card-header">
               <div>
