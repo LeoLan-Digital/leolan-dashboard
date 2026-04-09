@@ -247,7 +247,7 @@
         </div>
 
         <div class="charts-grid">
-          <article class="card chart-card">
+          <article class="chart-card" style="background:var(--card);border:1px solid var(--card-border);border-radius:var(--radius);padding:1.5rem;">
             <div class="card-header">
               <div>
                 <h3 class="card-title">📈 Follower-Wachstum</h3>
@@ -258,7 +258,7 @@
             <canvas id="followersChart"></canvas>
           </article>
 
-          <article class="card chart-card">
+          <article class="chart-card" style="background:var(--card);border:1px solid var(--card-border);border-radius:var(--radius);padding:1.5rem;">
             <div class="card-header">
               <div>
                 <h3 class="card-title">💬 WhatsApp Gespräche</h3>
@@ -269,7 +269,7 @@
             <canvas id="whatsappChart"></canvas>
           </article>
 
-          <article class="card chart-card">
+          <article class="chart-card" style="background:var(--card);border:1px solid var(--card-border);border-radius:var(--radius);padding:1.5rem;">
             <div class="card-header">
               <div>
                 <h3 class="card-title">⭐ Bewertungen</h3>
@@ -280,7 +280,7 @@
             <canvas id="ratingsChart"></canvas>
           </article>
 
-          <article class="card chart-card">
+          <article class="chart-card" style="background:var(--card);border:1px solid var(--card-border);border-radius:var(--radius);padding:1.5rem;">
             <div class="card-header">
               <div>
                 <h3 class="card-title">📊 Umsatz</h3>
@@ -338,8 +338,17 @@
   <div id="settingsModal" class="modal-backdrop">
     <div class="modal">
       <h3>⚙️ Einstellungen</h3>
-      <p>Passwort-Änderungen wurden aus diesem Modal entfernt. Ein separates Settings-Panel folgt später.</p>
-      <div class="modal-actions"><button onclick="closeSettings()" class="ghost-btn" style="flex:1;">Schließen</button></div>
+      <div style="display:flex;flex-direction:column;gap:12px;margin-top:8px;">
+        <label style="color:var(--muted);font-size:0.9rem;">Neues Passwort:</label>
+        <div style="position:relative;"><input id="newPwInput" type="password" placeholder="Neues Passwort (min. 6 Zeichen)" class="input" style="width:100%;padding-right:44px;" /><button type="button" onclick="togglePw('newPwInput',this)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;">👁</button></div>
+        <label style="color:var(--muted);font-size:0.9rem;">Passwort bestätigen:</label>
+        <div style="position:relative;"><input id="confirmPwInput" type="password" placeholder="Passwort wiederholen" class="input" style="width:100%;padding-right:44px;" /><button type="button" onclick="togglePw('confirmPwInput',this)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;">👁</button></div>
+        <div id="pwMsg" style="font-size:0.85rem;min-height:18px;"></div>
+      </div>
+      <div class="modal-actions" style="margin-top:16px;display:flex;gap:10px;">
+        <button onclick="saveNewPassword()" class="primary-btn" style="flex:1;">💾 Speichern</button>
+        <button onclick="closeSettings()" class="ghost-btn" style="flex:1;">Abbrechen</button>
+      </div>
     </div>
   </div>
 
@@ -350,6 +359,8 @@
       <input id="newUserEmail" class="input" type="email" placeholder="E-Mail-Adresse" />
       <div style="height:12px"></div>
       <input id="newUserName" class="input" type="text" placeholder="Name (optional)" />
+      <div style="height:12px"></div>
+      <div style="position:relative;"><input id="newUserPassword" type="password" placeholder="Passwort (min. 6 Zeichen)" class="input" style="width:100%;padding-right:44px;" /><button type="button" onclick="togglePw('newUserPassword',this)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;">👁</button></div>
       <div style="height:12px"></div>
       <select id="newUserRole" class="select">
         <option value="viewer">viewer</option>
@@ -928,8 +939,29 @@
       document.getElementById('newUserRole').value = 'viewer';
       document.getElementById('addUserStatus').textContent = '';
     }
+    window.togglePw = function(id, btn) { const el = document.getElementById(id); el.type = el.type === "password" ? "text" : "password"; btn.textContent = el.type === "password" ? "👁" : "🙈"; };
     window.openSettings = openSettings;
     window.closeSettings = closeSettings;
+    window.saveNewPassword = async function() {
+      const np = document.getElementById('newPwInput').value;
+      const cp = document.getElementById('confirmPwInput').value;
+      const msg = document.getElementById('pwMsg');
+      if (!np || np.length < 6) { msg.style.color='#ff5c5c'; msg.textContent='Mindestens 6 Zeichen!'; return; }
+      if (np !== cp) { msg.style.color='#ff5c5c'; msg.textContent='Passwörter stimmen nicht überein!'; return; }
+      try {
+        const resp = await fetch('https://n8n.leolan.net/webhook/dashboard-change-password', {
+          method: 'POST', headers: {'Content-Type':'application/json', ...authHeaders()},
+          body: JSON.stringify({ newPassword: np, email: currentUser?.email })
+        });
+        const data = await resp.json().catch(()=>({}));
+        if (data.success !== false) {
+          msg.style.color='#2dd881'; msg.textContent='✅ Passwort gespeichert!';
+          document.getElementById('newPwInput').value='';
+          document.getElementById('confirmPwInput').value='';
+          setTimeout(closeSettings, 1500);
+        } else { msg.style.color='#ff5c5c'; msg.textContent=data.error||'Fehler beim Speichern'; }
+      } catch(e) { msg.style.color='#ff5c5c'; msg.textContent='Verbindungsfehler'; }
+    };
     window.closeAddUserModal = closeAddUserModal;
     window.logout = logout;
   </script>
