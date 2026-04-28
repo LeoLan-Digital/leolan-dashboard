@@ -2044,4 +2044,24 @@ function matchTransaction(tx) {
 window.N26_MATCH = matchTransaction;
 </script>
 
+
+<script>
+// Init: nur overview zeigen
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('.tab-content').forEach(function(t) {
+    if (t.id !== 'tab-overview') {
+      t.style.display = 'none';
+      t.classList.remove('active');
+    } else {
+      t.style.display = 'block';
+      t.classList.add('active');
+    }
+  });
+  // Overview nav aktiv
+  var nav = document.getElementById('nav-overview');
+  if (nav) { nav.classList.add('active'); }
+  // Daten rendern
+  if (typeof renderAll === 'function') renderAll();
+});
+</script>
 </html>
