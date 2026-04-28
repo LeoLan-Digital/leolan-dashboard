@@ -1890,8 +1890,19 @@ function renderAll() {
 
 function renderOverview() {
   var totalExp = state.expenses.reduce(function(s,e){ var v=eurAmt(e); return v!==null?s+v:s; }, 0);
-  var el = document.getElementById('expense-total');
-  if (el) el.textContent = '€'+totalExp.toLocaleString('de-DE',{minimumFractionDigits:2});
+  var openItems = state.expenses.filter(function(e){ return e.status === 'offen'; });
+  var openAmt = openItems.reduce(function(s,e){ var v=eurAmt(e); return v!==null?s+v:s; }, 0);
+  
+  function setEl(id, val) { var el=document.getElementById(id); if(el) el.textContent=val; }
+  
+  setEl('kpi-expenses', '-€'+totalExp.toLocaleString('de-DE',{minimumFractionDigits:2}));
+  setEl('kpi-expenses-sub', state.expenses.length+' Buchungen');
+  setEl('kpi-income', '€0,00');
+  setEl('kpi-income-sub', 'Noch kein zahlender Kunde');
+  setEl('kpi-cashflow', '-€'+totalExp.toLocaleString('de-DE',{minimumFractionDigits:2}));
+  setEl('kpi-open', '-€'+openAmt.toLocaleString('de-DE',{minimumFractionDigits:2}));
+  setEl('kpi-open-sub', openItems.length+' offene Posten');
+  setEl('expense-total', '€'+totalExp.toLocaleString('de-DE',{minimumFractionDigits:2}));
 }
 
 function renderExpenses() {
