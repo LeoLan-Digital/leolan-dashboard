@@ -1188,91 +1188,22 @@ if (sessionStorage.getItem('leolan_auth')) {
       <div style="font-size:12px;opacity:.45;">DE25 1001 1001 2226 5950 79</div>
     </div>
     <div style="margin-left:auto;text-align:right;">
-      <div style="font-size:24px;font-weight:700;font-variant-numeric:tabular-nums;" id="bank-balance">€ 205,70</div>
+      <div style="font-size:24px;font-weight:700;font-variant-numeric:tabular-nums;" id="bank-balance">€ 175,03</div>
       <div style="font-size:11px;opacity:.4;">Stand: 28.04.2026</div>
     </div>
   </div>
 
-  <!-- Offene Posten zum Abgleichen -->
+  <!-- N26 Transaktionen — dynamisch via syncN26() -->
   <div class="section-card" style="margin-bottom:16px;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-      <div style="font-size:13px;font-weight:600;opacity:.5;text-transform:uppercase;letter-spacing:.08em;">🔴 Offene Rechnungen</div>
+      <div style="font-size:13px;font-weight:600;opacity:.5;text-transform:uppercase;letter-spacing:.08em;">💳 N26 Transaktionen</div>
+      <div style="font-size:11px;opacity:.4;" id="tx-sync-info">Lade...</div>
     </div>
-    <table>
+    <table id="n26-tx-table">
       <tr><th>Datum</th><th>Beschreibung</th><th>Betrag</th><th>Zugeordnet zu</th><th>Status</th></tr>
-      <!-- EINGANG -->
-      <tr style="background:rgba(48,209,88,0.06)">
-        <td>28.04. 23:50</td>
-        <td>💰 EINGANG — Kontoaufladung<br><span style="font-size:11px;opacity:.4;">N26 Einzahlung</span></td>
-        <td style="color:#30d158;font-weight:600;">+€200,00</td>
-        <td style="font-size:12px;opacity:.5;">Eigene Überweisung</td>
-        <td><span class="badge badge-green">✅ Eingegangen</span></td>
-      </tr>
-      <!-- AUSGABEN ANTHROPIC -->
-      <tr style="cursor:pointer" onclick="showTxDetail('tx6')">
-        <td>29.04. 00:02</td>
-        <td>ANTHROPIC IRELAND LTD<br><span style="font-size:11px;opacity:.4;">N26 Karte</span></td>
-        <td style="color:#ff453a;font-weight:600;">-€16,96 ($18,33)</td>
-        <td style="font-size:12px;">Claude API #2024-3572</td>
-        <td><span class="badge badge-green">✅ Zugeordnet</span></td>
-      </tr>
-      <tr style="cursor:pointer" onclick="showTxDetail('tx5')">
-        <td>28.04. 23:56</td>
-        <td>ANTHROPIC IRELAND LTD<br><span style="font-size:11px;opacity:.4;">N26 Karte</span></td>
-        <td style="color:#ff453a;font-weight:600;">-€18,12 ($19,58)</td>
-        <td style="font-size:12px;">Claude API #2064-6699</td>
-        <td><span class="badge badge-green">✅ Zugeordnet</span></td>
-      </tr>
-      <tr style="cursor:pointer" onclick="showTxDetail('tx4')">
-        <td>28.04. 23:50</td>
-        <td>ANTHROPIC IRELAND LTD<br><span style="font-size:11px;opacity:.4;">N26 Karte</span></td>
-        <td style="color:#ff453a;font-weight:600;">-€16,63 ($17,96)</td>
-        <td style="font-size:12px;">Claude API #2139-1171</td>
-        <td><span class="badge badge-green">✅ Zugeordnet</span></td>
-      </tr>
-      <tr style="cursor:pointer" onclick="showTxDetail('tx1')">
-        <td>28.04. 23:42</td>
-        <td>ANTHROPIC IRELAND LTD<br><span style="font-size:11px;opacity:.4;">N26 Karte</span></td>
-        <td style="color:#ff453a;font-weight:600;">-€15,12 ($17,65)</td>
-        <td style="font-size:12px;">Claude API #2784-8109</td>
-        <td><span class="badge badge-green">✅ Zugeordnet</span></td>
-      </tr>
-      <tr style="cursor:pointer" onclick="showTxDetail('tx2')">
-        <td>28.04. 23:18</td>
-        <td>ANTHROPIC IRELAND LTD<br><span style="font-size:11px;opacity:.4;">N26 Karte</span></td>
-        <td style="color:#ff453a;font-weight:600;">-€15,38 ($17,65)</td>
-        <td style="font-size:12px;">Claude API #2780-0221</td>
-        <td><span class="badge badge-green">✅ Zugeordnet</span></td>
-      </tr>
-      <!-- OFFENE -->
-            <tr style="cursor:pointer" onclick="showTxDetail('tx7')">
-        <td>29.04. 00:08</td>
-        <td>ANTHROPIC IRELAND LTD<br><span style="font-size:11px;opacity:.4;">N26 Karte</span></td>
-        <td style="color:#ff453a;font-weight:600;">-€15,25 ($17,81)</td>
-        <td style="font-size:12px;">Claude API #2399-5121</td>
-        <td><span class="badge badge-green">✅ Zugeordnet</span></td>
-      </tr>
-      <tr style="cursor:pointer" onclick="showTxDetail('tx8')">
-        <td>29.04. 00:15</td>
-        <td>ANTHROPIC IRELAND LTD<br><span style="font-size:11px;opacity:.4;">N26 Karte</span></td>
-        <td style="color:#ff453a;font-weight:600;">-€16,80 ($19,61)</td>
-        <td style="font-size:12px;">Claude API #2370-7422</td>
-        <td><span class="badge badge-green">✅ Zugeordnet</span></td>
-      </tr>
-      <tr style="cursor:pointer" onclick="showTxDetail('tx9')">
-        <td>29.04. 00:24</td>
-        <td>ANTHROPIC IRELAND LTD<br><span style="font-size:11px;opacity:.4;">N26 Karte</span></td>
-        <td style="color:#ff453a;font-weight:600;">-€14,53 ($16,96)*</td>
-        <td style="font-size:12px;">Claude API #2278-2550</td>
-        <td><span class="badge badge-yellow">⏳ Aktuell</span></td>
-      </tr>
-      <tr style="background:rgba(255,69,58,0.05)">
-        <td>Offen</td>
-        <td>IP Services GmbH — Markenüberwachung<br><span style="font-size:11px;color:#ff453a;">Überweisung ausstehend!</span></td>
-        <td style="color:#ff453a;font-weight:600;">-€71,40</td>
-        <td style="font-size:12px;">RVG 2600590</td>
-        <td><button class="btn btn-outline btn-sm" onclick="markPaid('m2')" style="font-size:11px;padding:4px 10px;">✓ Bezahlt</button></td>
-      </tr>
+      <tbody id="n26-tx-body">
+        <tr><td colspan="5" style="text-align:center;opacity:.4;padding:20px;">🔄 Lade Transaktionen...</td></tr>
+      </tbody>
     </table>
   </div>
 
@@ -2151,28 +2082,173 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <script>
-// Auto-Refresh: N26 Balance alle 60 Sek, Seite alle 5 Min
-var refreshCount = 0;
-var N26_ACCESS_TOKEN = null;
+// ══════════════════════════════════════════════════════
+// N26 SYNC SYSTEM — Dynamisch via n8n Webhook + Proxy
+// Endpoints (in Priorität):
+//   1. http://localhost:8765/all  (lokal, schnell)
+//   2. https://n8n.leolan.net/webhook/n26-data  (extern)
+// ══════════════════════════════════════════════════════
+var N26_LOCAL  = 'http://localhost:8765/all';
+var N26_REMOTE = 'https://n8n.leolan.net/webhook/n26-data';
+var N26_DATA   = null;  // Cache
 
+// Formatierung
+function fmtDate(isoStr) {
+  if (!isoStr) return '—';
+  try {
+    var d = new Date(isoStr);
+    return d.toLocaleDateString('de-DE', {day:'2-digit',month:'2-digit'}) + ' '
+      + d.toLocaleTimeString('de-DE', {hour:'2-digit',minute:'2-digit'});
+  } catch(e) { return isoStr.substring(0,16).replace('T',' '); }
+}
+
+function fmtAmount(eur, usd) {
+  var s = (eur >= 0 ? '+' : '') + eur.toLocaleString('de-DE', {minimumFractionDigits:2}) + ' €';
+  if (usd !== null && usd !== undefined) {
+    s += ' ($' + Math.abs(usd).toLocaleString('de-DE', {minimumFractionDigits:2}) + ')';
+  }
+  return s;
+}
+
+// Haupt-Fetch Funktion
+async function fetchN26Data() {
+  // Versuche lokal zuerst
+  try {
+    var r = await fetch(N26_LOCAL, {signal: AbortSignal.timeout(3000)});
+    if (r.ok) return await r.json();
+  } catch(e) {}
+  // Fallback: n8n Remote
+  try {
+    var r2 = await fetch(N26_REMOTE, {signal: AbortSignal.timeout(8000)});
+    if (r2.ok) return await r2.json();
+  } catch(e2) {}
+  return null;
+}
+
+// Transaktions-Tabelle aufbauen
+function renderN26Transactions(data) {
+  var tbody = document.getElementById('n26-tx-body');
+  if (!tbody) return;
+  
+  var txs = (data && data.transactions) || [];
+  if (txs.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;opacity:.4;padding:20px;">Keine Transaktionen gefunden</td></tr>';
+    return;
+  }
+  
+  var html = '';
+  txs.forEach(function(tx, idx) {
+    var isIncome  = tx.amount > 0 || tx.status === 'income';
+    var isMatched = tx.status === 'matched';
+    var rowBg = isIncome ? 'background:rgba(48,209,88,0.06);' : '';
+    var amtColor = isIncome ? 'color:#30d158;' : 'color:#ff453a;';
+    var amtStr = fmtAmount(tx.amount, tx.usd);
+    var badge = isIncome
+      ? '<span class="badge badge-green">✅ Eingegangen</span>'
+      : isMatched
+        ? '<span class="badge badge-green">✅ Zugeordnet</span>'
+        : '<span class="badge badge-yellow">⏳ Offen</span>';
+    
+    var invoiceCell = tx.invoice
+      ? tx.invoice.replace(/Claude API Rechnung /, 'Claude API ')
+      : (isIncome ? '<span style="opacity:.5;">'+tx.ref+'</span>' : '—');
+    
+    var clickable = (tx.invoice || tx.pdf) ? 'cursor:pointer;' : '';
+    var onclick   = (tx.invoice || tx.pdf)
+      ? 'onclick="showTxDetailDyn(' + idx + ')"'
+      : '';
+    
+    html += '<tr style="' + rowBg + clickable + '" ' + onclick + '>'
+      + '<td style="font-size:13px;">' + fmtDate(tx.date) + '</td>'
+      + '<td>' + (tx.name || '—') + '<br><span style="font-size:11px;opacity:.4;">N26 Karte</span></td>'
+      + '<td style="font-weight:600;font-variant-numeric:tabular-nums;' + amtColor + '">' + amtStr + '</td>'
+      + '<td style="font-size:12px;">' + invoiceCell + '</td>'
+      + '<td>' + badge + '</td>'
+      + '</tr>';
+  });
+  
+  tbody.innerHTML = html;
+  
+  // Sync-Info
+  var info = document.getElementById('tx-sync-info');
+  if (info && data.updated) {
+    var upd = new Date(data.updated);
+    info.textContent = 'Stand: ' + upd.toLocaleTimeString('de-DE');
+  }
+}
+
+// Detailansicht für dynamische Transaktionen
+function showTxDetailDyn(idx) {
+  if (!N26_DATA || !N26_DATA.transactions) return;
+  var tx = N26_DATA.transactions[idx];
+  if (!tx) return;
+  
+  var modal = document.getElementById('txDetailModal');
+  if (!modal) return;
+  
+  document.getElementById('tx-name').textContent   = tx.name || '';
+  document.getElementById('tx-amount').textContent = fmtAmount(tx.amount, tx.usd);
+  document.getElementById('tx-date').textContent   = fmtDate(tx.date);
+  document.getElementById('tx-ref').textContent    = tx.ref || '';
+  document.getElementById('tx-rate').textContent   = tx.rate || '—';
+  document.getElementById('tx-invoice-name').textContent = tx.invoice || 'Keine Rechnung zugeordnet';
+  document.getElementById('tx-invoice-ref').textContent  = tx.invoiceRef || '';
+  
+  // PDF Button
+  var pdfBtn = document.getElementById('tx-pdf-btn');
+  if (pdfBtn) { pdfBtn.dataset.url = tx.pdf || ''; }
+  
+  // currentPdfUrl global setzen (für openPDF())
+  window._currentTxPdf = tx.pdf || '';
+  
+  modal.style.display = 'flex';
+}
+
+// Haupt-Sync Funktion (Knopf + Auto)
+async function syncN26() {
+  var btn = document.querySelector('[onclick="syncN26()"]');
+  if (btn) btn.textContent = '⏳ Sync...';
+  
+  var data = await fetchN26Data();
+  N26_DATA = data;
+  
+  if (data) {
+    // Balance updaten
+    var bal = data.balance || 0;
+    ['bank-balance','balance-kpi'].forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el) el.textContent = '€ ' + bal.toLocaleString('de-DE', {minimumFractionDigits:2});
+    });
+    localStorage.setItem('leolan_bank_balance', JSON.stringify({amount:bal,time:new Date().toISOString()}));
+    
+    // Transaktionen rendern
+    renderN26Transactions(data);
+    updateTicker();
+  } else {
+    var tbody = document.getElementById('n26-tx-body');
+    if (tbody) tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#ff453a;padding:20px;">⚠️ N26 nicht erreichbar — Proxy läuft?</td></tr>';
+  }
+  
+  if (btn) btn.textContent = '🔄 N26 Sync';
+}
+
+// Balance-only Refresh (leichtgewichtig)
 async function refreshN26Balance() {
   try {
-    var r = await fetch('http://localhost:8765');
+    var r = await fetch(N26_LOCAL, {signal: AbortSignal.timeout(3000)});
     if (r.ok) {
       var d = await r.json();
-      var bal = d.availableBalance || 0;
+      var bal = d.balance || d.availableBalance || 0;
       ['bank-balance','balance-kpi'].forEach(function(id) {
         var el = document.getElementById(id);
         if (el) el.textContent = '€ ' + bal.toLocaleString('de-DE', {minimumFractionDigits:2});
       });
-      localStorage.setItem('leolan_bank_balance', JSON.stringify({amount:bal,time:new Date().toISOString()}));
       updateTicker();
     }
   } catch(e) {}
-  refreshCount++;
 }
 
-// Ticker anzeigen
+// Ticker
 function updateTicker() {
   var now = new Date();
   var ticker = document.getElementById('refresh-ticker');
@@ -2181,22 +2257,27 @@ function updateTicker() {
   }
 }
 
-// Auto-Refresh alle 60 Sek
-setInterval(function() {
-  refreshN26Balance();
-  updateTicker();
-}, 30000); // 30 Sekunden
+// PDF öffnen
+function openPDF() {
+  var url = window._currentTxPdf;
+  if (url) window.open(url, '_blank');
+}
 
-// Seiten-Auto-Refresh alle 5 Min (Transaktionen aktualisieren)
+// Auto-Refresh: Balance alle 30 Sek, Transaktionen alle 5 Min
+setInterval(refreshN26Balance, 30000);
 setInterval(function() {
-  if (document.getElementById('tab-payments') && 
+  if (document.getElementById('tab-payments') &&
       document.getElementById('tab-payments').classList.contains('active')) {
-    location.reload();
+    syncN26();
   }
 }, 300000);
 
+// Beim Laden: Transaktionen initial holen
 window.addEventListener('load', function() {
-  setTimeout(updateTicker, 500);
+  setTimeout(function() {
+    syncN26();
+    updateTicker();
+  }, 800);
 });
 </script>
 
@@ -2278,10 +2359,6 @@ function showTxDetail(txId) {
   modal.style.display = 'flex';
 }
 
-function openPDF() {
-  var tx = TX_DATA[window._currentTxId];
-  if (tx && tx.pdfUrl) window.open(tx.pdfUrl, '_blank');
-}
 function closeTxDetail() {
   document.getElementById('txDetailModal').style.display = 'none';
 }
