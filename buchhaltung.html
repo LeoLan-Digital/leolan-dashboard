@@ -1200,14 +1200,14 @@ if (sessionStorage.getItem('leolan_auth')) {
     </div>
     <table>
       <tr><th>Datum</th><th>N26 Buchung</th><th>Betrag</th><th>Zugeordnet zu</th><th>Status</th></tr>
-      <tr style="background:rgba(48,209,88,0.05)">
+      <tr style="background:rgba(48,209,88,0.05);cursor:pointer;" onclick="showTxDetail('tx1')" title="Klicken für Details">
         <td>28.04.26 22:33</td>
         <td>ANTHROPIC IRELAND LTD<br><span style="font-size:11px;opacity:.4;">N26 Karte</span></td>
         <td style="color:#ff453a;font-variant-numeric:tabular-nums;font-weight:600;">-€15,12<br><span style="font-size:11px;opacity:.5;">($17,65)</span></td>
         <td style="font-size:12px;">Claude API #2747-5867<br><span style="opacity:.5;">28.04.2026</span></td>
         <td><span class="badge badge-green">✅ Zugeordnet</span></td>
       </tr>
-      <tr style="background:rgba(48,209,88,0.05)">
+      <tr style="background:rgba(48,209,88,0.05);cursor:pointer;" onclick="showTxDetail('tx2')" title="Klicken für Details">
         <td>28.04.26 23:18</td>
         <td>ANTHROPIC IRELAND LTD<br><span style="font-size:11px;opacity:.4;">N26 Karte</span></td>
         <td style="color:#ff453a;font-variant-numeric:tabular-nums;font-weight:600;">-€15,38<br><span style="font-size:11px;opacity:.5;">($17,65)</span></td>
@@ -2132,5 +2132,68 @@ setInterval(function() {
 window.addEventListener('load', function() {
   setTimeout(updateTicker, 500);
 });
+</script>
+
+<!-- TRANSAKTION DETAIL MODAL -->
+<div id="txDetailModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);z-index:2000;align-items:center;justify-content:center;">
+  <div style="background:#1c1c1e;border:1px solid rgba(255,255,255,0.12);border-radius:16px;width:min(520px,90vw);padding:28px;position:relative;">
+    <button onclick="closeTxDetail()" style="position:absolute;top:16px;right:16px;background:rgba(255,255,255,.08);border:none;color:#fff;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:16px;">✕</button>
+    <div style="font-size:12px;opacity:.4;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">N26 TRANSAKTION</div>
+    <div style="font-size:22px;font-weight:700;margin-bottom:4px;" id="tx-name"></div>
+    <div style="font-size:36px;font-weight:700;font-variant-numeric:tabular-nums;color:#ff453a;margin-bottom:20px;" id="tx-amount"></div>
+    
+    <div style="background:rgba(255,255,255,.04);border-radius:12px;padding:16px;margin-bottom:16px;">
+      <div style="font-size:11px;opacity:.4;text-transform:uppercase;margin-bottom:12px;">DETAILS</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;">
+        <div><span style="opacity:.5;">Datum</span><br><span id="tx-date"></span></div>
+        <div><span style="opacity:.5;">Referenz</span><br><span id="tx-ref" style="font-size:12px;"></span></div>
+        <div><span style="opacity:.5;">N26 Karte</span><br><span>DE25 1001 1001 2226 5950 79</span></div>
+        <div><span style="opacity:.5;">Kurs</span><br><span id="tx-rate"></span></div>
+      </div>
+    </div>
+    
+    <div style="background:rgba(48,209,88,.06);border:1px solid rgba(48,209,88,.2);border-radius:12px;padding:16px;">
+      <div style="font-size:11px;opacity:.5;text-transform:uppercase;margin-bottom:12px;">🔗 ZUGEORDNETE RECHNUNG</div>
+      <div style="font-size:14px;font-weight:600;margin-bottom:4px;" id="tx-invoice-name"></div>
+      <div style="font-size:12px;opacity:.5;margin-bottom:12px;" id="tx-invoice-ref"></div>
+      <div style="display:flex;gap:8px;">
+        <button onclick="closeTxDetail()" style="flex:1;padding:10px;background:#0a84ff;border:none;border-radius:8px;color:#fff;font-size:13px;font-weight:600;cursor:pointer;">✓ OK</button>
+        <button onclick="closeTxDetail()" style="padding:10px 16px;background:rgba(255,255,255,.08);border:none;border-radius:8px;color:#fff;font-size:13px;cursor:pointer;">PDF</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+var TX_DATA = {
+  'tx1': {
+    name: 'ANTHROPIC IRELAND LTD', amount: '-€15,12 ($17,65)',
+    date: '28.04.2026 22:33', ref: 'ANTHROPIC PAYMENT', rate: '1 USD = €0.9259',
+    invName: 'Claude API Rechnung #2747-5867', invRef: 'Stripe · Anthropic Ireland, Limited · 28.04.2026'
+  },
+  'tx2': {
+    name: 'ANTHROPIC IRELAND LTD', amount: '-€15,38 ($17,65)',
+    date: '28.04.2026 23:18', ref: 'ANTHROPIC PAYMENT', rate: '1 USD = €0.9259',
+    invName: 'Claude API Rechnung #2780-0221', invRef: 'Stripe · Anthropic Ireland, Limited · 28.04.2026'
+  }
+};
+
+function showTxDetail(txId) {
+  var tx = TX_DATA[txId];
+  if (!tx) return;
+  document.getElementById('tx-name').textContent = tx.name;
+  document.getElementById('tx-amount').textContent = tx.amount;
+  document.getElementById('tx-date').textContent = tx.date;
+  document.getElementById('tx-ref').textContent = tx.ref;
+  document.getElementById('tx-rate').textContent = tx.rate;
+  document.getElementById('tx-invoice-name').textContent = tx.invName;
+  document.getElementById('tx-invoice-ref').textContent = tx.invRef;
+  var modal = document.getElementById('txDetailModal');
+  modal.style.display = 'flex';
+}
+
+function closeTxDetail() {
+  document.getElementById('txDetailModal').style.display = 'none';
+}
 </script>
 </html>
