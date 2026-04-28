@@ -1188,7 +1188,7 @@ if (sessionStorage.getItem('leolan_auth')) {
       <div style="font-size:12px;opacity:.45;">DE25 1001 1001 2226 5950 79</div>
     </div>
     <div style="margin-left:auto;text-align:right;">
-      <div style="font-size:24px;font-weight:700;font-variant-numeric:tabular-nums;" id="bank-balance">€ 84,88</div>
+      <div style="font-size:24px;font-weight:700;font-variant-numeric:tabular-nums;" id="bank-balance">€ 52,73</div>
       <div style="font-size:11px;opacity:.4;">Stand: 28.04.2026</div>
     </div>
   </div>
@@ -2158,7 +2158,7 @@ window.addEventListener('load', function() {
       <div style="font-size:12px;opacity:.5;margin-bottom:12px;" id="tx-invoice-ref"></div>
       <div style="display:flex;gap:8px;">
         <button onclick="closeTxDetail()" style="flex:1;padding:10px;background:#0a84ff;border:none;border-radius:8px;color:#fff;font-size:13px;font-weight:600;cursor:pointer;">✓ OK</button>
-        <button onclick="closeTxDetail()" style="padding:10px 16px;background:rgba(255,255,255,.08);border:none;border-radius:8px;color:#fff;font-size:13px;cursor:pointer;">PDF</button>
+        <button onclick="openPDF()" style="padding:10px 16px;background:rgba(255,255,255,.08);border:none;border-radius:8px;color:#fff;font-size:13px;cursor:pointer;">📄 PDF</button>
       </div>
     </div>
   </div>
@@ -2169,19 +2169,21 @@ var TX_DATA = {
   'tx1': {
     name: 'ANTHROPIC IRELAND LTD', amount: '-€15,12 ($17,65)',
     date: '28.04.2026 22:33', ref: 'ANTHROPIC PAYMENT', rate: '1 USD = €0.9259',
-    invName: 'Claude API Rechnung #2747-5867', invRef: 'Stripe · Anthropic Ireland, Limited · 28.04.2026'
+    invName: 'Claude API Rechnung #2747-5867', invRef: 'Stripe · Anthropic Ireland, Limited · 28.04.2026',
+    pdfUrl: 'https://pay.stripe.com/invoice/acct_1REyrSBNUnCSzfs9/live_YWNjdF8xUkV5clNCTlVuQ1N6ZnM5LF9VUThaSVNPV0pKeFZvUUtuWFY1Z1JVOW4xbE5aVU1FLDE2Nzk0OTIwMQ0200f9ppaKBB/pdf?s=em'
   },
   'tx2': {
     name: 'ANTHROPIC IRELAND LTD', amount: '-€15,38 ($17,65)',
     date: '28.04.2026 23:18', ref: 'ANTHROPIC PAYMENT', rate: '1 USD = €0.9259',
-    invName: 'Claude API Rechnung #2780-0221', invRef: 'Stripe · Anthropic Ireland, Limited · 28.04.2026'
+    invName: 'Claude API Rechnung #2780-0221', invRef: 'Stripe · Anthropic Ireland, Limited · 28.04.2026',
+    pdfUrl: 'https://pay.stripe.com/invoice/acct_1REyrSBNUnCSzfs9/live_YWNjdF8xUkV5clNCTlVuQ1N6ZnM5LF9VUTlKNnNQalVIMFZXRmdybG9ad1BCZlIwbEI4SFdxLDE2Nzk1MTk2Mg0200zclsNFUD/pdf?s=em'
   }
 };
 
 function showTxDetail(txId) {
   var tx = TX_DATA[txId];
   if (!tx) return;
-  document.getElementById('tx-name').textContent = tx.name;
+  window._currentTxId = txId; document.getElementById('tx-name').textContent = tx.name;
   document.getElementById('tx-amount').textContent = tx.amount;
   document.getElementById('tx-date').textContent = tx.date;
   document.getElementById('tx-ref').textContent = tx.ref;
@@ -2192,6 +2194,10 @@ function showTxDetail(txId) {
   modal.style.display = 'flex';
 }
 
+function openPDF() {
+  var tx = TX_DATA[window._currentTxId];
+  if (tx && tx.pdfUrl) window.open(tx.pdfUrl, '_blank');
+}
 function closeTxDetail() {
   document.getElementById('txDetailModal').style.display = 'none';
 }
