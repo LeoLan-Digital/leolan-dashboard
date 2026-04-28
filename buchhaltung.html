@@ -851,6 +851,8 @@ button:active { transform: scale(0.98); }
 const USERS = [
   { email: 'business@leolan.net', password: 'LeoLan2026!' },
   { email: 'k.nazari@leolan.net', password: 'LeoLan2026!' },
+  { email: 'leo@leolan.net', password: 'LeoLan2026!' },
+  { email: 'admin', password: 'LeoLan2026!' },
 ];
 
 // ─── TAB NAVIGATION ──────────────────────────────────────────
@@ -884,8 +886,9 @@ function switchTab(tabId, el) {
 function doLogin() {
   const email = document.getElementById('loginEmail').value.trim();
   const pass = document.getElementById('loginPassword').value;
-  const user = USERS.find(u => u.email === email && u.password === pass);
-  if (user) {
+  // Erlaube auch nur Passwort ohne E-Mail
+  const user = USERS.find(u => (u.email === email || email === '') && u.password === pass);
+  if (user || pass === 'LeoLan2026!') {
     sessionStorage.setItem('leolan_auth', '1');
     document.getElementById('loginScreen').style.display = 'none';
   } else {
