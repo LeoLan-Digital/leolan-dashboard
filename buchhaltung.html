@@ -1939,4 +1939,62 @@ function switchTab(id, el) {
 function doLogout(){ sessionStorage.removeItem('leolan_auth'); location.reload(); }
 </script>
 
+
+<script>
+// Auto-Matching: N26 Transaktion → Rechnung verbinden
+const VENDOR_MAP = {
+  'horak': 'horak. Rechtsanwälte',
+  'ip services': 'IP Services GmbH',
+  'eyepi': 'IP Services GmbH',
+  'anthropic': 'Anthropic Ireland Ltd',
+  'openai': 'OpenAI',
+  'google': 'Google Ireland Ltd',
+  'ihk': 'IHK Dresden',
+  'gewerbe': 'Gewerbeamt Dresden',
+  'expo': 'Expo (650 Industries)',
+  'n26': 'N26 Bank',
+};
+
+function matchTransaction(tx) {
+  var name = (tx.merchantName || tx.partnerName || '').toLowerCase();
+  var ref = (tx.referenceText || '').toLowerCase();
+  var amount = Math.abs(tx.amount || 0);
+  
+  // Vendor-Match
+  var matchedVendor = null;
+  for (var key in VENDOR_MAP) {
+    if (name.includes(key) || ref.includes(key)) {
+      matchedVendor = VENDOR_MAP[key];
+      break;
+    }
+  }
+  
+  // Rechnungsnummer-Match (RVG, LD-, Rg.)
+  var invMatch = ref.match(/RVG\s*(\d+)|LD-\d{4}-(\d+)|(\d{7,})/i);
+  var invoiceRef = invMatch ? invMatch[0] : null;
+  
+  // Ausgabe finden die passt
+  var matched = state.expenses.find(function(e) {
+    var ev = eurAmt(e);
+    var amtMatch = ev !== null && Math.abs(ev - amount) < 0.10;
+    var vendorMatch = matchedVendor && e.vendor && e.vendor.toLowerCase().includes(matchedVendor.toLowerCase().split(' ')[0]);
+    var refMatch = invoiceRef && (e.desc || '').toLowerCase().includes(invoiceRef.toLowerCase());
+    return e.status === 'offen' && (refMatch || (amtMatch && vendorMatch));
+  });
+  
+  if (matched) {
+    matched.status = 'bezahlt';
+    matched.note = (matched.note || '') + ' | ✅ N26 Auto-Match ' + new Date().toLocaleDateString('de-DE');
+    saveState();
+    renderExpenses();
+    renderOverview();
+    console.log('Auto-Match:', matched.desc);
+    return matched;
+  }
+  return null;
+}
+
+window.N26_MATCH = matchTransaction;
+</script>
+
 </html>
