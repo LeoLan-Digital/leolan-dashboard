@@ -959,49 +959,24 @@ const DEFAULT_CUSTOMERS = [
 // ─────────────────────────────────────────
 function loadState() {
   try {
-    // Check v4 first
-    const s4 = localStorage.getItem('leolan_buch_v4');
-    if (s4) {
-      const parsed = JSON.parse(s4);
-      parsed.expenses = (parsed.expenses||[]).map(e=>({note:'',status:'bezahlt',zahlungsart:'Überweisung',beleg_nr:'',faellig:'', ...e}));
-      parsed.income   = (parsed.income||[]).map(i=>({note:'',recurring:false,sepa:'',faellig:'', ...i}));
-      if (!parsed.categories) parsed.categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
-      if (!parsed.eurOverrides) parsed.eurOverrides = {};
-      if (!parsed.settings) parsed.settings = {};
-      if (!parsed.customers) parsed.customers = DEFAULT_CUSTOMERS.map(c=>({...c}));
-      return parsed;
+    const saved = localStorage.getItem('leolan_buch_v5');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (parsed.version >= DATA_VERSION) {
+        return { ...DEFAULT_STATE, ...parsed };
+      }
     }
-    // Migrate from v3
-    const s3 = localStorage.getItem('leolan_buch_v3');
-    if (s3) {
-      const old = JSON.parse(s3);
-      console.log('Migriere von v3 → v4...');
-      localStorage.removeItem('leolan_buch_v3');
-      return {
-        expenses: INITIAL_EXPENSES.map(e=>({...e})),
-        income:   INITIAL_INCOME.map(i=>({...i})),
-        categories: old.categories || JSON.parse(JSON.stringify(DEFAULT_CATEGORIES)),
-        eurOverrides: old.eurOverrides || {},
-        settings: old.settings || {},
-        customers: DEFAULT_CUSTOMERS.map(c=>({...c})),
-        version: DATA_VERSION
-      };
-    }
-  } catch(e) { console.warn('State load error', e); }
-  return {
-    expenses: INITIAL_EXPENSES.map(e=>({...e})),
-    income:   INITIAL_INCOME.map(i=>({...i})),
-    categories: JSON.parse(JSON.stringify(DEFAULT_CATEGORIES)),
-    eurOverrides: {},
-    settings: {},
-    customers: DEFAULT_CUSTOMERS.map(c=>({...c})),
-    version: DATA_VERSION
-  };
+  } catch(e) {}
+  // Neue Instanz → DEFAULT_STATE laden
+  localStorage.removeItem('leolan_buch_v5');
+  localStorage.removeItem('leolan_buch_v4');
+  localStorage.removeItem('leolan_buch_v3');
+  return { ...DEFAULT_STATE };
 }
 
 function saveState() {
   state.version = DATA_VERSION;
-  localStorage.setItem('leolan_buch_v4', JSON.stringify(state));
+  localStorage.setItem('leolan_buch_v5', JSON.stringify(state));
 }
 
 let state = loadState();
