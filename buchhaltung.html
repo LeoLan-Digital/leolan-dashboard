@@ -1188,7 +1188,7 @@ if (sessionStorage.getItem('leolan_auth')) {
       <div style="font-size:12px;opacity:.45;">DE25 1001 1001 2226 5950 79</div>
     </div>
     <div style="margin-left:auto;text-align:right;">
-      <div style="font-size:24px;font-weight:700;font-variant-numeric:tabular-nums;" id="bank-balance">€ 237,03</div>
+      <div style="font-size:24px;font-weight:700;font-variant-numeric:tabular-nums;" id="bank-balance">€ 205,70</div>
       <div style="font-size:11px;opacity:.4;">Stand: 28.04.2026</div>
     </div>
   </div>
@@ -2118,7 +2118,7 @@ var N26_ACCESS_TOKEN = null;
 
 async function refreshN26Balance() {
   try {
-    var r = await fetch('https://n8n.leolan.net/webhook/n26-balance');
+    var r = await fetch('http://localhost:8765');
     if (r.ok) {
       var d = await r.json();
       var bal = d.availableBalance || 0;
