@@ -7,6 +7,23 @@
   <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>LeoLan Digital — Buchhaltung 2026</title>
+
+<script>
+// Steuerberater Read-Only Modus
+function checkReadOnly() {
+  var email = sessionStorage.getItem('leolan_user');
+  if (email && email.includes('steuerberater')) {
+    document.querySelectorAll('button.btn-red, button[onclick*="edit"], button[onclick*="delete"], button[onclick*="openModal"], button[onclick*="openEdit"], .btn-primary').forEach(function(b) {
+      if (!b.id || b.id !== 'loginBtn') b.style.display = 'none';
+    });
+    var banner = document.createElement('div');
+    banner.innerHTML = '👁️ Lesezugriff (Steuerberater) — keine Bearbeitung möglich';
+    banner.style.cssText = 'background:rgba(255,214,10,0.1);border-bottom:1px solid rgba(255,214,10,0.2);color:#ffd60a;padding:8px 40px;font-size:13px;text-align:center;';
+    document.body.insertBefore(banner, document.body.firstChild);
+  }
+}
+</script>
+
 <div id="logout-container"><button onclick="doLogout()" style="position:fixed;top:10px;right:16px;z-index:500;background:rgba(255,69,58,0.15);border:1px solid rgba(255,69,58,0.3);color:#ff453a;padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:-apple-system,sans-serif;">↩ Abmelden</button></div>
 <style>
   /* ════════════════════════════════════════════════════════
