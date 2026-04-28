@@ -1171,12 +1171,59 @@ if (sessionStorage.getItem('leolan_auth')) {
 
   <!-- ════════════════════════════════ TAB: ZAHLUNGEN (Placeholder) -->
   <div id="tab-payments" class="tab-content">
-    <div class="placeholder-page">
-      <div class="ph-icon">💳</div>
-      <h3>Zahlungsübersicht</h3>
-      <p>Hier werden alle Ein- und Auszahlungen mit Bankabgleich angezeigt.<br>Diese Funktion ist in Vorbereitung.</p>
+  <div class="page-header">
+    <div class="page-title">💳 Zahlungen & Bankabgleich</div>
+    <div class="page-actions">
+      <button class="btn btn-outline btn-sm" onclick="syncN26()">🔄 N26 Sync</button>
+      <button class="btn btn-primary btn-sm" onclick="openAddPaymentModal()">+ Zahlung erfassen</button>
     </div>
   </div>
+
+  <!-- N26 Status -->
+  <div style="background:rgba(10,132,255,0.08);border:1px solid rgba(10,132,255,0.2);border-radius:12px;padding:16px;margin-bottom:16px;display:flex;align-items:center;gap:12px;">
+    <div style="background:#0a84ff;color:#fff;padding:6px 14px;border-radius:8px;font-weight:700;font-size:14px;">N26</div>
+    <div>
+      <div style="font-weight:600;font-size:14px;">N26 Business Standard</div>
+      <div style="font-size:12px;opacity:.45;">DE25 1001 1001 2226 5950 79</div>
+    </div>
+    <div style="margin-left:auto;text-align:right;">
+      <div style="font-size:24px;font-weight:700;font-variant-numeric:tabular-nums;" id="bank-balance">€ 84,88</div>
+      <div style="font-size:11px;opacity:.4;">Stand: 28.04.2026</div>
+    </div>
+  </div>
+
+  <!-- Offene Posten zum Abgleichen -->
+  <div class="section-card" style="margin-bottom:16px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <div style="font-size:13px;font-weight:600;opacity:.5;text-transform:uppercase;letter-spacing:.08em;">🔴 Offene Rechnungen</div>
+    </div>
+    <table>
+      <tr><th>Fällig</th><th>Beschreibung</th><th>Anbieter</th><th>Betrag</th><th>Aktion</th></tr>
+      <tr style="background:rgba(255,69,58,0.05)">
+        <td>Sofort</td>
+        <td>Markenüberwachung RVG 2600590</td>
+        <td style="opacity:.6">IP Services GmbH</td>
+        <td style="color:#ff453a;font-weight:600;">€71,40</td>
+        <td><button class="btn btn-outline btn-sm" onclick="markPaid('m2')" style="font-size:11px;padding:4px 10px;">✓ Als bezahlt</button></td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- Manuelle Transaktion -->
+  <div class="section-card">
+    <div style="font-size:13px;font-weight:600;opacity:.5;text-transform:uppercase;letter-spacing:.08em;margin-bottom:16px;">➕ Zahlung manuell erfassen</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px;">
+      <div><label>Datum</label><input type="date" id="pay-date" style="margin-top:4px;"></div>
+      <div><label>Betrag (€)</label><input type="number" id="pay-amount" placeholder="71.40" step="0.01" style="margin-top:4px;"></div>
+      <div><label>Empfänger</label><input type="text" id="pay-recipient" placeholder="IP Services GmbH" style="margin-top:4px;"></div>
+    </div>
+    <div style="margin-bottom:12px;">
+      <label>Verwendungszweck</label>
+      <input type="text" id="pay-ref" placeholder="z.B. RVG 2600590 oder LD-2026-0001" style="margin-top:4px;">
+    </div>
+    <button class="btn btn-primary" onclick="addPaymentAndMatch()">💳 Zahlung erfassen + automatisch zuordnen</button>
+  </div>
+</div>
 
   <!-- ════════════════════════════════ TAB: RECHNUNGEN -->
   <div id="tab-invoices" class="tab-content">
