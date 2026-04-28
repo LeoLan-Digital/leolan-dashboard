@@ -697,5 +697,36 @@ function showCeoTab(id, btn) {
 }
 </script>
 
+
+<script>
+// Filtert E-Mail-Daten beim Laden
+const IRRELEVANT_SENDERS = ['shopify', 'fiverr', 'allnet', 'marriott', 'barclays', 'amazon', 'paypal', 'newsletter', 'noreply@', 'marketing@', 'info@email'];
+
+function filterEmailData(emails) {
+  if (!Array.isArray(emails)) return emails;
+  return emails.filter(email => {
+    const from = (email.from || email.sender || '').toLowerCase();
+    return !IRRELEVANT_SENDERS.some(s => from.includes(s));
+  });
+}
+
+// Monkey-patch: Wenn Dashboard-Daten geladen werden, filtere E-Mails
+const _origFetch = window.fetch;
+window.fetch = function(url, opts) {
+  return _origFetch(url, opts).then(async res => {
+    if (url && url.includes('dashboard-data')) {
+      const clone = res.clone();
+      return clone.json().then(data => {
+        if (data && data.emails) {
+          data.emails = filterEmailData(data.emails);
+        }
+        return new Response(JSON.stringify(data), { status: res.status, headers: res.headers });
+      }).catch(() => res);
+    }
+    return res;
+  });
+};
+</script>
+
 </body>
 </html>
