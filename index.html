@@ -107,6 +107,17 @@
   @media(max-width:768px) { .kpi-grid { grid-template-columns:1fr 1fr; } .grid-3,.grid-2,.grid-2b { grid-template-columns:1fr; } .page { padding:16px; } }
 @keyframes pulse-red { 0%,100%{box-shadow:0 0 0 0 rgba(255,69,58,0.4)} 50%{box-shadow:0 0 0 4px rgba(255,69,58,0)} }
 </style>
+
+<style>
+.tab-nav { display:flex; gap:4px; padding:12px 40px; background:#1c1c1e; border-bottom:1px solid rgba(255,255,255,0.08); position:sticky; top:52px; z-index:50; overflow-x:auto; }
+.tab-nav-btn { padding:8px 16px; border:none; border-radius:8px; background:rgba(255,255,255,0.07); color:rgba(255,255,255,0.6); font-size:13px; font-weight:500; cursor:pointer; white-space:nowrap; font-family:-apple-system,sans-serif; transition:all .15s; }
+.tab-nav-btn:hover { background:rgba(255,255,255,0.12); color:#fff; }
+.tab-nav-btn.active { background:#0a84ff; color:#fff; }
+.ceo-tab { display:none; }
+.ceo-tab.active { display:block; animation:tabFade .2s ease; }
+@keyframes tabFade { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
+</style>
+
 </head>
 <body>
 
@@ -115,96 +126,119 @@
   <div class="nav-time"><span class="status-dot"></span>Live · Stand 28.04.2026 19:00</div>
 </nav>
 
-<div class="page">
+<div class="tab-nav">
+  <button class="tab-nav-btn active" onclick="showCeoTab('overview',this)">📊 Übersicht</button>
+  <button class="tab-nav-btn" onclick="showCeoTab('finanzen',this)">💰 Finanzen</button>
+  <button class="tab-nav-btn" onclick="showCeoTab('kunden',this)">👥 Kunden</button>
+  <button class="tab-nav-btn" onclick="showCeoTab('marketing',this)">📣 Marketing</button>
+  <button class="tab-nav-btn" onclick="showCeoTab('system',this)">⚙️ System</button>
+</div>
 
-  
-  <!-- ZEITFILTER -->
-  <div style="margin-bottom:20px;">
-    <div class="card">
-      <div class="card-title">🗓️ Zeitraum</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;" id="filters">
-        <button class="filter-btn active" onclick="setFilter('today')">Heute</button>
-        <button class="filter-btn" onclick="setFilter('week')">Woche</button>
-        <button class="filter-btn active2" onclick="setFilter('april')">April 2026</button>
-        <button class="filter-btn" onclick="setFilter('all')">Alles</button>
+<div class="page" style="padding-top:16px;">
+
+  <!-- ══ TAB: ÜBERSICHT ══════════════════════════════════════════════════════ -->
+  <div id="ceo-overview" class="ceo-tab active">
+
+    <!-- ALERTS -->
+    <div class="alerts">
+      <div class="alert alert-red">⚠️ <strong>IP Services RVG 2600590:</strong> €71,40 noch offen — Überweisung ausstehend! IBAN DE93 2505 0180 0910 3038 51</div>
+      <div class="alert alert-yellow">⚠️ <strong>IP Services:</strong> €71,40 doppelt bezahlt (falsche Rg-Nr) → morgen anrufen &amp; zurückfordern. Tel: 0511-357356-22</div>
+      <div class="alert alert-red">⚠️ <strong>Squarespace:</strong> 3x Domain-Zahlung fehlgeschlagen (01./06./11.04.) — Domains drohen abzulaufen! → squarespace.com öffnen &amp; Karte aktualisieren</div>
+      <div class="alert alert-blue">🍎 <strong>App Store:</strong> Build 63 v2.0.0 aktuell "In Prüfung" bei Apple</div>
+      <div class="alert alert-yellow">💸 <strong>Cashflow negativ:</strong> Ausgaben ($5.731) übersteigen Einnahmen (€0) — Anthropic API-Kosten optimieren!</div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="kpi-grid">
+      <div class="kpi">
+        <div class="kpi-label">Aktive Kunden</div>
+        <div class="kpi-value c-blue">2</div>
+        <div class="kpi-sub">K892834 + K715397</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Einnahmen April</div>
+        <div class="kpi-value c-green">€0</div>
+        <div class="kpi-sub">Noch kein zahlender Kunde</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Ausgaben April</div>
+        <div class="kpi-value c-red">$5.731</div>
+        <div class="kpi-sub">Anthropic $5.615 + mehr</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Cashflow</div>
+        <div class="kpi-value c-red">-$5.731</div>
+        <div class="kpi-sub">Negativ — optimieren!</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">MRR-Potential</div>
+        <div class="kpi-value c-yellow">€349+</div>
+        <div class="kpi-sub">Bei echten Kunden</div>
       </div>
     </div>
-  </div>
 
-  <!-- WACHSTUMS-CHART -->
-  <div class="card" style="margin-bottom:20px;">
-    <div class="card-title">📈 Wachstum & Cashflow — April 2026</div>
-    <div class="card-sub" id="chart-label">Wochenweise: Einnahmen vs. Ausgaben</div>
-    <div style="position:relative;height:260px;margin-top:16px;">
-      <canvas id="growthChart"></canvas>
-    </div>
-    <div style="display:flex;gap:24px;margin-top:12px;font-size:12px;">
-      <div style="display:flex;align-items:center;gap:6px;"><div style="width:12px;height:3px;background:#34c759;border-radius:2px;"></div>Einnahmen (€)</div>
-      <div style="display:flex;align-items:center;gap:6px;"><div style="width:12px;height:3px;background:#ff453a;border-radius:2px;"></div>Ausgaben ($)</div>
-      <div style="display:flex;align-items:center;gap:6px;"><div style="width:12px;height:3px;background:#2997ff;border-radius:2px;"></div>Kunden</div>
-    </div>
-  </div>
-
-  <!-- EXPENSE CHART -->
-  <div class="grid-2b" style="margin-bottom:20px;">
-    <div class="card">
-      <div class="card-title">🍩 Ausgaben-Verteilung</div>
-      <div style="position:relative;height:200px;margin-top:12px;">
-        <canvas id="expenseDonut"></canvas>
+    <!-- WACHSTUMS-CHART -->
+    <div class="card" style="margin-bottom:20px;">
+      <div class="card-title">📈 Wachstum &amp; Cashflow — April 2026</div>
+      <div class="card-sub" id="chart-label">Wochenweise: Einnahmen vs. Ausgaben</div>
+      <div style="position:relative;height:260px;margin-top:16px;">
+        <canvas id="growthChart"></canvas>
+      </div>
+      <div style="display:flex;gap:24px;margin-top:12px;font-size:12px;">
+        <div style="display:flex;align-items:center;gap:6px;"><div style="width:12px;height:3px;background:#34c759;border-radius:2px;"></div>Einnahmen (€)</div>
+        <div style="display:flex;align-items:center;gap:6px;"><div style="width:12px;height:3px;background:#ff453a;border-radius:2px;"></div>Ausgaben ($)</div>
+        <div style="display:flex;align-items:center;gap:6px;"><div style="width:12px;height:3px;background:#2997ff;border-radius:2px;"></div>Kunden</div>
       </div>
     </div>
-    <div class="card">
-      <div class="card-title">📊 KPI Trend</div>
-      <div class="card-sub" id="kpi-trend-label">Cashflow-Verlauf</div>
-      <div style="position:relative;height:200px;margin-top:12px;">
-        <canvas id="cashflowBar"></canvas>
+
+    <!-- NÄCHSTE SCHRITTE -->
+    <div class="card" style="margin-bottom:20px;">
+      <div class="card-title">🏆 Nächste Schritte</div>
+      <div class="card-sub">Prioritäten</div>
+      <div class="status-row">
+        <span class="status-name">Squarespace Karte</span>
+        <span class="status-val"><span class="badge badge-red">DRINGEND</span></span>
+      </div>
+      <div class="status-row">
+        <span class="status-name">Echten Kunden gewinnen</span>
+        <span class="status-val"><span class="badge badge-yellow">TOP 1</span></span>
+      </div>
+      <div class="status-row">
+        <span class="status-name">Anthropic Kosten senken</span>
+        <span class="status-val"><span class="badge badge-yellow">TOP 2</span></span>
+      </div>
+      <div class="status-row">
+        <span class="status-name">App Store Approval</span>
+        <span class="status-val"><span class="badge badge-blue">In Review</span></span>
+      </div>
+      <div class="status-row">
+        <span class="status-name">Social Media Posts</span>
+        <span class="status-val"><span class="badge badge-gray">Ausstehend</span></span>
       </div>
     </div>
-  </div>
-<!-- ALERTS -->
-  <div class="alerts">
-    ⚠️ <strong>IP Services RVG 2600590:</strong> €71,40 noch offen — Überweisung ausstehend! IBAN DE93 2505 0180 0910 3038 51</div>
-  <div class="alert alert-yellow">⚠️ <strong>IP Services:</strong> €71,40 doppelt bezahlt (falsche Rg-Nr) → morgen anrufen & zurückfordern. Tel: 0511-357356-22</div>
-  <div class="alert alert-red">⚠️ <strong>Squarespace:</strong></strong> 3x Domain-Zahlung fehlgeschlagen (01./06./11.04.) — Domains drohen abzulaufen! → squarespace.com öffnen &amp; Karte aktualisieren</div>
-    <div class="alert alert-blue">🍎 <strong>App Store:</strong> Build 63 v2.0.0 aktuell "In Prüfung" bei Apple</div>
-    <div class="alert alert-yellow">💸 <strong>Cashflow negativ:</strong> Ausgaben ($5.731) übersteigen Einnahmen (€0) — Anthropic API-Kosten optimieren!</div>
+
   </div>
 
-  <!-- KPIs -->
-  <div class="kpi-grid">
-    <div class="kpi">
-      <div class="kpi-label">Aktive Kunden</div>
-      <div class="kpi-value c-blue">2</div>
-      <div class="kpi-sub">K892834 + K715397</div>
-    </div>
-    <div class="kpi">
-      <div class="kpi-label">Einnahmen April</div>
-      <div class="kpi-value c-green">€0</div>
-      <div class="kpi-sub">Noch kein zahlender Kunde</div>
-    </div>
-    <div class="kpi">
-      <div class="kpi-label">Ausgaben April</div>
-      <div class="kpi-value c-red">$5.731</div>
-      <div class="kpi-sub">Anthropic $5.615 + mehr</div>
-    </div>
-    <div class="kpi">
-      <div class="kpi-label">Cashflow</div>
-      <div class="kpi-value c-red">-$5.731</div>
-      <div class="kpi-sub">Negativ — optimieren!</div>
-    </div>
-    <div class="kpi">
-      <div class="kpi-label">MRR-Potential</div>
-      <div class="kpi-value c-yellow">€349+</div>
-      <div class="kpi-sub">Bei echten Kunden</div>
-    </div>
-  </div>
+  <!-- ══ TAB: FINANZEN ══════════════════════════════════════════════════════ -->
+  <div id="ceo-finanzen" class="ceo-tab">
 
-  <!-- ROW 1: Ausgaben + Produkt Status -->
-  <div class="grid-2">
-    <div class="card">
+    <!-- ZEITFILTER -->
+    <div style="margin-bottom:20px;">
+      <div class="card">
+        <div class="card-title">🗓️ Zeitraum</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;" id="filters">
+          <button class="filter-btn active" onclick="setFilter('today')">Heute</button>
+          <button class="filter-btn" onclick="setFilter('week')">Woche</button>
+          <button class="filter-btn active2" onclick="setFilter('april')">April 2026</button>
+          <button class="filter-btn" onclick="setFilter('all')">Alles</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- AUSGABEN-BREAKDOWN -->
+    <div class="card" style="margin-bottom:20px;">
       <div class="card-title">📉 Ausgaben April 2026</div>
       <div class="card-sub">Alle API- &amp; Plattform-Kosten</div>
-      
       <div class="expense-item">
         <div class="expense-name">Anthropic (Claude API)</div>
         <div class="bar-track"><div class="bar-fill" style="width:98%;background:#ff453a"></div></div>
@@ -236,10 +270,165 @@
       </div>
     </div>
 
-    <div class="card">
+    <!-- CASHFLOW-CHART + AUSGABEN-DONUT -->
+    <div class="grid-2b" style="margin-bottom:20px;">
+      <div class="card">
+        <div class="card-title">🍩 Ausgaben-Verteilung</div>
+        <div style="position:relative;height:200px;margin-top:12px;">
+          <canvas id="expenseDonut"></canvas>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">📊 KPI Trend</div>
+        <div class="card-sub" id="kpi-trend-label">Cashflow-Verlauf</div>
+        <div style="position:relative;height:200px;margin-top:12px;">
+          <canvas id="cashflowBar"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- KUNDEN-RECHNUNGEN -->
+    <div class="card" style="margin-bottom:20px;">
+      <div class="card-title">📋 Kunden-Rechnungen April</div>
+      <div class="card-sub">LD-2026-0087 bis LD-2026-0094 · Gesamt: €0</div>
+      <table>
+        <tr><th>Rechnung</th><th>Datum</th><th>Status</th></tr>
+        <tr><td>LD-2026-0094</td><td>21.04.</td><td><span class="badge badge-green">✓ Gesendet</span></td></tr>
+        <tr><td>LD-2026-0093</td><td>21.04.</td><td><span class="badge badge-green">✓ Gesendet</span></td></tr>
+        <tr><td>LD-2026-0092</td><td>21.04.</td><td><span class="badge badge-green">✓ Gesendet</span></td></tr>
+        <tr><td>LD-2026-0091</td><td>21.04.</td><td><span class="badge badge-green">✓ Gesendet</span></td></tr>
+        <tr><td>LD-2026-0090</td><td>21.04.</td><td><span class="badge badge-green">✓ Gesendet</span></td></tr>
+        <tr><td>LD-2026-0089</td><td>18.04.</td><td><span class="badge badge-green">✓ Gesendet</span></td></tr>
+        <tr><td>LD-2026-0088</td><td>18.04.</td><td><span class="badge badge-green">✓ Gesendet</span></td></tr>
+        <tr><td>LD-2026-0087</td><td>18.04.</td><td><span class="badge badge-green">✓ Gesendet</span></td></tr>
+      </table>
+    </div>
+
+  </div>
+
+  <!-- ══ TAB: KUNDEN ════════════════════════════════════════════════════════ -->
+  <div id="ceo-kunden" class="ceo-tab">
+
+    <div class="card" style="margin-bottom:20px;">
+      <div class="card-title">👥 Kunden-Übersicht</div>
+      <div class="card-sub">2 aktive Accounts</div>
+      <table>
+        <tr><th>Name</th><th>Code</th><th>Paket</th><th>Status</th></tr>
+        <tr>
+          <td>LeoLan (Test)</td>
+          <td style="color:var(--muted)">K892834</td>
+          <td>Core</td>
+          <td><span class="badge badge-green">Aktiv</span></td>
+        </tr>
+        <tr>
+          <td>Apple Review</td>
+          <td style="color:var(--muted)">K715397</td>
+          <td>Pro</td>
+          <td><span class="badge badge-blue">Demo</span></td>
+        </tr>
+      </table>
+      <div class="btn-row">
+        <button class="btn btn-primary">+ Neuer Kunde</button>
+        <button class="btn btn-ghost" onclick="location.reload()">⟳ Refresh</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══ TAB: MARKETING ════════════════════════════════════════════════════ -->
+  <div id="ceo-marketing" class="ceo-tab">
+
+    <!-- STATIC: Marketing & Social Media Übersicht -->
+    <div class="card" style="margin-bottom:20px;">
+      <div class="card-title">📣 Marketing &amp; Social Media</div>
+      <div class="card-sub">@leo_lan.de · Leo-Lan</div>
+      <div class="social-row">
+        <div class="social-name">Instagram @leo_lan.de</div>
+        <div class="social-val">64 Follower</div>
+      </div>
+      <div class="social-row">
+        <div class="social-name">Facebook Leo-Lan</div>
+        <div class="social-val">48 Follower</div>
+      </div>
+      <div class="social-row">
+        <div class="social-name">WhatsApp Business</div>
+        <div class="social-val c-green">+49 15678 483700</div>
+      </div>
+      <div class="social-row">
+        <div class="social-name">Google Business</div>
+        <div class="social-val c-green">Live ✓</div>
+      </div>
+      <div class="social-row">
+        <div class="social-name">Letzter Post</div>
+        <div class="social-val c-red">Ausstehend ⚠️</div>
+      </div>
+    </div>
+
+    <!-- LIVE: Instagram + Facebook + WhatsApp -->
+    <div class="grid-3" style="margin-bottom:20px;">
+      <div class="card">
+        <div class="card-title">📸 Instagram @leolan_digital</div>
+        <div class="card-sub">Live · Performance &amp; Aktivität</div>
+        <div class="status-row"><span class="status-name">Follower</span><span class="status-val" data-key="instagram.followers"><span class="badge badge-gray">Lade…</span></span></div>
+        <div class="status-row"><span class="status-name">Posts heute</span><span class="status-val" data-key="instagram.postsToday"><span class="badge badge-gray">Lade…</span></span></div>
+        <div class="status-row"><span class="status-name">Likes heute</span><span class="status-val" data-key="instagram.likesToday"><span class="badge badge-gray">Lade…</span></span></div>
+        <div class="status-row"><span class="status-name">Story aktiv</span><span class="status-val" data-key="instagram.storyActive"><span class="badge badge-gray">Lade…</span></span></div>
+      </div>
+      <div class="card">
+        <div class="card-title">📘 Facebook Leo-Lan</div>
+        <div class="card-sub">Live · Page-Werte</div>
+        <div class="status-row"><span class="status-name">Page Likes</span><span class="status-val" data-key="facebook.pageLikes"><span class="badge badge-gray">Lade…</span></span></div>
+        <div class="status-row"><span class="status-name">Posts heute</span><span class="status-val" data-key="facebook.postsToday"><span class="badge badge-gray">Lade…</span></span></div>
+        <div class="status-row"><span class="status-name">Reichweite</span><span class="status-val" data-key="facebook.reach"><span class="badge badge-gray">Lade…</span></span></div>
+      </div>
+      <div class="card">
+        <div class="card-title">💬 WhatsApp Bot</div>
+        <div class="card-sub">Live · Nutzung &amp; Gutscheine</div>
+        <div class="status-row"><span class="status-name">Gespräche heute</span><span class="status-val" data-key="whatsapp.conversationsToday"><span class="badge badge-gray">Lade…</span></span></div>
+        <div class="status-row"><span class="status-name">Aktive Nutzer</span><span class="status-val" data-key="whatsapp.activeUsers"><span class="badge badge-gray">Lade…</span></span></div>
+        <div class="status-row"><span class="status-name">Stempel vergeben</span><span class="status-val" data-key="whatsapp.stampsIssued"><span class="badge badge-gray">Lade…</span></span></div>
+        <div class="status-row"><span class="status-name">Aktive Gutscheine</span><span class="status-val" data-key="whatsapp.activeCoupons"><span class="badge badge-gray">Lade…</span></span></div>
+      </div>
+    </div>
+
+    <!-- LIVE: Google Reviews + Emails -->
+    <div class="grid-2b" style="margin-bottom:20px;">
+      <div class="card">
+        <div class="card-title">⭐ Google Reviews</div>
+        <div class="card-sub">Live · Bewertungsübersicht</div>
+        <div class="status-row"><span class="status-name">Durchschnitt</span><span class="status-val" data-key="reviews.average"><span class="badge badge-gray">Lade…</span></span></div>
+        <div class="status-row"><span class="status-name">Neue Reviews heute</span><span class="status-val" data-key="reviews.newReviews"><span class="badge badge-gray">Lade…</span></span></div>
+        <div class="status-row"><span class="status-name">Unbeantwortete</span><span class="status-val" data-key="reviews.unanswered"><span class="badge badge-gray">Lade…</span></span></div>
+      </div>
+      <div class="card">
+        <div class="card-title">📧 E-Mails (ungelesen)</div>
+        <div class="card-sub">Live · Postfächer</div>
+        <div class="status-row"><span class="status-name">business@leolan.net</span><span class="status-val" data-key="emails.business"><span class="badge badge-gray">Lade…</span></span></div>
+        <div class="status-row"><span class="status-name">k.nazari@leolan.net</span><span class="status-val" data-key="emails.knazari"><span class="badge badge-gray">Lade…</span></span></div>
+        <div class="status-row"><span class="status-name">knazari2604@gmail.com</span><span class="status-val" data-key="emails.gmail"><span class="badge badge-gray">Lade…</span></span></div>
+      </div>
+    </div>
+
+    <!-- LIVE: Automationen -->
+    <div class="card" style="margin-bottom:20px;">
+      <div class="card-title">🤖 Automationen Status</div>
+      <div class="card-sub">System- und Posting-Automationen · Live</div>
+      <div class="status-row"><span class="status-name">Instagram Feed Post · täglich 10:00</span><span class="status-val" data-key="automation.instagramFeed"><span class="badge badge-green">✅ Aktiv</span></span></div>
+      <div class="status-row"><span class="status-name">Instagram Story · täglich 18:00</span><span class="status-val" data-key="automation.instagramStory"><span class="badge badge-green">✅ Aktiv</span></span></div>
+      <div class="status-row"><span class="status-name">Facebook Post · täglich 11:00</span><span class="status-val" data-key="automation.facebookPost"><span class="badge badge-green">✅ Aktiv</span></span></div>
+      <div class="status-row"><span class="status-name">Bewertungsmanagement · alle 6h</span><span class="status-val" data-key="automation.reviewManagement"><span class="badge badge-green">✅ Aktiv</span></span></div>
+      <div class="status-row"><span class="status-name">WhatsApp Bot · 24/7</span><span class="status-val" data-key="automation.whatsappBot"><span class="badge badge-green">✅ Aktiv</span></span></div>
+    </div>
+
+  </div>
+
+  <!-- ══ TAB: SYSTEM ════════════════════════════════════════════════════════ -->
+  <div id="ceo-system" class="ceo-tab">
+
+    <!-- PRODUKT & SYSTEM STATUS -->
+    <div class="card" style="margin-bottom:20px;">
       <div class="card-title">📱 Produkt &amp; System Status</div>
       <div class="card-sub">Live-Übersicht</div>
-      
       <div class="status-row">
         <span class="status-name">App Store (iOS)</span>
         <span class="status-val"><span style="width:8px;height:8px;border-radius:50%;background:#ffd60a;display:inline-block;margin-right:6px;"></span>In Prüfung Build 63</span>
@@ -269,80 +458,10 @@
         <span class="status-val c-green"><span style="width:8px;height:8px;border-radius:50%;background:#30d158;display:inline-block;margin-right:6px;"></span>Aktiv</span>
       </div>
     </div>
-  </div>
 
-  <!-- ROW 2: Kunden + Rechnungen -->
-  <div class="grid-2b">
-    <div class="card">
-      <div class="card-title">👥 Kunden-Übersicht</div>
-      <div class="card-sub">2 aktive Accounts</div>
-      <table>
-        <tr><th>Name</th><th>Code</th><th>Paket</th><th>Status</th></tr>
-        <tr>
-          <td>LeoLan (Test)</td>
-          <td style="color:var(--muted)">K892834</td>
-          <td>Core</td>
-          <td><span class="badge badge-green">Aktiv</span></td>
-        </tr>
-        <tr>
-          <td>Apple Review</td>
-          <td style="color:var(--muted)">K715397</td>
-          <td>Pro</td>
-          <td><span class="badge badge-blue">Demo</span></td>
-        </tr>
-      </table>
-      <div class="btn-row">
-        <button class="btn btn-primary">+ Neuer Kunde</button>
-        <button class="btn btn-ghost" onclick="location.reload()">⟳ Refresh</button>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-title">📋 Kunden-Rechnungen April</div>
-      <div class="card-sub">LD-2026-0087 bis LD-2026-0094 · Gesamt: €0</div>
-      <table>
-        <tr><th>Rechnung</th><th>Datum</th><th>Status</th></tr>
-        <tr><td>LD-2026-0094</td><td>21.04.</td><td><span class="badge badge-green">✓ Gesendet</span></td></tr>
-        <tr><td>LD-2026-0093</td><td>21.04.</td><td><span class="badge badge-green">✓ Gesendet</span></td></tr>
-        <tr><td>LD-2026-0092</td><td>21.04.</td><td><span class="badge badge-green">✓ Gesendet</span></td></tr>
-        <tr><td>LD-2026-0091</td><td>21.04.</td><td><span class="badge badge-green">✓ Gesendet</span></td></tr>
-        <tr><td>LD-2026-0090</td><td>21.04.</td><td><span class="badge badge-green">✓ Gesendet</span></td></tr>
-        <tr><td>LD-2026-0089</td><td>18.04.</td><td><span class="badge badge-green">✓ Gesendet</span></td></tr>
-        <tr><td>LD-2026-0088</td><td>18.04.</td><td><span class="badge badge-green">✓ Gesendet</span></td></tr>
-        <tr><td>LD-2026-0087</td><td>18.04.</td><td><span class="badge badge-green">✓ Gesendet</span></td></tr>
-      </table>
-    </div>
-  </div>
-
-  <!-- ROW 3: Marketing + Gründung -->
-  <div class="grid-3">
-    <div class="card">
-      <div class="card-title">📣 Marketing & Social Media</div>
-      <div class="card-sub">@leo_lan.de · Leo-Lan</div>
-      <div class="social-row">
-        <div class="social-name">Instagram @leo_lan.de</div>
-        <div class="social-val">64 Follower</div>
-      </div>
-      <div class="social-row">
-        <div class="social-name">Facebook Leo-Lan</div>
-        <div class="social-val">48 Follower</div>
-      </div>
-      <div class="social-row">
-        <div class="social-name">WhatsApp Business</div>
-        <div class="social-val c-green">+49 15678 483700</div>
-      </div>
-      <div class="social-row">
-        <div class="social-name">Google Business</div>
-        <div class="social-val c-green">Live ✓</div>
-      </div>
-      <div class="social-row">
-        <div class="social-name">Letzter Post</div>
-        <div class="social-val c-red">Ausstehend ⚠️</div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-title">⚖️ Gründung & Behörden</div>
+    <!-- GRÜNDUNG & BEHÖRDEN -->
+    <div class="card" style="margin-bottom:20px;">
+      <div class="card-title">⚖️ Gründung &amp; Behörden</div>
       <div class="card-sub">LeoLan Digital — aktiv seit 20.04.2026</div>
       <div class="status-row">
         <span class="status-name">Gewerbe</span>
@@ -366,88 +485,6 @@
       </div>
     </div>
 
-    <div class="card">
-      <div class="card-title">🏆 Nächste Schritte</div>
-      <div class="card-sub">Prioritäten</div>
-      <div class="status-row">
-        <span class="status-name">Squarespace Karte</span>
-        <span class="status-val"><span class="badge badge-red">DRINGEND</span></span>
-      </div>
-      <div class="status-row">
-        <span class="status-name">Echten Kunden gewinnen</span>
-        <span class="status-val"><span class="badge badge-yellow">TOP 1</span></span>
-      </div>
-      <div class="status-row">
-        <span class="status-name">Anthropic Kosten senken</span>
-        <span class="status-val"><span class="badge badge-yellow">TOP 2</span></span>
-      </div>
-      <div class="status-row">
-        <span class="status-name">App Store Approval</span>
-        <span class="status-val"><span class="badge badge-blue">In Review</span></span>
-      </div>
-      <div class="status-row">
-        <span class="status-name">Social Media Posts</span>
-        <span class="status-val"><span class="badge badge-gray">Ausstehend</span></span>
-      </div>
-    </div>
-  </div>
-
-  <!-- ── LIVE DATA SEKTIONEN ───────────────────────────────────────────────── -->
-
-  <!-- Instagram + Facebook + WhatsApp -->
-  <div class="grid-3" style="margin-bottom:20px;">
-    <div class="card">
-      <div class="card-title">📸 Instagram @leolan_digital</div>
-      <div class="card-sub">Live · Performance &amp; Aktivität</div>
-      <div class="status-row"><span class="status-name">Follower</span><span class="status-val" data-key="instagram.followers"><span class="badge badge-gray">Lade…</span></span></div>
-      <div class="status-row"><span class="status-name">Posts heute</span><span class="status-val" data-key="instagram.postsToday"><span class="badge badge-gray">Lade…</span></span></div>
-      <div class="status-row"><span class="status-name">Likes heute</span><span class="status-val" data-key="instagram.likesToday"><span class="badge badge-gray">Lade…</span></span></div>
-      <div class="status-row"><span class="status-name">Story aktiv</span><span class="status-val" data-key="instagram.storyActive"><span class="badge badge-gray">Lade…</span></span></div>
-    </div>
-    <div class="card">
-      <div class="card-title">📘 Facebook Leo-Lan</div>
-      <div class="card-sub">Live · Page-Werte</div>
-      <div class="status-row"><span class="status-name">Page Likes</span><span class="status-val" data-key="facebook.pageLikes"><span class="badge badge-gray">Lade…</span></span></div>
-      <div class="status-row"><span class="status-name">Posts heute</span><span class="status-val" data-key="facebook.postsToday"><span class="badge badge-gray">Lade…</span></span></div>
-      <div class="status-row"><span class="status-name">Reichweite</span><span class="status-val" data-key="facebook.reach"><span class="badge badge-gray">Lade…</span></span></div>
-    </div>
-    <div class="card">
-      <div class="card-title">💬 WhatsApp Bot</div>
-      <div class="card-sub">Live · Nutzung &amp; Gutscheine</div>
-      <div class="status-row"><span class="status-name">Gespräche heute</span><span class="status-val" data-key="whatsapp.conversationsToday"><span class="badge badge-gray">Lade…</span></span></div>
-      <div class="status-row"><span class="status-name">Aktive Nutzer</span><span class="status-val" data-key="whatsapp.activeUsers"><span class="badge badge-gray">Lade…</span></span></div>
-      <div class="status-row"><span class="status-name">Stempel vergeben</span><span class="status-val" data-key="whatsapp.stampsIssued"><span class="badge badge-gray">Lade…</span></span></div>
-      <div class="status-row"><span class="status-name">Aktive Gutscheine</span><span class="status-val" data-key="whatsapp.activeCoupons"><span class="badge badge-gray">Lade…</span></span></div>
-    </div>
-  </div>
-
-  <!-- Google Reviews + Emails -->
-  <div class="grid-2b" style="margin-bottom:20px;">
-    <div class="card">
-      <div class="card-title">⭐ Google Reviews</div>
-      <div class="card-sub">Live · Bewertungsübersicht</div>
-      <div class="status-row"><span class="status-name">Durchschnitt</span><span class="status-val" data-key="reviews.average"><span class="badge badge-gray">Lade…</span></span></div>
-      <div class="status-row"><span class="status-name">Neue Reviews heute</span><span class="status-val" data-key="reviews.newReviews"><span class="badge badge-gray">Lade…</span></span></div>
-      <div class="status-row"><span class="status-name">Unbeantwortete</span><span class="status-val" data-key="reviews.unanswered"><span class="badge badge-gray">Lade…</span></span></div>
-    </div>
-    <div class="card">
-      <div class="card-title">📧 E-Mails (ungelesen)</div>
-      <div class="card-sub">Live · Postfächer</div>
-      <div class="status-row"><span class="status-name">business@leolan.net</span><span class="status-val" data-key="emails.business"><span class="badge badge-gray">Lade…</span></span></div>
-      <div class="status-row"><span class="status-name">k.nazari@leolan.net</span><span class="status-val" data-key="emails.knazari"><span class="badge badge-gray">Lade…</span></span></div>
-      <div class="status-row"><span class="status-name">knazari2604@gmail.com</span><span class="status-val" data-key="emails.gmail"><span class="badge badge-gray">Lade…</span></span></div>
-    </div>
-  </div>
-
-  <!-- Automationen -->
-  <div class="card" style="margin-bottom:20px;">
-    <div class="card-title">🤖 Automationen Status</div>
-    <div class="card-sub">System- und Posting-Automationen · Live</div>
-    <div class="status-row"><span class="status-name">Instagram Feed Post · täglich 10:00</span><span class="status-val" data-key="automation.instagramFeed"><span class="badge badge-green">✅ Aktiv</span></span></div>
-    <div class="status-row"><span class="status-name">Instagram Story · täglich 18:00</span><span class="status-val" data-key="automation.instagramStory"><span class="badge badge-green">✅ Aktiv</span></span></div>
-    <div class="status-row"><span class="status-name">Facebook Post · täglich 11:00</span><span class="status-val" data-key="automation.facebookPost"><span class="badge badge-green">✅ Aktiv</span></span></div>
-    <div class="status-row"><span class="status-name">Bewertungsmanagement · alle 6h</span><span class="status-val" data-key="automation.reviewManagement"><span class="badge badge-green">✅ Aktiv</span></span></div>
-    <div class="status-row"><span class="status-name">WhatsApp Bot · 24/7</span><span class="status-val" data-key="automation.whatsappBot"><span class="badge badge-green">✅ Aktiv</span></span></div>
   </div>
 
 </div>
@@ -639,6 +676,25 @@ async function loadDashboardData() {
 // Initial load + auto-refresh every 5 min
 loadDashboardData();
 setInterval(loadDashboardData, 5 * 60 * 1000);
+</script>
+
+
+<script>
+function showCeoTab(id, btn) {
+  document.querySelectorAll('.ceo-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-nav-btn').forEach(b => b.classList.remove('active'));
+  const el = document.getElementById('ceo-' + id);
+  if (el) el.classList.add('active');
+  if (btn) btn.classList.add('active');
+  if (id === 'finanzen' && typeof makeGrowthChart === 'function') {
+    setTimeout(() => { makeGrowthChart(DATA ? DATA.april : {}); makeDonut(); makeCashflow(); }, 100);
+  }
+  if (id === 'marketing') {
+    if (typeof loadDashboardData === 'function' && !window._mktLoaded) {
+      loadDashboardData(); window._mktLoaded = true;
+    }
+  }
+}
 </script>
 
 </body>
