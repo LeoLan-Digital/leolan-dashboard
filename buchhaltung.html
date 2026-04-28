@@ -1058,3 +1058,60 @@ function getKonto(cat) {
 }
 
 function fmtDate(d
+function fmtDate(d) {
+  if (!d) return '—';
+  try {
+    var dt = new Date(d);
+    return dt.toLocaleDateString('de-DE', {day:'2-digit',month:'short',year:'numeric'});
+  } catch(e) { return d; }
+}
+
+// Initialisierung
+let state = loadState();
+renderAll();
+document.addEventListener('DOMContentLoaded', function() {
+  if (typeof loadBankBalance === 'function') loadBankBalance();
+  if (sessionStorage.getItem('leolan_auth')) {
+    document.getElementById('loginScreen').style.display = 'none';
+    if (typeof checkReadOnly === 'function') setTimeout(checkReadOnly, 300);
+  }
+});
+</script>
+
+<!-- BANK TAB CONTENT -->
+<div id="tab-bank" class="tab-content" style="display:none;">
+  <h2 style="margin-bottom:24px;">🏦 Bank-Verbindung</h2>
+  <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:16px;">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+      <div style="background:#0a84ff;color:#fff;padding:8px 16px;border-radius:8px;font-weight:700;font-size:16px;">N26</div>
+      <div>
+        <div style="font-weight:600;font-size:15px;">N26 Business Standard</div>
+        <div style="font-size:13px;opacity:0.45;">DE25 1001 1001 2226 5950 79</div>
+      </div>
+      <div style="margin-left:auto;"><span class="badge badge-yellow">⏳ Ausstehend</span></div>
+    </div>
+    <div style="background:rgba(255,255,255,0.04);border-radius:10px;padding:20px;margin-bottom:20px;">
+      <div style="font-size:11px;opacity:0.35;text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;">Kontostand</div>
+      <div style="font-size:40px;font-weight:700;letter-spacing:-0.03em;" id="bank-balance">€ —</div>
+      <div style="font-size:12px;opacity:0.4;margin-top:6px;" id="bank-balance-time">Nicht verbunden</div>
+    </div>
+    <button onclick="window.open('https://bankaccountdata.gocardless.com/register/','_blank')" style="width:100%;padding:13px;background:#0a84ff;border:none;border-radius:10px;color:#fff;font-size:15px;font-weight:600;cursor:pointer;">
+      🔗 GoCardless Konto anlegen → N26 verbinden
+    </button>
+    <p style="font-size:12px;opacity:0.35;text-align:center;margin-top:10px;">Nach Registrierung: secret_id + secret_key an Mira schicken</p>
+  </div>
+  <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:24px;">
+    <div style="font-size:11px;opacity:0.5;text-transform:uppercase;margin-bottom:12px;">Manueller Kontostand</div>
+    <div style="display:flex;gap:10px;">
+      <input type="number" id="manual-balance" placeholder="100.00" step="0.01" style="flex:1;padding:10px 14px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:#fff;font-size:15px;">
+      <button onclick="saveManualBalance()" style="padding:10px 18px;background:#0a84ff;border:none;border-radius:10px;color:#fff;font-size:13px;font-weight:600;cursor:pointer;">Speichern</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function saveManualBalance(){var v=parseFloat(document.getElementById('manual-balance').value);if(!isNaN(v)){document.getElementById('bank-balance').textContent='€ '+v.toLocaleString('de-DE',{minimumFractionDigits:2});document.getElementById('bank-balance-time').textContent='Stand: '+new Date().toLocaleString('de-DE');localStorage.setItem('leolan_bank_balance',JSON.stringify({amount:v,time:new Date().toISOString()}));}}
+function loadBankBalance(){var s=JSON.parse(localStorage.getItem('leolan_bank_balance')||'null');if(s&&document.getElementById('bank-balance')){document.getElementById('bank-balance').textContent='€ '+s.amount.toLocaleString('de-DE',{minimumFractionDigits:2});document.getElementById('bank-balance-time').textContent='Stand: '+new Date(s.time).toLocaleString('de-DE');}}
+window.addEventListener('load',loadBankBalance);
+</script>
+</html>
