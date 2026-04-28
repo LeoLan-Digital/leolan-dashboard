@@ -2087,20 +2087,16 @@ var N26_ACCESS_TOKEN = null;
 
 async function refreshN26Balance() {
   try {
-    // Versuche N26 API (falls Token verfügbar)
-    if (N26_ACCESS_TOKEN) {
-      const r = await fetch('https://api.tech26.de/api/accounts', {
-        headers: {'Authorization': 'Bearer ' + N26_ACCESS_TOKEN}
-      });
-      if (r.ok) {
-        const d = await r.json();
-        const bal = d.availableBalance || 0;
-        const el = document.getElementById('bank-balance');
+    var r = await fetch('https://n8n.leolan.net/webhook/n26-balance');
+    if (r.ok) {
+      var d = await r.json();
+      var bal = d.availableBalance || 0;
+      ['bank-balance','balance-kpi'].forEach(function(id) {
+        var el = document.getElementById(id);
         if (el) el.textContent = '€ ' + bal.toLocaleString('de-DE', {minimumFractionDigits:2});
-        const el2 = document.getElementById('balance-kpi');
-        if (el2) el2.textContent = '€ ' + bal.toLocaleString('de-DE', {minimumFractionDigits:2});
-        localStorage.setItem('leolan_bank_balance', JSON.stringify({amount: bal, time: new Date().toISOString()}));
-      }
+      });
+      localStorage.setItem('leolan_bank_balance', JSON.stringify({amount:bal,time:new Date().toISOString()}));
+      updateTicker();
     }
   } catch(e) {}
   refreshCount++;
@@ -2119,7 +2115,7 @@ function updateTicker() {
 setInterval(function() {
   refreshN26Balance();
   updateTicker();
-}, 60000);
+}, 30000); // 30 Sekunden
 
 // Seiten-Auto-Refresh alle 5 Min (Transaktionen aktualisieren)
 setInterval(function() {
