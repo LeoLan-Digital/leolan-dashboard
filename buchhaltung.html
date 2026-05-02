@@ -2531,16 +2531,33 @@ function closeTxDetail() {
 
 function toggleSidebar() {
   var sb = document.getElementById('sidebar');
-  if (!sb) { alert('sidebar not found'); return; }
+  if (!sb) return;
+  // Always use mobile approach on small screens OR as fallback
   var isMobile = window.innerWidth <= 900;
   if (isMobile) {
-    var isOpen = sb.classList.toggle('open');
-    var ov = document.getElementById('sidebar-overlay');
-    if (ov) ov.classList.toggle('visible', isOpen);
-    // Force repaint for iOS Safari
-    sb.style.display = 'none';
-    sb.offsetHeight; // trigger reflow
-    sb.style.display = '';
+    var isOpen = sb.style.left === '0px' || sb.style.left === '0';
+    if (!isOpen) {
+      // Open sidebar
+      sb.style.position = 'fixed';
+      sb.style.top = '52px';
+      sb.style.left = '0';
+      sb.style.bottom = '0';
+      sb.style.width = '80vw';
+      sb.style.maxWidth = '280px';
+      sb.style.zIndex = '9999';
+      sb.style.transform = 'none';
+      sb.style.display = 'block';
+      sb.style.backgroundColor = 'var(--bg-elevated, #1c1c1e)';
+      sb.style.overflowY = 'auto';
+      var ov = document.getElementById('sidebar-overlay');
+      if (ov) { ov.style.display = 'block'; ov.style.position = 'fixed'; ov.style.inset = '0'; ov.style.background = 'rgba(0,0,0,0.6)'; ov.style.zIndex = '9998'; }
+    } else {
+      // Close sidebar
+      sb.style.left = '-300px';
+      sb.style.display = 'none';
+      var ov = document.getElementById('sidebar-overlay');
+      if (ov) ov.style.display = 'none';
+    }
   } else {
     sb.classList.toggle('collapsed');
     var mc = document.querySelector('.main-content');
