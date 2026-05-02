@@ -3281,6 +3281,7 @@ function _updateStatus(type, id, newStatus, selectEl) {
       case 'open-items': renderOpenItems(); break;
       case 'reminders': renderReminders(); break;
       case 'konten':    renderKonten(); break;
+      case 'payments':  syncN26(); syncQonto(); break;
       case 'eur':       renderEUR(); _loadEurOverridesUI(); break;
       case 'settings':  _loadSettingsUI(); break;
       case 'overview':  renderChart(); break;
