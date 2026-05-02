@@ -132,6 +132,14 @@
     .sidebar.open { transform: translateX(0); }
     .main-content { margin-left: 0 !important; }
   }
+  #sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 149;
+  }
+  #sidebar-overlay.visible { display: block; }
   .sidebar-inner { padding: 10px 8px 32px; }
 
   /* Sidebar sections */
@@ -1038,6 +1046,7 @@ if (sessionStorage.getItem('leolan_auth')) {
 <div class="app-layout">
 
   <!-- ─── SIDEBAR ─── -->
+  <div id="sidebar-overlay" onclick="toggleSidebar()"></div>
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-inner">
 
@@ -2517,6 +2526,8 @@ function toggleSidebar() {
   if (!sb) return;
   if (window.innerWidth <= 768) {
     sb.classList.toggle('open');
+    var ov = document.getElementById('sidebar-overlay');
+    if (ov) ov.classList.toggle('visible', sb.classList.contains('open'));
   } else {
     sb.classList.toggle('collapsed');
     var mc = document.querySelector('.main-content');
