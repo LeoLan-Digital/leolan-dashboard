@@ -232,6 +232,120 @@
     to   { opacity: 1; transform: translateY(0); }
   }
 
+  /* ── N26 Balance Widget ─────────────────────────────────── */
+  #n26-balance-widget {
+    background: linear-gradient(135deg, rgba(10,132,255,0.12) 0%, rgba(10,132,255,0.05) 100%);
+    border: 1px solid rgba(10,132,255,0.25);
+    border-radius: 14px;
+    padding: 14px 20px;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  #n26-balance-widget::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, #0a84ff, #5ac8fa);
+    border-radius: 14px 14px 0 0;
+  }
+  .n26-widget-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .n26-widget-left { display: flex; align-items: center; gap: 14px; }
+  .n26-widget-icon {
+    width: 42px; height: 42px;
+    background: linear-gradient(135deg, #0a84ff, #0066cc);
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+  .n26-widget-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    color: rgba(255,255,255,.4);
+    margin-bottom: 3px;
+  }
+  .n26-widget-amount {
+    font-size: 26px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -.01em;
+    color: #fff;
+    line-height: 1;
+  }
+  .n26-widget-meta {
+    font-size: 11px;
+    color: rgba(255,255,255,.35);
+    margin-top: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .n26-status-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: #3a3a3c;
+    flex-shrink: 0;
+    transition: background 0.3s;
+  }
+  .n26-status-dot.live  { background: #30d158; box-shadow: 0 0 6px rgba(48,209,88,.5); }
+  .n26-status-dot.manual { background: #ffd60a; }
+  .n26-status-dot.error  { background: #ff453a; }
+  .n26-widget-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .n26-btn {
+    background: rgba(255,255,255,.08);
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 8px;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 7px 13px;
+    cursor: pointer;
+    transition: background .15s;
+    white-space: nowrap;
+  }
+  .n26-btn:hover { background: rgba(255,255,255,.14); }
+  .n26-btn.primary { background: rgba(10,132,255,.25); border-color: rgba(10,132,255,.4); color: #0a84ff; }
+  .n26-btn.primary:hover { background: rgba(10,132,255,.35); }
+  .n26-manual-row {
+    display: none;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255,255,255,.08);
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .n26-manual-row.open { display: flex; }
+  .n26-input {
+    background: rgba(255,255,255,.06);
+    border: 1px solid rgba(255,255,255,.15);
+    border-radius: 8px;
+    color: #fff;
+    font-size: 14px;
+    padding: 7px 12px;
+    width: 160px;
+    outline: none;
+    font-variant-numeric: tabular-nums;
+  }
+  .n26-input:focus { border-color: rgba(10,132,255,.6); background: rgba(10,132,255,.07); }
+  .n26-input::placeholder { color: rgba(255,255,255,.25); }
+  .n26-iban {
+    font-size: 11px;
+    color: rgba(255,255,255,.2);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: .03em;
+    white-space: nowrap;
+  }
+
   /* ── KPI Cards ───────────────────────────────────────── */
   .kpi-grid {
     display: grid;
@@ -1007,6 +1121,35 @@ if (sessionStorage.getItem('leolan_auth')) {
   <div class="main-content">
   <main>
 
+  <!-- ════════════════════════════════ N26 KONTOSTAND WIDGET ════ -->
+  <div id="n26-balance-widget">
+    <div class="n26-widget-inner">
+      <div class="n26-widget-left">
+        <div class="n26-widget-icon">🏦</div>
+        <div>
+          <div class="n26-widget-label">Qonto Kontostand</div>
+          <div class="n26-widget-amount" id="n26w-amount">— €</div>
+          <div class="n26-widget-meta">
+            <span class="n26-status-dot" id="n26w-dot"></span>
+            <span id="n26w-meta">Noch nicht abgerufen</span>
+            <span class="n26-iban"> · DE40 1001 0123 9845 0754 49</span>
+          </div>
+        </div>
+      </div>
+      <div class="n26-widget-right">
+        <button class="n26-btn primary" id="n26w-refresh-btn" onclick="qontoWidgetRefresh()">🔄 Aktualisieren</button>
+        <button class="n26-btn" onclick="n26WidgetToggleManual()">✏️ Manuell eingeben</button>
+      </div>
+    </div>
+    <div class="n26-manual-row" id="n26w-manual-row">
+      <span style="font-size:12px;color:rgba(255,255,255,.45);white-space:nowrap">Kontostand manuell:</span>
+      <input type="number" class="n26-input" id="n26w-input" placeholder="z.B. 1234.56" step="0.01" min="-999999" max="9999999"
+        onkeydown="if(event.key==='Enter')n26WidgetSaveManual()">
+      <button class="n26-btn primary" onclick="n26WidgetSaveManual()">✓ Speichern</button>
+      <button class="n26-btn" onclick="n26WidgetToggleManual()">Abbrechen</button>
+    </div>
+  </div>
+
   <!-- ════════════════════════════════ TAB: DASHBOARD -->
   <div id="tab-overview" class="tab-content active">
     <div class="kpi-grid">
@@ -1175,34 +1318,34 @@ if (sessionStorage.getItem('leolan_auth')) {
   <div class="page-header">
     <div class="page-title">💳 Zahlungen & Bankabgleich</div>
     <div class="page-actions">
-      <button class="btn btn-outline btn-sm" onclick="syncN26()">🔄 N26 Sync</button>
+      <button class="btn btn-outline btn-sm" onclick="syncQonto()">🔄 Qonto Sync</button>
       <button class="btn btn-primary btn-sm" onclick="openAddPaymentModal()">+ Zahlung erfassen</button>
     </div>
   </div>
 
-  <!-- N26 Status -->
+  <!-- Qonto Status -->
   <div style="background:rgba(10,132,255,0.08);border:1px solid rgba(10,132,255,0.2);border-radius:12px;padding:16px;margin-bottom:16px;display:flex;align-items:center;gap:12px;">
-    <div style="background:#0a84ff;color:#fff;padding:6px 14px;border-radius:8px;font-weight:700;font-size:14px;">N26</div>
+    <div style="background:#0a84ff;color:#fff;padding:6px 14px;border-radius:8px;font-weight:700;font-size:14px;">Q</div>
     <div>
-      <div style="font-weight:600;font-size:14px;">N26 Business Standard</div>
-      <div style="font-size:12px;opacity:.45;">DE25 1001 1001 2226 5950 79</div>
+      <div style="font-weight:600;font-size:14px;">Qonto Hauptkonto</div>
+      <div style="font-size:12px;opacity:.45;">DE40 1001 0123 9845 0754 49</div>
     </div>
     <div style="margin-left:auto;text-align:right;">
-      <div style="font-size:24px;font-weight:700;font-variant-numeric:tabular-nums;" id="bank-balance">€ 161,50</div>
-      <div style="font-size:11px;opacity:.4;">Stand: 28.04.2026</div>
+      <div style="font-size:24px;font-weight:700;font-variant-numeric:tabular-nums;" id="bank-balance">€ 0,00</div>
+      <div style="font-size:11px;opacity:.4;" id="qonto-balance-ts">Lade...</div>
     </div>
   </div>
 
-  <!-- N26 Transaktionen — dynamisch via syncN26() -->
+  <!-- Qonto Transaktionen — dynamisch via syncQonto() -->
   <div class="section-card" style="margin-bottom:16px;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-      <div style="font-size:13px;font-weight:600;opacity:.5;text-transform:uppercase;letter-spacing:.08em;">💳 N26 Transaktionen</div>
+      <div style="font-size:13px;font-weight:600;opacity:.5;text-transform:uppercase;letter-spacing:.08em;">💳 Qonto Transaktionen</div>
       <div style="font-size:11px;opacity:.4;" id="tx-sync-info">Lade...</div>
     </div>
     <table id="n26-tx-table">
-      <tr><th>Datum</th><th>Beschreibung</th><th>Betrag</th><th>Zugeordnet zu</th><th>Status</th></tr>
+      <tr><th>Datum</th><th>Beschreibung</th><th>Betrag</th><th>Seite</th><th>Status</th></tr>
       <tbody id="n26-tx-body">
-        <tr><td colspan="5" style="text-align:center;opacity:.4;padding:20px;">🔄 Lade Transaktionen...</td></tr>
+        <tr><td colspan="5" style="text-align:center;opacity:.4;padding:20px;">🔄 Lade Qonto-Transaktionen...</td></tr>
       </tbody>
     </table>
   </div>
@@ -1600,12 +1743,12 @@ if (sessionStorage.getItem('leolan_auth')) {
     <div class="section-card">
       <h3>🏦 Bankverbindung</h3>
       <div class="settings-grid">
-        <div><label class="settings-label">IBAN</label><input type="text" id="s-iban" class="input-field" value="DE25100110012226595079"></div>
-        <div><label class="settings-label">BIC</label><input type="text" id="s-bic" class="input-field" value="NTSBDEB1XXX"></div>
-        <div><label class="settings-label">Bank</label><input type="text" id="s-bank" class="input-field" value="N26 Bank (Business)"></div>
+        <div><label class="settings-label">IBAN</label><input type="text" id="s-iban" class="input-field" value="DE40100101239845075449"></div>
+        <div><label class="settings-label">BIC</label><input type="text" id="s-bic" class="input-field" value="QNTODEB2XXX"></div>
+        <div><label class="settings-label">Bank</label><input type="text" id="s-bank" class="input-field" value="Qonto"></div>
         <div><label class="settings-label">Kontoinhaber</label><input type="text" id="s-account-holder" class="input-field" value="Kamaleddin Nazari"></div>
       </div>
-      <p style="margin-top:10px;font-size:12px;color:var(--text-muted)">⚠️ Aktuell: Privatkonto ING. Geschäftskonto folgt.</p>
+      <p style="margin-top:10px;font-size:12px;color:var(--text-muted)">✅ Qonto Geschäftskonto aktiv (seit 01.05.2026)</p>
     </div>
 
     <div class="section-card">
@@ -1936,7 +2079,7 @@ function loadState() {
       company:'LeoLan Digital', owner:'Kamaleddin Nazari',
       street:'Reicker Straße 132', city:'01237 Dresden',
       email:'business@leolan.net', phone:'+49 15678483701',
-      iban:'DE25 1001 1001 2226 5950 79', bic:'NTSBDEB1XXX', bank:'N26 Bank (Business)',
+      iban:'DE40 1001 0123 9845 0754 49', bic:'QNTODEB2XXX', bank:'Qonto',
       taxId:'203/252/14709', vatId:'DE351138587', finanzamt:'Finanzamt Dresden-Süd'
     }
   };
@@ -2033,7 +2176,7 @@ const VENDOR_MAP = {
   'ihk': 'IHK Dresden',
   'gewerbe': 'Gewerbeamt Dresden',
   'expo': 'Expo (650 Industries)',
-  'n26': 'N26 Bank',
+  'qonto': 'Qonto',
 };
 
 function matchTransaction(tx) {
@@ -2101,199 +2244,226 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <script>
 // ══════════════════════════════════════════════════════
-// N26 SYNC SYSTEM — Dynamisch via n8n Webhook + Proxy
-// Endpoints (in Priorität):
-//   1. http://localhost:8765/all  (lokal, schnell)
-//   2. https://n8n.leolan.net/webhook/n26-data  (extern)
+// QONTO SYNC SYSTEM — via n8n Webhooks
+// Endpoints:
+//   Balance:      https://n8n.leolan.net/webhook/qonto-balance
+//   Transaktionen: https://n8n.leolan.net/webhook/qonto-transactions
 // ══════════════════════════════════════════════════════
-var N26_LOCAL  = 'http://localhost:8765/all';
-var N26_REMOTE = 'https://n8n.leolan.net/webhook/n26-data';
-var N26_DATA   = null;  // Cache
+var QONTO_BALANCE_URL = 'https://n8n.leolan.net/webhook/qonto-balance';
+var QONTO_TX_URL      = 'https://n8n.leolan.net/webhook/qonto-transactions';
+var QONTO_DATA        = null; // Cache
 
 // Formatierung
-function fmtDate(isoStr) {
+function fmtQontoDate(isoStr) {
   if (!isoStr) return '—';
   try {
     var d = new Date(isoStr);
-    return d.toLocaleDateString('de-DE', {day:'2-digit',month:'2-digit'}) + ' '
-      + d.toLocaleTimeString('de-DE', {hour:'2-digit',minute:'2-digit'});
-  } catch(e) { return isoStr.substring(0,16).replace('T',' '); }
+    return d.toLocaleDateString('de-DE', {day:'2-digit', month:'2-digit', year:'2-digit'}) + ' '
+      + d.toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'});
+  } catch(e) { return String(isoStr).substring(0, 16).replace('T', ' '); }
 }
 
-function fmtAmount(eur, usd) {
-  var s = (eur >= 0 ? '+' : '') + eur.toLocaleString('de-DE', {minimumFractionDigits:2}) + ' €';
-  if (usd !== null && usd !== undefined) {
-    s += ' ($' + Math.abs(usd).toLocaleString('de-DE', {minimumFractionDigits:2}) + ')';
-  }
-  return s;
+function fmtQontoAmount(amount, side) {
+  var sign = side === 'credit' ? '+' : '-';
+  var abs  = Math.abs(amount || 0);
+  return sign + abs.toLocaleString('de-DE', {minimumFractionDigits:2}) + ' €';
 }
 
-// Haupt-Fetch Funktion
-async function fetchN26Data() {
-  // Versuche lokal zuerst
-  try {
-    var r = await fetch(N26_LOCAL, {signal: AbortSignal.timeout(3000)});
-    if (r.ok) return await r.json();
-  } catch(e) {}
-  // Fallback: n8n Remote
-  try {
-    var r2 = await fetch(N26_REMOTE, {signal: AbortSignal.timeout(8000)});
-    if (r2.ok) return await r2.json();
-  } catch(e2) {}
-  return null;
-}
-
-// Transaktions-Tabelle aufbauen
-function renderN26Transactions(data) {
+// Transaktionen-Tabelle rendern
+function renderQontoTransactions(data) {
   var tbody = document.getElementById('n26-tx-body');
   if (!tbody) return;
-  
+
   var txs = (data && data.transactions) || [];
   if (txs.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;opacity:.4;padding:20px;">Keine Transaktionen gefunden</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;opacity:.4;padding:20px;">Keine Transaktionen (Konto neu)</td></tr>';
     return;
   }
-  
+
   var html = '';
-  txs.forEach(function(tx, idx) {
-    var isIncome  = tx.amount > 0 || tx.status === 'income';
-    var isMatched = tx.status === 'matched';
-    var rowBg = isIncome ? 'background:rgba(48,209,88,0.06);' : '';
-    var amtColor = isIncome ? 'color:#30d158;' : 'color:#ff453a;';
-    var amtStr = fmtAmount(tx.amount, tx.usd);
-    var badge = isIncome
-      ? '<span class="badge badge-green">✅ Eingegangen</span>'
-      : isMatched
-        ? '<span class="badge badge-green">✅ Zugeordnet</span>'
-        : '<span class="badge badge-yellow">⏳ Offen</span>';
-    
-    var invoiceCell = tx.invoice
-      ? tx.invoice.replace(/Claude API Rechnung /, 'Claude API ')
-      : (isIncome ? '<span style="opacity:.5;">'+tx.ref+'</span>' : '—');
-    
-    var clickable = (tx.invoice || tx.pdf) ? 'cursor:pointer;' : '';
-    var onclick   = (tx.invoice || tx.pdf)
-      ? 'onclick="showTxDetailDyn(' + idx + ')"'
-      : '';
-    
-    html += '<tr style="' + rowBg + clickable + '" ' + onclick + '>'
-      + '<td style="font-size:13px;">' + fmtDate(tx.date) + '</td>'
-      + '<td>' + (tx.name || '—') + '<br><span style="font-size:11px;opacity:.4;">N26 Karte</span></td>'
+  txs.forEach(function(tx) {
+    var isCredit = tx.side === 'credit';
+    var amtColor = isCredit ? 'color:#30d158;' : 'color:#ff453a;';
+    var rowBg    = isCredit ? 'background:rgba(48,209,88,0.04);' : '';
+    var amtStr   = fmtQontoAmount(tx.amount, tx.side);
+    var dateStr  = fmtQontoDate(tx.settled_at || tx.emitted_at);
+    var label    = tx.label || tx.note || '—';
+    var sideStr  = isCredit
+      ? '<span class="badge badge-green">Eingang</span>'
+      : '<span class="badge badge-red">Ausgang</span>';
+    var statusStr = tx.status === 'completed'
+      ? '<span class="badge badge-green">✅ Verbucht</span>'
+      : tx.status === 'pending'
+        ? '<span class="badge badge-yellow">⏳ Ausstehend</span>'
+        : '<span class="badge badge-gray">' + (tx.status || '—') + '</span>';
+
+    html += '<tr style="' + rowBg + '">'
+      + '<td style="font-size:13px;">' + dateStr + '</td>'
+      + '<td>' + label + '</td>'
       + '<td style="font-weight:600;font-variant-numeric:tabular-nums;' + amtColor + '">' + amtStr + '</td>'
-      + '<td style="font-size:12px;">' + invoiceCell + '</td>'
-      + '<td>' + badge + '</td>'
+      + '<td>' + sideStr + '</td>'
+      + '<td>' + statusStr + '</td>'
       + '</tr>';
   });
-  
+
   tbody.innerHTML = html;
-  
-  // Sync-Info
+
   var info = document.getElementById('tx-sync-info');
-  if (info && data.updated) {
-    var upd = new Date(data.updated);
-    info.textContent = 'Stand: ' + upd.toLocaleTimeString('de-DE');
+  if (info && data.lastSync) {
+    var d = new Date(data.lastSync);
+    info.textContent = 'Stand: ' + d.toLocaleTimeString('de-DE');
   }
 }
 
-// Detailansicht für dynamische Transaktionen
-function showTxDetailDyn(idx) {
-  if (!N26_DATA || !N26_DATA.transactions) return;
-  var tx = N26_DATA.transactions[idx];
-  if (!tx) return;
-  
-  var modal = document.getElementById('txDetailModal');
-  if (!modal) return;
-  
-  document.getElementById('tx-name').textContent   = tx.name || '';
-  document.getElementById('tx-amount').textContent = fmtAmount(tx.amount, tx.usd);
-  document.getElementById('tx-date').textContent   = fmtDate(tx.date);
-  document.getElementById('tx-ref').textContent    = tx.ref || '';
-  document.getElementById('tx-rate').textContent   = tx.rate || '—';
-  document.getElementById('tx-invoice-name').textContent = tx.invoice || 'Keine Rechnung zugeordnet';
-  document.getElementById('tx-invoice-ref').textContent  = tx.invoiceRef || '';
-  
-  // PDF Button
-  var pdfBtn = document.getElementById('tx-pdf-btn');
-  if (pdfBtn) { pdfBtn.dataset.url = tx.pdf || ''; }
-  
-  // currentPdfUrl global setzen (für openPDF())
-  window._currentTxPdf = tx.pdf || '';
-  
-  modal.style.display = 'flex';
-}
-
-// Haupt-Sync Funktion (Knopf + Auto)
-async function syncN26() {
-  var btn = document.querySelector('[onclick="syncN26()"]');
+// Hauptsync-Funktion
+async function syncQonto() {
+  var btn = document.querySelector('[onclick="syncQonto()"]');
   if (btn) btn.textContent = '⏳ Sync...';
-  
-  var data = await fetchN26Data();
-  N26_DATA = data;
-  
-  if (data) {
-    // Balance updaten
-    var bal = data.balance || 0;
-    ['bank-balance','balance-kpi'].forEach(function(id) {
-      var el = document.getElementById(id);
-      if (el) el.textContent = '€ ' + bal.toLocaleString('de-DE', {minimumFractionDigits:2});
-    });
-    localStorage.setItem('leolan_bank_balance', JSON.stringify({amount:bal,time:new Date().toISOString()}));
-    
-    // Transaktionen rendern
-    renderN26Transactions(data);
-    updateTicker();
-  } else {
-    var tbody = document.getElementById('n26-tx-body');
-    if (tbody) tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#ff453a;padding:20px;">⚠️ N26 nicht erreichbar — Proxy läuft?</td></tr>';
-  }
-  
-  if (btn) btn.textContent = '🔄 N26 Sync';
-}
 
-// Balance-only Refresh (leichtgewichtig)
-async function refreshN26Balance() {
   try {
-    var r = await fetch(N26_LOCAL, {signal: AbortSignal.timeout(3000)});
-    if (r.ok) {
-      var d = await r.json();
-      var bal = d.balance || d.availableBalance || 0;
-      ['bank-balance','balance-kpi'].forEach(function(id) {
-        var el = document.getElementById(id);
-        if (el) el.textContent = '€ ' + bal.toLocaleString('de-DE', {minimumFractionDigits:2});
-      });
-      updateTicker();
+    // Balance + Transaktionen parallel holen
+    var [balResp, txResp] = await Promise.all([
+      fetch(QONTO_BALANCE_URL, {signal: AbortSignal.timeout(8000)}).then(r => r.ok ? r.json() : null).catch(() => null),
+      fetch(QONTO_TX_URL,      {signal: AbortSignal.timeout(8000)}).then(r => r.ok ? r.json() : null).catch(() => null)
+    ]);
+
+    QONTO_DATA = txResp;
+
+    // Balance anzeigen
+    if (balResp) {
+      var bal = balResp.balance !== undefined ? balResp.balance : 0;
+      var balStr = '€ ' + Number(bal).toLocaleString('de-DE', {minimumFractionDigits:2});
+      var balEl = document.getElementById('bank-balance');
+      if (balEl) balEl.textContent = balStr;
+      var tsEl = document.getElementById('qonto-balance-ts');
+      if (tsEl && balResp.lastSync) {
+        var d = new Date(balResp.lastSync);
+        tsEl.textContent = 'Stand: ' + d.toLocaleDateString('de-DE') + ' ' + d.toLocaleTimeString('de-DE', {hour:'2-digit',minute:'2-digit'});
+      } else if (tsEl) {
+        tsEl.textContent = 'Live';
+      }
+      // Widget oben auch aktualisieren
+      qontoWidgetSetBalance(bal, 'live', balResp.lastSync ? new Date(balResp.lastSync).toLocaleTimeString('de-DE', {hour:'2-digit',minute:'2-digit'}) : 'Live');
     }
-  } catch(e) {}
+
+    // Transaktionen rendern
+    if (txResp) {
+      renderQontoTransactions(txResp);
+    }
+
+    updateTicker();
+  } catch(e) {
+    console.warn('Qonto sync failed', e);
+  }
+
+  if (btn) btn.textContent = '🔄 Qonto Sync';
 }
 
 // Ticker
 function updateTicker() {
   var now = new Date();
-  var ticker = document.getElementById('refresh-ticker');
-  if (ticker) {
-    ticker.textContent = 'Letztes Update: ' + now.toLocaleTimeString('de-DE') + ' | Auto-Refresh aktiv';
+  var el = document.getElementById('refresh-ticker');
+  if (el) el.textContent = 'Letztes Update: ' + now.toLocaleTimeString('de-DE') + ' | Auto-Refresh aktiv';
+}
+
+// ══════════════════════════════════════════════════════
+// QONTO BALANCE WIDGET
+// ══════════════════════════════════════════════════════
+function qontoWidgetFmtAmount(val) {
+  return '€ ' + Number(val).toLocaleString('de-DE', {minimumFractionDigits:2, maximumFractionDigits:2});
+}
+
+function qontoWidgetSetBalance(amount, mode, timeLabel) {
+  var amtEl  = document.getElementById('n26w-amount');
+  var dotEl  = document.getElementById('n26w-dot');
+  var metaEl = document.getElementById('n26w-meta');
+  if (!amtEl) return;
+  amtEl.textContent = qontoWidgetFmtAmount(amount);
+  amtEl.style.color = amount >= 0 ? '#fff' : '#ff453a';
+  dotEl.className = 'n26-status-dot ' + (mode || '');
+  metaEl.textContent = (mode === 'live' ? 'Live · ' : mode === 'manual' ? 'Manuell · ' : '') + (timeLabel || '');
+  ['bank-balance', 'balance-kpi'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.textContent = qontoWidgetFmtAmount(amount);
+  });
+  localStorage.setItem('leolan_qonto_widget', JSON.stringify({amount: amount, mode: mode, time: new Date().toISOString()}));
+}
+
+async function qontoWidgetRefresh() {
+  var btn  = document.getElementById('n26w-refresh-btn');
+  var meta = document.getElementById('n26w-meta');
+  if (btn)  { btn.textContent = '⏳ Lade...'; btn.disabled = true; }
+  if (meta) meta.textContent = 'Verbinde mit Qonto...';
+
+  try {
+    var r = await fetch(QONTO_BALANCE_URL, {signal: AbortSignal.timeout(10000)});
+    if (r.ok) {
+      var d = await r.json();
+      var balance = d.balance !== undefined ? d.balance : 0;
+      var ts = d.lastSync ? new Date(d.lastSync).toLocaleTimeString('de-DE', {hour:'2-digit',minute:'2-digit'}) : new Date().toLocaleTimeString('de-DE', {hour:'2-digit',minute:'2-digit'});
+      qontoWidgetSetBalance(balance, 'live', ts);
+      var tsEl = document.getElementById('qonto-balance-ts');
+      if (tsEl && d.lastSync) {
+        tsEl.textContent = 'Stand: ' + new Date(d.lastSync).toLocaleDateString('de-DE') + ' ' + ts;
+      }
+    } else {
+      throw new Error('HTTP ' + r.status);
+    }
+  } catch(e) {
+    var dotEl = document.getElementById('n26w-dot');
+    if (dotEl) dotEl.className = 'n26-status-dot error';
+    if (meta) meta.textContent = 'Fehler — ' + (e.message || 'Verbindung fehlgeschlagen');
+    document.getElementById('n26w-manual-row').classList.add('open');
+  }
+
+  if (btn) { btn.textContent = '🔄 Aktualisieren'; btn.disabled = false; }
+}
+
+function n26WidgetToggleManual() {
+  var row = document.getElementById('n26w-manual-row');
+  row.classList.toggle('open');
+  if (row.classList.contains('open')) {
+    var inp = document.getElementById('n26w-input');
+    try {
+      var saved = JSON.parse(localStorage.getItem('leolan_qonto_widget') || '{}');
+      if (saved.amount !== undefined) inp.value = saved.amount;
+    } catch(e) {}
+    setTimeout(function() { inp.focus(); inp.select(); }, 50);
   }
 }
 
-// PDF öffnen
-function openPDF() {
-  var url = window._currentTxPdf;
-  if (url) window.open(url, '_blank');
+function n26WidgetSaveManual() {
+  var inp = document.getElementById('n26w-input');
+  var val = parseFloat(inp.value.replace(',','.'));
+  if (isNaN(val)) { inp.focus(); inp.select(); return; }
+  var ts = new Date().toLocaleTimeString('de-DE', {hour:'2-digit',minute:'2-digit'});
+  qontoWidgetSetBalance(val, 'manual', ts);
+  document.getElementById('n26w-manual-row').classList.remove('open');
+  inp.value = '';
 }
 
-// Auto-Refresh: Balance alle 30 Sek, Transaktionen alle 5 Min
-setInterval(refreshN26Balance, 30000);
+function qontoWidgetInit() {
+  try {
+    var saved = JSON.parse(localStorage.getItem('leolan_qonto_widget') || '{}');
+    if (saved.amount !== undefined && saved.time) {
+      var ts = new Date(saved.time).toLocaleTimeString('de-DE', {hour:'2-digit',minute:'2-digit'});
+      qontoWidgetSetBalance(saved.amount, saved.mode, ts);
+    }
+  } catch(e) {}
+  qontoWidgetRefresh().catch(function(){});
+}
+
+// Auto-Refresh: Balance alle 60 Sek, TX alle 5 Min
+setInterval(function() { qontoWidgetRefresh().catch(function(){}); }, 60000);
 setInterval(function() {
-  if (document.getElementById('tab-payments') &&
-      document.getElementById('tab-payments').classList.contains('active')) {
-    syncN26();
-  }
+  var tab = document.getElementById('tab-payments');
+  if (tab && tab.classList.contains('active')) syncQonto();
 }, 300000);
 
-// Beim Laden: Transaktionen initial holen
 window.addEventListener('load', function() {
+  qontoWidgetInit();
   setTimeout(function() {
-    syncN26();
+    syncQonto();
     updateTicker();
   }, 800);
 });
