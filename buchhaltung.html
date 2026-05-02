@@ -2576,7 +2576,9 @@ async function syncN26() {
   var data = await fetchN26Data();
   N26_DATA = data;
   if (!data) {
-    if (balEl) balEl.textContent = 'Fehler';
+    if (balEl) balEl.textContent = '⏳ Push gesendet';
+    // Telegram Push: Leo muss N26 App bestätigen
+    try { await fetch('https://n8n.leolan.net/webhook/n26-sync-request', {signal: AbortSignal.timeout(5000)}); } catch(e) {}
     return;
   }
   if (balEl) balEl.textContent = '€' + (data.balance || 0).toLocaleString('de-DE', {minimumFractionDigits:2});
