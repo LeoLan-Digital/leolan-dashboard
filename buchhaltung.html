@@ -2576,9 +2576,12 @@ async function syncN26() {
   var data = await fetchN26Data();
   N26_DATA = data;
   if (!data) {
-    if (balEl) balEl.textContent = '⏳ Push gesendet';
-    // Telegram Push: Leo muss N26 App bestätigen
-    try { await fetch('https://n8n.leolan.net/webhook/n26-sync-request', {signal: AbortSignal.timeout(5000)}); } catch(e) {}
+    if (balEl) balEl.textContent = '⏳ N26 App bestätigen...';
+    // N26 MFA Challenge direkt triggern
+    try {
+      await fetch('https://n8n.leolan.net/webhook/n26-mfa-trigger', {signal: AbortSignal.timeout(5000)});
+    } catch(e) {}
+    if (balEl) balEl.textContent = 'N26 App öffnen + bestätigen, dann nochmal Sync drücken';
     return;
   }
   if (balEl) balEl.textContent = '€' + (data.balance || 0).toLocaleString('de-DE', {minimumFractionDigits:2});
