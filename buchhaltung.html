@@ -2531,11 +2531,16 @@ function closeTxDetail() {
 
 function toggleSidebar() {
   var sb = document.getElementById('sidebar');
-  if (!sb) return;
-  if (window.innerWidth <= 768) {
-    sb.classList.toggle('open');
+  if (!sb) { alert('sidebar not found'); return; }
+  var isMobile = window.innerWidth <= 900;
+  if (isMobile) {
+    var isOpen = sb.classList.toggle('open');
     var ov = document.getElementById('sidebar-overlay');
-    if (ov) ov.classList.toggle('visible', sb.classList.contains('open'));
+    if (ov) ov.classList.toggle('visible', isOpen);
+    // Force repaint for iOS Safari
+    sb.style.display = 'none';
+    sb.offsetHeight; // trigger reflow
+    sb.style.display = '';
   } else {
     sb.classList.toggle('collapsed');
     var mc = document.querySelector('.main-content');
