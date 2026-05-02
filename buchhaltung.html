@@ -1323,6 +1323,19 @@ if (sessionStorage.getItem('leolan_auth')) {
     </div>
   </div>
 
+  <!-- N26 Status -->
+  <div style="background:rgba(100,100,100,0.08);border:1px solid rgba(100,100,100,0.2);border-radius:12px;padding:16px;margin-bottom:12px;display:flex;align-items:center;gap:12px;">
+    <div style="background:#333;color:#fff;padding:6px 14px;border-radius:8px;font-weight:700;font-size:14px;">N26</div>
+    <div>
+      <div style="font-weight:600;font-size:14px;">N26 Business Standard</div>
+      <div style="font-size:12px;opacity:.45;">DE25 1001 1001 2226 5950 79</div>
+    </div>
+    <div style="margin-left:auto;text-align:right;">
+      <div style="font-size:24px;font-weight:700;font-variant-numeric:tabular-nums;" id="n26-balance-display">— €</div>
+      <button onclick="syncN26()" style="font-size:11px;background:none;border:none;color:#0a84ff;cursor:pointer;padding:0;">N26 Sync</button>
+    </div>
+  </div>
+
   <!-- Qonto Status -->
   <div style="background:rgba(10,132,255,0.08);border:1px solid rgba(10,132,255,0.2);border-radius:12px;padding:16px;margin-bottom:16px;display:flex;align-items:center;gap:12px;">
     <div style="background:#0a84ff;color:#fff;padding:6px 14px;border-radius:8px;font-weight:700;font-size:14px;">Q</div>
