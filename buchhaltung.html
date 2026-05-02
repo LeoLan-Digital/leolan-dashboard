@@ -3308,6 +3308,11 @@ document.addEventListener('DOMContentLoaded', function() {
   // header date
   var hd = document.getElementById('headerDate');
   if (hd) hd.textContent = 'GJ ' + new Date().getFullYear();
+  // Auto-sync N26 + Qonto on load
+  setTimeout(function() {
+    if (typeof syncN26 === 'function') syncN26();
+    if (typeof syncQonto === 'function') syncQonto();
+  }, 500);
 });
 </script>
 </html>
