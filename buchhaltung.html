@@ -1853,37 +1853,7 @@ const KONTO_MAP = {
   'Büro':               { kto: '4980', stk: 'VSt 19%',  name: 'Bürobedarf' },
   'Reise':              { kto: '4650', stk: 'VSt 19%',  name: 'Reisekosten' },
   'Telefon/Internet':   { kto: '4910', stk: 'VSt 19%',  name: 'Telefon/Internet' },
-  'Sonstiges':          { kto: '4990', stk: 'VSt 19%',  name: 'Sonstige Kosten' },
-  'tx7': {
-    name: 'ANTHROPIC IRELAND LTD', amount: '-€15,25 ($17,81)',
-    date: '29.04.2026 00:08', ref: 'ANTHROPIC PAYMENT', rate: '1 USD = €0.9259',
-    invName: 'Claude API Rechnung #2399-5121', invRef: 'Stripe · 29.04.2026',
-    pdfUrl: 'https://pay.stripe.com/invoice/acct_1REyrSBNUnCSzfs9/live_YWNjdF8xUkV5clNCTlVuQ1N6ZnM5LF9VUUE2QWJFQTFlNXk3RGxvMElBUmdmbGhYRlAxZzZULDE2Nzk1NDkxMA0200C6NVp3hE/pdf?s=em'
-  },
-  'tx8': {
-    name: 'ANTHROPIC IRELAND LTD', amount: '-€16,80 ($19,61)',
-    date: '29.04.2026 00:15', ref: 'ANTHROPIC PAYMENT', rate: '1 USD = €0.9259',
-    invName: 'Claude API Rechnung #2370-7422', invRef: 'Stripe · 29.04.2026',
-    pdfUrl: 'https://pay.stripe.com/invoice/acct_1REyrSBNUnCSzfs9/live_YWNjdF8xUkV5clNCTlVuQ1N6ZnM5LF9VUUFEbjJLYkZEZHc3cXNiVnZyTEhyTks1cHFVcVRlLDE2Nzk1NTMwNg0200Cy4Xb0CJ/pdf?s=em'
-  },
-  'tx9': {
-    name: 'ANTHROPIC IRELAND LTD', amount: '-€14,53 ($16,96) *',
-    date: '29.04.2026 00:24', ref: 'ANTHROPIC PAYMENT', rate: '1 USD = €0.9259',
-    invName: 'Claude API Rechnung #2278-2550', invRef: 'Stripe · 29.04.2026',
-    pdfUrl: 'https://pay.stripe.com/invoice/acct_1REyrSBNUnCSzfs9/live_YWNjdF8xUkV5clNCTlVuQ1N6ZnM5LF9VUUFNZFo3MmVpa2ZSTVlmcFd5TWZ0blBINXZDbmZRLDE2Nzk1NTg0MA0200QtHwJODo/pdf?s=em'
-  }
-  'tx10': {
-    name: 'ANTHROPIC IRELAND LTD', amount: '-€16,68 ($18,01)',
-    date: '29.04.2026 00:31', ref: 'ANTHROPIC PAYMENT', rate: '1 USD = €0.9259',
-    invName: 'Claude API Rechnung #2097-5827', invRef: 'Stripe · 29.04.2026',
-    pdfUrl: 'https://pay.stripe.com/invoice/acct_1REyrSBNUnCSzfs9/live_YWNjdF8xUkV5clNCTlVuQ1N6ZnM5LF9VUUFEbjJLYkZEZHc3cXNiVnZyTEhyTks1cHFVcVRlLDE2Nzk1NTMwNg0200Cy4Xb0CJ/pdf?s=em'
-  },
-  'tx11': {
-    name: 'ANTHROPIC IRELAND LTD', amount: '-€14,63 ($15,80)',
-    date: '29.04.2026 00:40', ref: 'ANTHROPIC PAYMENT', rate: '1 USD = €0.9259',
-    invName: 'Claude API Rechnung #2024-2419', invRef: 'Stripe · 29.04.2026',
-    pdfUrl: 'https://pay.stripe.com/invoice/acct_1REyrSBNUnCSzfs9/live_YWNjdF8xUkV5clNCTlVuQ1N6ZnM5LF9VUUFNZFo3MmVpa2ZSTVlmcFd5TWZ0blBINXZDbmZRLDE2Nzk1NTg0MA0200QtHwJODo/pdf?s=em'
-  }
+  'Sonstiges':          { kto: '4990', stk: 'VSt 19%',  name: 'Sonstige Kosten' }
 };
 
 const INCOME_KONTO_MAP = {
@@ -1944,54 +1914,6 @@ const DEFAULT_CUSTOMERS = [
 // ─────────────────────────────────────────
 // STATE
 // ─────────────────────────────────────────
-function loadState() {
-  try {
-    // Check v4 first
-    const s4 = localStorage.getItem('leolan_buch_v4');
-    if (s4) {
-      const parsed = JSON.parse(s4);
-      parsed.expenses = (parsed.expenses||[]).map(e=>({note:'',status:'bezahlt',zahlungsart:'Überweisung',beleg_nr:'',faellig:'', ...e}));
-      parsed.income   = (parsed.income||[]).map(i=>({note:'',recurring:false,sepa:'',faellig:'', ...i}));
-      if (!parsed.categories) parsed.categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
-      if (!parsed.eurOverrides) parsed.eurOverrides = {};
-      if (!parsed.settings) parsed.settings = {};
-      if (!parsed.customers) parsed.customers = DEFAULT_CUSTOMERS.map(c=>({...c}));
-      return parsed;
-    }
-    // Migrate from v3
-    const s3 = localStorage.getItem('leolan_buch_v3');
-    if (s3) {
-      const old = JSON.parse(s3);
-      console.log('Migriere von v3 → v4...');
-      localStorage.removeItem('leolan_buch_v3');
-      return {
-        expenses: INITIAL_EXPENSES.map(e=>({...e})),
-        income:   INITIAL_INCOME.map(i=>({...i})),
-        categories: old.categories || JSON.parse(JSON.stringify(DEFAULT_CATEGORIES)),
-        eurOverrides: old.eurOverrides || {},
-        settings: old.settings || {},
-        customers: DEFAULT_CUSTOMERS.map(c=>({...c})),
-        version: DATA_VERSION
-      };
-    }
-  } catch(e) { console.warn('State load error', e); }
-  return {
-    expenses: INITIAL_EXPENSES.map(e=>({...e})),
-    income:   INITIAL_INCOME.map(i=>({...i})),
-    categories: JSON.parse(JSON.stringify(DEFAULT_CATEGORIES)),
-    eurOverrides: {},
-    settings: {},
-    customers: DEFAULT_CUSTOMERS.map(c=>({...c})),
-    version: DATA_VERSION
-  };
-}
-
-function saveState() {
-  state.version = DATA_VERSION;
-  localStorage.setItem('leolan_buch_v4', JSON.stringify(state));
-}
-
-let state = loadState();
 
 // ─────────────────────────────────────────
 // HELPERS
@@ -2001,11 +1923,6 @@ function getUsdRate() {
   return (r && r > 0) ? r : (state.settings.usdRate || DEFAULT_USD_RATE);
 }
 
-function eurAmt(e) {
-  if (e.amount_eur !== null && e.amount_eur !== undefined) return e.amount_eur;
-  if (e.amount_usd !== null && e.amount_usd !== undefined) return e.amount_usd * getUsdRate();
-  return null;
-}
 
 function fmtE(v) {
   if (v === null || v === undefined) return '<span class="text-muted">—</span>';
@@ -2103,7 +2020,7 @@ function saveState() {
   try { localStorage.setItem('leolan_buch_v5', JSON.stringify(state)); } catch(e) {}
 }
 
-let state = loadState();
+var state = loadState();
 
 // EUR Betrag berechnen
 function eurAmt(e) {
@@ -2113,12 +2030,7 @@ function eurAmt(e) {
 }
 
 function esc(s) { if (!s) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function fmtE(v) { if (v===null||v===undefined) return '<span style="opacity:.4">—</span>'; return '€'+parseFloat(v).toLocaleString('de-DE',{minimumFractionDigits:2}); }
-function catBadge(c) { return '<span class="badge badge-gray">'+esc(c||'?')+'</span>'; }
-function statusBadge(s) {
-  var m={bezahlt:'green',offen:'red',überfällig:'red',storniert:'gray'};
-  return '<span class="badge badge-'+(m[s]||'gray')+'">'+esc(s||'offen')+'</span>';
-}
+
 
 function renderAll() {
   renderExpenses();
@@ -2163,16 +2075,6 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <script>
-function switchTab(id, el) {
-  document.querySelectorAll('.tab-content').forEach(function(t) {
-    t.classList.remove('active'); t.style.display='none';
-  });
-  document.querySelectorAll('.sidebar-item,.sidebar-sub-item').forEach(function(n) { n.classList.remove('active'); });
-  var target = document.getElementById('tab-'+id);
-  if (target) { target.classList.add('active'); target.style.display='block'; }
-  if (el) el.classList.add('active');
-  if (id==='expenses') renderExpenses();
-}
 function doLogout(){ sessionStorage.removeItem('leolan_auth'); location.reload(); }
 </script>
 
@@ -2554,7 +2456,36 @@ var TX_DATA = {
     name: 'ANTHROPIC IRELAND LTD', amount: '-€16,96 ($18,33)',
     date: '29.04.2026 00:02', ref: 'ANTHROPIC PAYMENT', rate: '1 USD = €0.9259',
     invName: 'Claude API Rechnung #2024-3572', invRef: 'Stripe · 29.04.2026',
-    pdfUrl: 'https://pay.stripe.com/invoice/acct_1REyrSBNUnCSzfs9/live_YWNjdF8xUkV5clNCTlVuQ1N6ZnM5LF9VUUEwM0NwZ29OY28yVTVxOXZVU3h1bXk0T3JYYmVMLDE2Nzk1NDUxNw0200Jq4EaRPu/pdf?s=em'
+    pdfUrl: 'https://pay.stripe.com/invoice/acct_1REyrSBNUnCSzfs9/live_YWNjdF8xUkV5clNCTlVuQ1N6ZnM5LF9VUUEwM0NwZ29OY28yVTVxOXZVU3h1bXk0T3JYYmVMLDE2Nzk1NDUxNw0200Jq4EaRPu/pdf?s=em'  },
+  'tx7': {
+    name: 'ANTHROPIC IRELAND LTD', amount: '-€15,25 ($17,81)',
+    date: '29.04.2026 00:08', ref: 'ANTHROPIC PAYMENT', rate: '1 USD = €0.9259',
+    invName: 'Claude API Rechnung #2399-5121', invRef: 'Stripe · 29.04.2026',
+    pdfUrl: 'https://pay.stripe.com/invoice/acct_1REyrSBNUnCSzfs9/live_YWNjdF8xUkV5clNCTlVuQ1N6ZnM5LF9VUUE2QWJFQTFlNXk3RGxvMElBUmdmbGhYRlAxZzZULDE2Nzk1NDkxMA0200C6NVp3hE/pdf?s=em'
+  },
+  'tx8': {
+    name: 'ANTHROPIC IRELAND LTD', amount: '-€16,80 ($19,61)',
+    date: '29.04.2026 00:15', ref: 'ANTHROPIC PAYMENT', rate: '1 USD = €0.9259',
+    invName: 'Claude API Rechnung #2370-7422', invRef: 'Stripe · 29.04.2026',
+    pdfUrl: 'https://pay.stripe.com/invoice/acct_1REyrSBNUnCSzfs9/live_YWNjdF8xUkV5clNCTlVuQ1N6ZnM5LF9VUUFEbjJLYkZEZHc3cXNiVnZyTEhyTks1cHFVcVRlLDE2Nzk1NTMwNg0200Cy4Xb0CJ/pdf?s=em'
+  },
+  'tx9': {
+    name: 'ANTHROPIC IRELAND LTD', amount: '-€14,53 ($16,96)',
+    date: '29.04.2026 00:24', ref: 'ANTHROPIC PAYMENT', rate: '1 USD = €0.9259',
+    invName: 'Claude API Rechnung #2278-2550', invRef: 'Stripe · 29.04.2026',
+    pdfUrl: 'https://pay.stripe.com/invoice/acct_1REyrSBNUnCSzfs9/live_YWNjdF8xUkV5clNCTlVuQ1N6ZnM5LF9VUUFNZFo3MmVpa2ZSTVlmcFd5TWZ0blBINXZDbmZRLDE2Nzk1NTg0MA0200QtHwJODo/pdf?s=em'
+  },
+  'tx10': {
+    name: 'ANTHROPIC IRELAND LTD', amount: '-€16,68 ($18,01)',
+    date: '29.04.2026 00:31', ref: 'ANTHROPIC PAYMENT', rate: '1 USD = €0.9259',
+    invName: 'Claude API Rechnung #2097-5827', invRef: 'Stripe · 29.04.2026',
+    pdfUrl: 'https://pay.stripe.com/invoice/acct_1REyrSBNUnCSzfs9/live_YWNjdF8xUkV5clNCTlVuQ1N6ZnM5LF9VUUFEbjJLYkZEZHc3cXNiVnZyTEhyTks1cHFVcVRlLDE2Nzk1NTMwNg0200Cy4Xb0CJ/pdf?s=em'
+  },
+  'tx11': {
+    name: 'ANTHROPIC IRELAND LTD', amount: '-€14,63 ($15,80)',
+    date: '29.04.2026 00:40', ref: 'ANTHROPIC PAYMENT', rate: '1 USD = €0.9259',
+    invName: 'Claude API Rechnung #2024-2419', invRef: 'Stripe · 29.04.2026',
+    pdfUrl: 'https://pay.stripe.com/invoice/acct_1REyrSBNUnCSzfs9/live_YWNjdF8xUkV5clNCTlVuQ1N6ZnM5LF9VUUFNZFo3MmVpa2ZSTVlmcFd5TWZ0blBINXZDbmZRLDE2Nzk1NTg0MA0200QtHwJODo/pdf?s=em'
   }
 };
 
@@ -2575,5 +2506,763 @@ function showTxDetail(txId) {
 function closeTxDetail() {
   document.getElementById('txDetailModal').style.display = 'none';
 }
+</script>
+<script>
+// ══════════════════════════════════════════════════════════════
+// FEHLENDE FUNKTIONEN — vollständige Implementierung
+// ══════════════════════════════════════════════════════════════
+
+function toggleSidebar() {
+  var sb = document.getElementById('sidebar');
+  if (!sb) return;
+  if (window.innerWidth <= 768) {
+    sb.classList.toggle('open');
+  } else {
+    sb.classList.toggle('collapsed');
+    var mc = document.querySelector('.main-content');
+    if (mc) mc.style.marginLeft = sb.classList.contains('collapsed') ? '0' : 'var(--sidebar-w)';
+  }
+}
+
+function toggleSection(id) {
+  var sec = document.getElementById(id);
+  if (sec) sec.classList.toggle('collapsed');
+}
+
+function closeModalOutside(event) {
+  if (event.target === document.getElementById('modalOverlay')) {
+    document.getElementById('modalOverlay').classList.remove('open');
+  }
+}
+
+function syncN26() {
+  var el = document.getElementById('n26-balance-display');
+  if (el) el.textContent = '— €';
+  alert('⚠️ N26 Direktzugang nicht verfügbar.\nBitte Kontostand über das Widget oben manuell eingeben.');
+}
+
+function openPDF() {
+  var txId = window._currentTxId;
+  if (!txId || typeof TX_DATA === 'undefined') return;
+  var tx = TX_DATA[txId];
+  if (tx && tx.pdfUrl) window.open(tx.pdfUrl, '_blank');
+}
+
+// ─── ADD MODALS ───────────────────────────────────────────────
+function _getCats(type) {
+  var def = { expense: ['Software/API','Software/SaaS','Entwicklung','Behörden/Beratung','Behörden','Rechtskosten','Marketing','Büro','Reise','Telefon/Internet','Sonstiges'],
+              income: ['Webentwicklung','App-Entwicklung','KI/Automatisierung','Beratung','Marketing','Entwicklung','Sonstiges'] };
+  if (typeof state !== 'undefined' && state.categories && state.categories[type]) return state.categories[type];
+  if (typeof DEFAULT_CATEGORIES !== 'undefined' && DEFAULT_CATEGORIES[type]) return DEFAULT_CATEGORIES[type];
+  return def[type] || [];
+}
+
+function _esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function openAddModal(type) {
+  var isIncome = type === 'income';
+  var cats = _getCats(type);
+  var catOpts = cats.map(function(c){ return '<option>'+_esc(c)+'</option>'; }).join('');
+  var html = '<div class="form-row">'
+    + '<div class="form-group"><label>Datum</label><input type="date" id="m-date" value="'+new Date().toISOString().slice(0,10)+'"></div>'
+    + '<div class="form-group"><label>Betrag (€)</label><input type="number" id="m-amount" step="0.01" min="0" placeholder="0.00"></div>'
+    + '</div>'
+    + '<div class="form-group"><label>Beschreibung</label><input type="text" id="m-desc" placeholder="z.B. Google Workspace April"></div>'
+    + '<div class="form-row">'
+    + '<div class="form-group"><label>'+(isIncome?'Kunde':'Anbieter')+'</label><input type="text" id="m-vendor" placeholder=""></div>'
+    + '<div class="form-group"><label>Kategorie</label><select id="m-cat">'+catOpts+'</select></div>'
+    + '</div>'
+    + '<div class="form-row">'
+    + (isIncome ? '' : '<div class="form-group"><label>Zahlungsart</label><select id="m-pay"><option>Überweisung</option><option>Lastschrift</option><option>Kreditkarte</option><option>Bar</option><option>PayPal</option></select></div>')
+    + '<div class="form-group"><label>Status</label><select id="m-status"><option value="bezahlt">✓ Bezahlt</option><option value="offen">Offen</option></select></div>'
+    + '</div>'
+    + '<div class="form-group"><label>Notiz</label><textarea id="m-note" rows="2"></textarea></div>'
+    + '<div class="modal-actions">'
+    + '<button class="btn btn-outline" onclick="document.getElementById(\'modalOverlay\').classList.remove(\'open\')">Abbrechen</button>'
+    + '<button class="btn" onclick="_saveAddModal(\''+type+'\')">&#128190; Speichern</button>'
+    + '</div>';
+  document.getElementById('modalTitle').textContent = isIncome ? '+ Neue Einnahme' : '+ Neue Ausgabe';
+  document.getElementById('modalBody').innerHTML = html;
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+function _saveAddModal(type) {
+  var date   = (document.getElementById('m-date')||{}).value || '';
+  var amount = parseFloat((document.getElementById('m-amount')||{}).value || '0') || 0;
+  var desc   = ((document.getElementById('m-desc')||{}).value || '').trim();
+  var vendor = ((document.getElementById('m-vendor')||{}).value || '').trim();
+  var cat    = ((document.getElementById('m-cat')||{}).value) || 'Sonstiges';
+  var status = ((document.getElementById('m-status')||{}).value) || 'bezahlt';
+  var note   = ((document.getElementById('m-note')||{}).value || '').trim();
+  var zahlungsart = ((document.getElementById('m-pay')||{}).value) || 'Überweisung';
+  if (!desc || !amount || !date) { alert('Bitte Datum, Betrag und Beschreibung ausfüllen.'); return; }
+  var id = type[0] + Date.now();
+  if (type === 'income') {
+    if (!state.income) state.income = [];
+    var inv = 'LD-2026-' + String(1000 + state.income.length).padStart(4,'0');
+    state.income.push({ id:id, date:date, invoice:inv, desc:desc, customer:vendor, amount_net:amount, ust:0, amount_gross:amount, category:cat, status:status, note:note, recurring:false });
+    renderIncomeTable();
+  } else {
+    if (!state.expenses) state.expenses = [];
+    state.expenses.push({ id:id, date:date, desc:desc, vendor:vendor, amount_eur:amount, amount_usd:null, category:cat, status:status, note:note, zahlungsart:zahlungsart, beleg_nr:'' });
+    if (typeof renderExpenses==='function') renderExpenses();
+    if (typeof renderOverview==='function') renderOverview();
+  }
+  if (typeof saveState==='function') saveState();
+  document.getElementById('modalOverlay').classList.remove('open');
+}
+
+function openAddCustomerModal() {
+  var html = '<div class="form-row">'
+    + '<div class="form-group"><label>Name / Firma</label><input type="text" id="mc-name" placeholder="Max Mustermann"></div>'
+    + '<div class="form-group"><label>E-Mail</label><input type="email" id="mc-email" placeholder="max@example.com"></div>'
+    + '</div><div class="form-row">'
+    + '<div class="form-group"><label>Stadt</label><input type="text" id="mc-city" placeholder="Dresden"></div>'
+    + '<div class="form-group"><label>Telefon</label><input type="tel" id="mc-phone" placeholder="+49..."></div>'
+    + '</div>'
+    + '<div class="form-group"><label>Notiz</label><textarea id="mc-note" rows="2"></textarea></div>'
+    + '<div class="modal-actions">'
+    + '<button class="btn btn-outline" onclick="document.getElementById(\'modalOverlay\').classList.remove(\'open\')">Abbrechen</button>'
+    + '<button class="btn" onclick="_saveAddCustomer()">&#128190; Kunde speichern</button>'
+    + '</div>';
+  document.getElementById('modalTitle').textContent = '+ Neuer Kunde';
+  document.getElementById('modalBody').innerHTML = html;
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+function _saveAddCustomer() {
+  var name  = ((document.getElementById('mc-name')||{}).value||'').trim();
+  var email = ((document.getElementById('mc-email')||{}).value||'').trim();
+  var city  = ((document.getElementById('mc-city')||{}).value||'').trim();
+  var phone = ((document.getElementById('mc-phone')||{}).value||'').trim();
+  var note  = ((document.getElementById('mc-note')||{}).value||'').trim();
+  if (!name) { alert('Bitte Name eingeben.'); return; }
+  if (!state.customers) state.customers = [];
+  state.customers.push({ id:'c'+Date.now(), name:name, email:email, city:city, phone:phone, note:note });
+  if (typeof saveState==='function') saveState();
+  renderCustomers();
+  document.getElementById('modalOverlay').classList.remove('open');
+}
+
+function openAddPaymentModal() { openAddModal('expense'); }
+
+function addPaymentAndMatch() {
+  var date      = (document.getElementById('pay-date')||{}).value || '';
+  var amount    = parseFloat((document.getElementById('pay-amount')||{}).value||'0')||0;
+  var recipient = ((document.getElementById('pay-recipient')||{}).value||'').trim();
+  var ref       = ((document.getElementById('pay-ref')||{}).value||'').trim();
+  if (!amount || !date) { alert('Datum und Betrag erforderlich.'); return; }
+  var matched = (typeof window.N26_MATCH === 'function') ? window.N26_MATCH({ partnerName:recipient, referenceText:ref, amount:amount }) : null;
+  if (matched) {
+    alert('✅ Zugeordnet zu: ' + matched.desc);
+  } else {
+    if (!state.expenses) state.expenses = [];
+    state.expenses.push({ id:'p'+Date.now(), date:date, desc:(recipient||'Zahlung')+' — '+(ref||''), vendor:recipient, amount_eur:amount, amount_usd:null, category:'Sonstiges', status:'bezahlt', note:ref, zahlungsart:'Überweisung', beleg_nr:'' });
+    if (typeof saveState==='function') saveState();
+    if (typeof renderExpenses==='function') renderExpenses();
+    if (typeof renderOverview==='function') renderOverview();
+    alert('✅ Zahlung erfasst (kein automatischer Match gefunden).');
+  }
+  ['pay-date','pay-amount','pay-recipient','pay-ref'].forEach(function(id){ var el=document.getElementById(id); if(el)el.value=''; });
+}
+
+// ─── INCOME TABLE ─────────────────────────────────────────────
+function renderIncomeTable() {
+  var tbody = document.getElementById('incomeBody');
+  if (!tbody) return;
+  var items = state.income || [];
+  if (!items.length) { tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;opacity:.4;padding:20px;">Noch keine Einnahmen erfasst. Klicke &quot;+ Einnahme hinzufügen&quot;.</td></tr>'; return; }
+  var IKMAP = (typeof INCOME_KONTO_MAP !== 'undefined') ? INCOME_KONTO_MAP : {};
+  tbody.innerHTML = items.map(function(i) {
+    var kto = (IKMAP[i.category]||{kto:'8100'}).kto;
+    var gross = i.amount_gross || i.amount_net || 0;
+    var fmtV = function(v){ return '€'+parseFloat(v||0).toLocaleString('de-DE',{minimumFractionDigits:2}); };
+    var sBadge = {'bezahlt':'green','offen':'yellow','überfällig':'red','storniert':'gray'};
+    return '<tr><td>'+_esc(i.date||'—')+'</td><td>'+_esc(i.invoice||'—')+'</td><td>'+_esc(i.desc||'—')+'</td>'
+      +'<td>'+_esc(i.customer||'—')+'</td><td class="amount-positive">'+fmtV(i.amount_net||0)+'</td>'
+      +'<td class="amount-neutral">'+fmtV(i.ust||0)+'</td><td class="amount-positive">'+fmtV(gross)+'</td>'
+      +'<td><span class="badge badge-konto">'+kto+'</span></td>'
+      +'<td><span class="badge badge-gray">'+_esc(i.category||'—')+'</span></td>'
+      +'<td><span class="badge badge-'+(sBadge[i.status]||'gray')+'">'+_esc(i.status||'offen')+'</span></td>'
+      +'<td class="actions-cell"><button class="btn btn-xs btn-red" onclick="_deleteEntry(\'income\',\''+i.id+'\')">&#128465;</button></td></tr>';
+  }).join('');
+}
+
+function _deleteEntry(type, id) {
+  if (!confirm('Eintrag wirklich löschen?')) return;
+  if (type==='income') state.income=(state.income||[]).filter(function(x){return x.id!==id;});
+  else if (type==='customer') state.customers=(state.customers||[]).filter(function(x){return x.id!==id;});
+  else state.expenses=(state.expenses||[]).filter(function(x){return x.id!==id;});
+  if (typeof saveState==='function') saveState();
+  if (typeof renderExpenses==='function') renderExpenses();
+  if (typeof renderOverview==='function') renderOverview();
+  renderIncomeTable(); renderCustomers(); renderOpenItems();
+}
+
+// ─── CUSTOMERS ────────────────────────────────────────────────
+function renderCustomers() {
+  var tbody = document.getElementById('customersBody');
+  if (!tbody) return;
+  var custs = state.customers || [];
+  if (!custs.length) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;opacity:.4;padding:20px;">Noch keine Kunden erfasst.</td></tr>'; return; }
+  tbody.innerHTML = custs.map(function(c) {
+    var invC = (state.income||[]).filter(function(i){return i.customer===c.name;}).length;
+    var rev  = (state.income||[]).filter(function(i){return i.customer===c.name;}).reduce(function(s,i){return s+(i.amount_gross||0);},0);
+    var fmtV = function(v){ return '€'+parseFloat(v||0).toLocaleString('de-DE',{minimumFractionDigits:2}); };
+    return '<tr><td>'+_esc(c.name||'—')+'</td><td>'+_esc(c.email||'—')+'</td><td>'+_esc(c.city||'—')+'</td>'
+      +'<td>'+invC+'</td><td class="amount-positive">'+fmtV(rev)+'</td>'
+      +'<td class="actions-cell"><button class="btn btn-xs btn-red" onclick="_deleteEntry(\'customer\',\''+c.id+'\')">&#128465;</button></td></tr>';
+  }).join('');
+}
+
+// ─── OPEN ITEMS ───────────────────────────────────────────────
+function renderOpenItems() {
+  var today = new Date(); today.setHours(0,0,0,0);
+  var fmtV = function(v){ if(v===null||v===undefined)return '—'; return '€'+parseFloat(v).toLocaleString('de-DE',{minimumFractionDigits:2}); };
+  var getEur = function(e) {
+    if (e.amount_eur!==null&&e.amount_eur!==undefined) return e.amount_eur;
+    if (e.amount_usd!==null&&e.amount_usd!==undefined) return e.amount_usd*(state.usdRate||0.9259);
+    return null;
+  };
+  var openExp = (state.expenses||[]).filter(function(e){return e.status==='offen';});
+  var openInc = (state.income||[]).filter(function(i){return i.status==='offen';});
+  
+  function daysInfo(dateStr) {
+    var d = new Date(dateStr||Date.now()); d.setHours(0,0,0,0);
+    var diff = Math.round((today-d)/86400000);
+    var cls = diff>0?'overdue':diff>-7?'due-soon':'fine';
+    var txt = diff>0?(diff+' Tage überfällig'):diff===0?'Heute fällig':(Math.abs(diff)+' Tage');
+    return '<span class="days-overdue '+cls+'">'+txt+'</span>';
+  }
+  
+  var expBody = document.getElementById('op-expenses-body');
+  if (expBody) {
+    expBody.innerHTML = openExp.length ? openExp.map(function(e) {
+      var ev = getEur(e);
+      return '<tr><td>'+_esc(e.date||'—')+'</td><td>'+_esc(e.beleg_nr||'—')+'</td><td>'+_esc(e.desc||'—')+'</td>'
+        +'<td>'+_esc(e.vendor||'—')+'</td><td class="amount-negative">'+fmtV(ev)+'</td>'
+        +'<td>'+_esc(e.faellig||e.date||'—')+'</td><td>'+daysInfo(e.faellig||e.date)+'</td>'
+        +'<td class="actions-cell"><button class="btn btn-xs btn-green" onclick="_markPaid(\'expense\',\''+e.id+'\')">&#10003; Bezahlt</button></td></tr>';
+    }).join('') : '<tr><td colspan="8" style="text-align:center;opacity:.4;padding:20px;">✅ Keine offenen Verbindlichkeiten</td></tr>';
+  }
+  
+  var incBody = document.getElementById('op-income-body');
+  if (incBody) {
+    incBody.innerHTML = openInc.length ? openInc.map(function(i) {
+      var fmtV2 = function(v){ return '€'+parseFloat(v||0).toLocaleString('de-DE',{minimumFractionDigits:2}); };
+      return '<tr><td>'+_esc(i.date||'—')+'</td><td>'+_esc(i.invoice||'—')+'</td><td>'+_esc(i.desc||'—')+'</td>'
+        +'<td>'+_esc(i.customer||'—')+'</td><td class="amount-positive">'+fmtV2(i.amount_gross||0)+'</td>'
+        +'<td>'+_esc(i.faellig||i.date||'—')+'</td><td>'+daysInfo(i.faellig||i.date)+'</td>'
+        +'<td><span class="badge badge-red">Offen</span></td>'
+        +'<td class="actions-cell"><button class="btn btn-xs btn-green" onclick="_markPaid(\'income\',\''+i.id+'\')">&#10003; Bezahlt</button></td></tr>';
+    }).join('') : '<tr><td colspan="9" style="text-align:center;opacity:.4;padding:20px;">✅ Keine offenen Forderungen</td></tr>';
+  }
+  
+  var total = openExp.length + openInc.length;
+  var badge = document.getElementById('op-badge');
+  if (badge) badge.textContent = total;
+  
+  var bar = document.getElementById('op-summary-bar');
+  if (bar) {
+    if (total) {
+      var openExpAmt = openExp.reduce(function(s,e){var v=getEur(e);return v!==null?s+v:s;},0);
+      var openIncAmt = openInc.reduce(function(s,i){return s+(i.amount_gross||0);},0);
+      bar.style.display='block';
+      bar.textContent='⚠️ Offene Verbindlichkeiten: €'+openExpAmt.toFixed(2)+' | Offene Forderungen: €'+openIncAmt.toFixed(2);
+    } else { bar.style.display='none'; }
+  }
+}
+
+function _markPaid(type, id) {
+  var arr = type==='income'?(state.income||[]):(state.expenses||[]);
+  var item = arr.find(function(x){return x.id===id;});
+  if (item) {
+    item.status='bezahlt';
+    item.note=(item.note||'')+' | ✅ Bezahlt '+new Date().toLocaleDateString('de-DE');
+    if (typeof saveState==='function') saveState();
+    renderOpenItems(); renderReminders();
+    if (typeof renderExpenses==='function') renderExpenses();
+    if (typeof renderOverview==='function') renderOverview();
+  }
+}
+
+// ─── REMINDERS ────────────────────────────────────────────────
+function renderReminders() {
+  var container = document.getElementById('reminders-container');
+  if (!container) return;
+  var today = new Date(); today.setHours(0,0,0,0);
+  var openInc = (state.income||[]).filter(function(i){return i.status==='offen';});
+  var badge = document.getElementById('mahn-badge');
+  if (!openInc.length) {
+    container.innerHTML = '<div class="success-box">✅ Keine offenen Forderungen — keine Mahnungen nötig!</div>';
+    if (badge) badge.style.display='none'; return;
+  }
+  if (badge) { badge.textContent=openInc.length; badge.style.display=''; }
+  var html = openInc.map(function(inv) {
+    var fDate = inv.faellig ? new Date(inv.faellig) : new Date(new Date(inv.date).getTime()+14*86400000);
+    fDate.setHours(0,0,0,0);
+    var diff = Math.round((today-fDate)/86400000);
+    var fmtV = '€'+parseFloat(inv.amount_gross||0).toLocaleString('de-DE',{minimumFractionDigits:2});
+    return '<div class="mahnung-card"><div class="mahnung-header">'
+      +'<div><div style="font-weight:700;font-size:15px;">'+_esc(inv.customer||'Kunde')+'</div>'
+      +'<div style="opacity:.5;font-size:13px;">'+_esc(inv.invoice||'—')+' · '+_esc(inv.desc||'—')+'</div></div>'
+      +'<div style="text-align:right"><div style="font-size:20px;font-weight:700;color:'+(diff>0?'var(--red)':'var(--yellow)')+'">'+fmtV+'</div>'
+      +'<div style="font-size:12px;opacity:.5">'+(diff>0?(diff+' Tage überfällig'):('Fällig: '+fDate.toLocaleDateString('de-DE')))+'</div>'
+      +'</div></div>'
+      +'<div class="actions-cell" style="justify-content:flex-start;gap:8px;flex-wrap:wrap;">'
+      +'<button class="btn btn-sm btn-outline" onclick="_generateMahnung(\''+inv.id+'\')">&#128196; Mahnung erstellen</button>'
+      +'<button class="btn btn-sm btn-green" onclick="_markPaid(\'income\',\''+inv.id+'\')">&#10003; Als bezahlt markieren</button>'
+      +'</div></div>';
+  }).join('');
+  container.innerHTML = html;
+}
+
+function _generateMahnung(invId) {
+  var inv = (state.income||[]).find(function(i){return i.id===invId;});
+  if (!inv) return;
+  var s = state.settings || {};
+  var today = new Date().toLocaleDateString('de-DE');
+  var fmtV = '€'+parseFloat(inv.amount_gross||0).toLocaleString('de-DE',{minimumFractionDigits:2});
+  var win = window.open('','_blank');
+  if (!win) { alert('Popup geblockt. Bitte Popup-Blocker deaktivieren.'); return; }
+  win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Mahnung '+_esc(inv.invoice||'')+
+    '</title><style>body{font-family:Arial,sans-serif;max-width:700px;margin:40px auto;color:#000;}</style></head><body>'+
+    '<div style="text-align:right;margin-bottom:30px;"><b>'+_esc(s.company||'LeoLan Digital')+'</b><br>'+
+    _esc(s.owner||'Kamaleddin Nazari')+'<br>'+_esc(s.street||'Reicker Straße 132')+'<br>'+
+    _esc(s.city||'01237 Dresden')+'<br>'+_esc(s.email||'business@leolan.net')+'</div>'+
+    '<p><b>'+_esc(inv.customer||'Kunde')+'</b></p>'+
+    '<p>Datum: '+today+'</p>'+
+    '<h2>Zahlungserinnerung — Rechnung '+_esc(inv.invoice||'—')+'</h2>'+
+    '<p>Sehr geehrte Damen und Herren,<br><br>unsere Rechnung '+_esc(inv.invoice||'—')+
+    ' vom '+_esc(inv.date||'—')+' über <b>'+fmtV+'</b> ist noch offen.</p>'+
+    '<p>Bitte überweisen Sie innerhalb von 7 Tagen auf:<br><b>IBAN: '+
+    _esc(s.iban||'DE40 1001 0123 9845 0754 49')+'</b><br>BIC: '+_esc(s.bic||'QNTODEB2XXX')+
+    '<br>Verwendungszweck: '+_esc(inv.invoice||'—')+'</p>'+
+    '<p style="color:#888;">Sollten Sie bereits bezahlt haben, ist dieses Schreiben gegenüber standslos.</p>'+
+    '<p style="margin-top:40px;">Mit freundlichen Grüßen,<br>'+_esc(s.owner||'Kamaleddin Nazari')+'</p>'+
+    '<script>window.print();<\/script></body></html>');
+  win.document.close();
+}
+
+// ─── KONTENÜBERSICHT ──────────────────────────────────────────
+function renderKonten() {
+  var tbody    = document.getElementById('kontenBody');
+  var incBody  = document.getElementById('kontenIncomeBody');
+  var KMAP = (typeof KONTO_MAP !== 'undefined') ? KONTO_MAP : {};
+  var getEur = function(e) {
+    if (e.amount_eur!==null&&e.amount_eur!==undefined) return e.amount_eur;
+    if (e.amount_usd!==null&&e.amount_usd!==undefined) return e.amount_usd*(state.usdRate||0.9259);
+    return 0;
+  };
+  if (tbody) {
+    var km = {};
+    (state.expenses||[]).forEach(function(e) {
+      var info = KMAP[e.category] || {kto:'4990',name:'Sonstige'};
+      var kto = e.konto || info.kto;
+      var name = info.name;
+      var ev = getEur(e);
+      if (!km[kto]) km[kto]={kto:kto,name:name,count:0,soll:0,haben:0};
+      km[kto].count++; km[kto].soll+=ev;
+    });
+    var rows = Object.values(km).sort(function(a,b){return a.kto.localeCompare(b.kto);});
+    var fmtV = function(v){ return '€'+parseFloat(v||0).toLocaleString('de-DE',{minimumFractionDigits:2}); };
+    tbody.innerHTML = rows.length ? rows.map(function(k){
+      var saldo = k.haben - k.soll;
+      return '<tr class="konto-row"><td><code style="color:var(--teal)">'+k.kto+'</code></td>'
+        +'<td>'+_esc(k.name)+'</td><td>'+k.count+'</td>'
+        +'<td class="amount-negative">'+fmtV(k.soll)+'</td>'
+        +'<td class="amount-positive">'+fmtV(k.haben)+'</td>'
+        +'<td class="'+(saldo<0?'amount-negative':'amount-positive')+'">'+fmtV(Math.abs(saldo))+'</td></tr>';
+    }).join('') : '<tr><td colspan="6" style="text-align:center;opacity:.4;padding:20px;">Keine Buchungen</td></tr>';
+  }
+  if (incBody) {
+    var im = {};
+    (state.income||[]).forEach(function(i) {
+      var kto='8100'; var name='Erlöse §19 UStG';
+      if (!im[kto]) im[kto]={kto:kto,name:name,count:0,haben:0};
+      im[kto].count++; im[kto].haben+=(i.amount_gross||0);
+    });
+    var fmtV2 = function(v){ return '€'+parseFloat(v||0).toLocaleString('de-DE',{minimumFractionDigits:2}); };
+    var irows = Object.values(im);
+    incBody.innerHTML = irows.length ? irows.map(function(k){
+      return '<tr class="konto-row"><td><code style="color:var(--teal)">'+k.kto+'</code></td>'
+        +'<td>'+_esc(k.name)+'</td><td>'+k.count+'</td><td class="amount-positive">'+fmtV2(k.haben)+'</td></tr>';
+    }).join('') : '<tr><td colspan="4" style="text-align:center;opacity:.4;padding:20px;">Keine Einnahmen</td></tr>';
+  }
+}
+
+// ─── EÜR ──────────────────────────────────────────────────────
+function renderEUR() {
+  var container = document.getElementById('eurContainer');
+  if (!container) return;
+  var year  = parseInt((document.getElementById('eurYear')||{value:'2026'}).value)||2026;
+  var month = (document.getElementById('eurMonth')||{value:'all'}).value||'all';
+  var adjI  = parseFloat((document.getElementById('eur-adj-income')||{value:'0'}).value)||0;
+  var adjE  = parseFloat((document.getElementById('eur-adj-expenses')||{value:'0'}).value)||0;
+  var rate  = state.usdRate||0.9259;
+
+  function inPeriod(d) {
+    if (!d) return false;
+    var p=new Date(d); if(p.getFullYear()!==year) return false;
+    if(month!=='all'&&p.getMonth()+1!==parseInt(month)) return false; return true;
+  }
+  var getEur2 = function(e) {
+    if(e.amount_eur!==null&&e.amount_eur!==undefined) return e.amount_eur;
+    if(e.amount_usd!==null&&e.amount_usd!==undefined) return e.amount_usd*rate; return 0;
+  };
+
+  var filtExp = (state.expenses||[]).filter(function(e){return inPeriod(e.date);});
+  var filtInc = (state.income||[]).filter(function(i){return inPeriod(i.date);});
+  var totalExp = filtExp.reduce(function(s,e){return s+getEur2(e);},0)+adjE;
+  var totalInc = filtInc.reduce(function(s,i){return s+(i.amount_gross||0);},0)+adjI;
+  var result   = totalInc-totalExp;
+
+  var catMap = {};
+  filtExp.forEach(function(e){
+    var c=e.category||'Sonstiges'; catMap[c]=(catMap[c]||0)+getEur2(e);
+  });
+  var fmtV3 = function(v){ return (v<0?'-':'')+'€'+Math.abs(v).toLocaleString('de-DE',{minimumFractionDigits:2}); };
+  var label = month==='all'?'Gesamtjahr '+year:'Monat '+month+'/'+year;
+
+  var html = '<div class="eur-header"><h2>Einnahmen-Überschuss-Rechnung (EÜR)</h2>'
+    +'<p>'+label+' — LeoLan Digital · Kleinunternehmer §19 UStG</p></div>'
+    +'<div class="eur-section">'
+    +'<div class="eur-line section-header-line"><span>A. BETRIEBSEINNAHMEN</span></div>'
+    +'<div class="eur-line"><span>Erlöse §19 UStG (steuerfrei)</span><span style="color:var(--green)">'+fmtV3(totalInc-adjI)+'</span></div>'
+    +(adjI?'<div class="eur-line"><span>Korrektur (manuell)</span><span style="color:var(--orange)">'+fmtV3(adjI)+'</span></div>':'')
+    +'<div class="eur-line" style="font-weight:600"><span>Summe Einnahmen</span><span style="color:var(--green)">'+fmtV3(totalInc)+'</span></div>'
+    +'</div><div class="eur-section" style="margin-top:16px;">'
+    +'<div class="eur-line section-header-line"><span>B. BETRIEBSAUSGABEN</span></div>'
+    +Object.keys(catMap).map(function(c){
+      return '<div class="eur-line"><span>'+_esc(c)+'</span><span style="color:var(--red)">'+fmtV3(catMap[c])+'</span></div>';
+    }).join('')
+    +(adjE?'<div class="eur-line"><span>Korrektur (manuell)</span><span style="color:var(--orange)">'+fmtV3(adjE)+'</span></div>':'')
+    +'<div class="eur-line" style="font-weight:600"><span>Summe Ausgaben</span><span style="color:var(--red)">'+fmtV3(totalExp)+'</span></div>'
+    +'</div><div class="eur-line total">'
+    +'<span>C. JAHRESÜBERSCHUSS / -FEHLBETRAG</span>'
+    +'<span style="color:'+(result>=0?'var(--green)':'var(--red)')+'">'+fmtV3(result)+'</span>'
+    +'</div><div style="margin-top:16px;font-size:12px;opacity:.5">Kleinunternehmer §19 UStG — Keine Umsatzsteuer · Stand: '
+    +new Date().toLocaleDateString('de-DE')+'</div>';
+  container.innerHTML = html;
+}
+
+function saveEurOverrides() {
+  if (!state.eurOverrides) state.eurOverrides={};
+  state.eurOverrides.income   = parseFloat((document.getElementById('eur-adj-income')||{value:'0'}).value)||0;
+  state.eurOverrides.expenses = parseFloat((document.getElementById('eur-adj-expenses')||{value:'0'}).value)||0;
+  state.eurOverrides.note     = ((document.getElementById('eur-adj-note')||{}).value)||'';
+  if (typeof saveState==='function') saveState();
+  renderEUR();
+}
+
+// ─── SETTINGS ─────────────────────────────────────────────────
+function saveSettings() {
+  if (!state.settings) state.settings={};
+  var fields={company:'s-name',owner:'s-owner',street:'s-street',city:'s-city',email:'s-email',
+    phone:'s-phone',website:'s-web',year:'s-year',iban:'s-iban',bic:'s-bic',bank:'s-bank',
+    accountHolder:'s-account-holder',taxId:'s-taxid',vatId:'s-vatid',finanzamt:'s-finanzamt',steuerart:'s-steuerart'};
+  Object.keys(fields).forEach(function(k){ var el=document.getElementById(fields[k]); if(el)state.settings[k]=el.value; });
+  var re=document.getElementById('s-usd-rate'); if(re)state.usdRate=parseFloat(re.value)||0.9259;
+  if (typeof saveState==='function') saveState();
+  _renderCategories();
+  alert('✅ Einstellungen gespeichert!');
+}
+
+function _loadSettingsUI() {
+  var s=state.settings||{};
+  var map={'s-name':s.company||'LeoLan Digital','s-owner':s.owner||'Kamaleddin Nazari',
+    's-street':s.street||'Reicker Straße 132','s-city':s.city||'01237 Dresden',
+    's-email':s.email||'business@leolan.net','s-phone':s.phone||'+49 15678483701',
+    's-web':s.website||'','s-year':s.year||'2026',
+    's-iban':s.iban||'DE40 1001 0123 9845 0754 49','s-bic':s.bic||'QNTODEB2XXX',
+    's-bank':s.bank||'Qonto','s-account-holder':s.accountHolder||'Kamaleddin Nazari',
+    's-taxid':s.taxId||'','s-vatid':s.vatId||'DE351138587',
+    's-finanzamt':s.finanzamt||'Finanzamt Dresden','s-steuerart':s.steuerart||'Kleinunternehmer §19 UStG'};
+  Object.keys(map).forEach(function(id){ var el=document.getElementById(id); if(el)el.value=map[id]; });
+  var re=document.getElementById('s-usd-rate'); if(re)re.value=state.usdRate||0.9259;
+  _renderCategories();
+}
+
+function _renderCategories() {
+  var def={expense:['Software/API','Software/SaaS','Entwicklung','Behörden/Beratung','Behörden','Rechtskosten','Marketing','Büro','Reise','Telefon/Internet','Sonstiges'],
+           income:['Webentwicklung','App-Entwicklung','KI/Automatisierung','Beratung','Marketing','Entwicklung','Sonstiges']};
+  var cats=state.categories||def;
+  ['expense','income'].forEach(function(type){
+    var ul=type.charAt(0).toUpperCase()+type.slice(1);
+    var list=document.getElementById('catList'+ul); if(!list)return;
+    var items=cats[type]||[];
+    list.innerHTML=items.map(function(c,i){
+      return '<span class="cat-tag">'+_esc(c)+'<button class="cat-tag-remove" onclick="_removeCategory(\''+type+'\','+i+')">×</button></span>';
+    }).join('');
+  });
+}
+
+function addCategory(type) {
+  var ul=type.charAt(0).toUpperCase()+type.slice(1);
+  var inp=document.getElementById('catInput'+ul); if(!inp)return;
+  var val=inp.value.trim(); if(!val)return;
+  var def={expense:['Software/API','Software/SaaS','Entwicklung','Behörden/Beratung','Behörden','Rechtskosten','Marketing','Büro','Reise','Telefon/Internet','Sonstiges'],
+           income:['Webentwicklung','App-Entwicklung','KI/Automatisierung','Beratung','Marketing','Entwicklung','Sonstiges']};
+  if (!state.categories) state.categories=JSON.parse(JSON.stringify(def));
+  if (!state.categories[type]) state.categories[type]=[];
+  if (!state.categories[type].includes(val)) { state.categories[type].push(val); if(typeof saveState==='function')saveState(); _renderCategories(); }
+  inp.value='';
+}
+
+function _removeCategory(type, idx) {
+  if (!state.categories||!state.categories[type]) return;
+  state.categories[type].splice(idx,1);
+  if (typeof saveState==='function') saveState();
+  _renderCategories();
+}
+
+function resetAll() {
+  if (!confirm('Wirklich ALLE Daten zurücksetzen? Das kann nicht rükgängig gemacht werden!')) return;
+  ['leolan_buch_v4','leolan_buch_v5'].forEach(function(k){localStorage.removeItem(k);});
+  location.reload();
+}
+
+// ─── BELEGE ────────────────────────────────────────────────────
+function handleBelegUpload(event) {
+  var files=event.target.files; if(!files||!files.length)return;
+  var listEl=document.getElementById('uploadedBelegeList');
+  var hintEl=document.getElementById('noBelegeHint');
+  if(hintEl)hintEl.style.display='none';
+  Array.from(files).forEach(function(file){
+    var icon=file.type.includes('pdf')?'&#128196;':file.type.includes('image')?'&#128444;':'&#128206;';
+    var card=document.createElement('div'); card.className='beleg-card';
+    card.innerHTML='<div class="beleg-icon">'+icon+'</div>'
+      +'<div class="beleg-info"><div class="beleg-name">'+_esc(file.name)+'</div>'
+      +'<div class="beleg-meta">'+Math.round(file.size/1024)+' KB · '+new Date().toLocaleDateString('de-DE')+'</div></div>'
+      +'<span class="badge badge-yellow">Lokal</span>';
+    if(listEl)listEl.appendChild(card);
+  });
+}
+
+// ─── EXPORTS ──────────────────────────────────────────────────
+function _csvCell(v){ return '"'+String(v||'').replace(/"/g,'""')+'"'; }
+function _dlBlob(content,filename,mime){
+  var blob=new Blob(['﻿'+content],{type:mime});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a'); a.href=url; a.download=filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(function(){URL.revokeObjectURL(url);},1000);
+}
+
+function exportCSV(type) {
+  var rate=state.usdRate||0.9259;
+  var getEurC=function(e){
+    if(e.amount_eur!==null&&e.amount_eur!==undefined)return e.amount_eur;
+    if(e.amount_usd!==null&&e.amount_usd!==undefined)return e.amount_usd*rate; return 0;
+  };
+  var rows=[], headers=[];
+  if (type==='expenses'||type==='all') {
+    headers=['Datum','Beschreibung','Anbieter','Betrag (EUR)','Kategorie','Status','Notiz'];
+    rows=(state.expenses||[]).map(function(e){
+      return [e.date,e.desc,e.vendor,'-'+getEurC(e).toFixed(2),e.category,e.status,e.note||''].map(_csvCell).join(';');
+    });
+  }
+  if (type==='income') {
+    headers=['Datum','Rechnungsnr.','Beschreibung','Kunde','Betrag Brutto','Status'];
+    rows=(state.income||[]).map(function(i){
+      return [i.date,i.invoice,i.desc,i.customer,(i.amount_gross||0).toFixed(2),i.status].map(_csvCell).join(';');
+    });
+  }
+  if (type==='all') {
+    var incRows=(state.income||[]).map(function(i){
+      return ['Einnahme',i.date,i.invoice,i.desc,i.customer,(i.amount_gross||0).toFixed(2),i.status,'','',''].map(_csvCell).join(';');
+    });
+    rows=rows.concat(incRows);
+  }
+  var csv=headers.map(_csvCell).join(';')+'\n'+rows.join('\n');
+');
+  _dlBlob(csv,'leolan-'+type+'-'+new Date().toISOString().slice(0,10)+'.csv','text/csv;charset=utf-8;');
+}
+
+function exportJSON() {
+  var data=Object.assign({},state,{exportDate:new Date().toISOString()});
+  _dlBlob(JSON.stringify(data,null,2),'leolan-backup-'+new Date().toISOString().slice(0,10)+'.json','application/json');
+}
+
+function importJSON(event) {
+  var file=event.target.files[0]; if(!file)return;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      var data=JSON.parse(e.target.result);
+      if(!data.expenses&&!data.income){alert('Ungültige Backup-Datei!');return;}
+      if(!confirm('Alle Daten überschreiben?'))return;
+      Object.assign(state,data);
+      if(typeof saveState==='function')saveState();
+      if(typeof renderAll==='function')renderAll();
+      renderIncomeTable(); renderCustomers(); renderOpenItems();
+      alert('✅ Import erfolgreich!');
+    }catch(err){alert('Fehler beim Import: '+err.message);}
+  };
+  reader.readAsText(file);
+}
+
+function printEUR() {
+  var tabEl=document.getElementById('nav-eur');
+  if(typeof switchTab==='function') switchTab('eur',tabEl);
+  setTimeout(function(){window.print();},400);
+}
+
+function generateElsterEUER(event) {
+  if(event)event.preventDefault();
+  var year=parseInt((document.getElementById('elsterYear')||{value:'2026'}).value)||2026;
+  var s=state.settings||{}; var rate=state.usdRate||0.9259;
+  var getEurG=function(e){
+    if(e.amount_eur!==null&&e.amount_eur!==undefined)return e.amount_eur;
+    if(e.amount_usd!==null&&e.amount_usd!==undefined)return e.amount_usd*rate; return 0;
+  };
+  var tExp=(state.expenses||[]).reduce(function(s,e){var d=new Date(e.date||'');return d.getFullYear()===year?s+getEurG(e):s;},0);
+  var tInc=(state.income||[]).reduce(function(s,i){var d=new Date(i.date||'');return d.getFullYear()===year?s+(i.amount_gross||0):s;},0);
+  var xml='<?xml version="1.0" encoding="UTF-8"?>
+<!-- ELSTER EÜR Export — LeoLan Digital -->
+<!-- '+new Date().toISOString()+' -->
+'
+    +'<EuerFormular Jahr="'+year+'">
+  <Steuerpflichtiger>
+'
+    +'    <Name>'+_esc(s.owner||'Kamaleddin Nazari')+'</Name>
+'
+    +'    <Unternehmen>'+_esc(s.company||'LeoLan Digital')+'</Unternehmen>
+'
+    +'    <Steuernummer>'+_esc(s.taxId||'')+'</Steuernummer>
+'
+    +'    <Finanzamt>'+_esc(s.finanzamt||'Finanzamt Dresden')+'</Finanzamt>
+'
+    +'  </Steuerpflichtiger>
+  <EUeR>
+'
+    +'    <Betriebseinnahmen>
+      <Erloese_Kleinunternehmer umsatzsteuer="0">'+tInc.toFixed(2)+'</Erloese_Kleinunternehmer>
+    </Betriebseinnahmen>
+'
+    +'    <Betriebsausgaben>
+      <Summe>'+tExp.toFixed(2)+'</Summe>
+    </Betriebsausgaben>
+'
+    +'    <Gewinn_Verlust>'+((tInc-tExp).toFixed(2))+'</Gewinn_Verlust>
+'
+    +'    <!-- Kleinunternehmer §19 UStG: keine USt -->
+  </EUeR>
+</EuerFormular>
+';
+  _dlBlob(xml,'ELSTER-EUeR-'+year+'.xml','application/xml');
+}
+
+// ─── CHART ────────────────────────────────────────────────────
+function renderChart() {
+  var container=document.getElementById('barChart'); if(!container)return;
+  var now=new Date(); var months=[];
+  for(var i=5;i>=0;i--){
+    var d=new Date(now.getFullYear(),now.getMonth()-i,1);
+    months.push({year:d.getFullYear(),month:d.getMonth()+1,label:d.toLocaleDateString('de-DE',{month:'short'})});
+  }
+  var rate=state.usdRate||0.9259; var maxV=1;
+  var mdata=months.map(function(m){
+    var inc=(state.income||[]).filter(function(i){var d=new Date(i.date||'');return d.getFullYear()===m.year&&d.getMonth()+1===m.month;})
+      .reduce(function(s,i){return s+(i.amount_gross||0);},0);
+    var exp=(state.expenses||[]).filter(function(e){var d=new Date(e.date||'');return d.getFullYear()===m.year&&d.getMonth()+1===m.month;})
+      .reduce(function(s,e){
+        var v=e.amount_eur!==null&&e.amount_eur!==undefined?e.amount_eur:(e.amount_usd!==null&&e.amount_usd!==undefined?e.amount_usd*rate:0);
+        return s+v;
+      },0);
+    if(inc>maxV)maxV=inc; if(exp>maxV)maxV=exp;
+    return {label:m.label,inc:inc,exp:exp};
+  });
+  container.innerHTML=mdata.map(function(m){
+    var iH=Math.max(2,Math.round(m.inc/maxV*110));
+    var eH=Math.max(2,Math.round(m.exp/maxV*110));
+    return '<div class="chart-month">'
+      +'<div class="chart-bars">'
+      +'<div class="bar income" style="height:'+iH+'px" title="Einnahmen: €'+m.inc.toFixed(2)+'"></div>'
+      +'<div class="bar expense" style="height:'+eH+'px" title="Ausgaben: €'+m.exp.toFixed(2)+'"></div>'
+      +'</div><div class="chart-label">'+m.label+'</div></div>';
+  }).join('');
+}
+
+// ─── INVOICES TABLE ───────────────────────────────────────────
+function renderInvoices() {
+  var tbody=document.getElementById('invoiceBody'); if(!tbody)return;
+  var items=state.income||[];
+  if(!items.length){tbody.innerHTML='<tr><td colspan="10" style="text-align:center;opacity:.4;padding:20px;">Noch keine Rechnungen erfasst.</td></tr>';return;}
+  var IKMAP=(typeof INCOME_KONTO_MAP!=='undefined')?INCOME_KONTO_MAP:{};
+  tbody.innerHTML=items.map(function(i){
+    var kto=(IKMAP[i.category]||{kto:'8100'}).kto;
+    var fmtV4=function(v){return '€'+parseFloat(v||0).toLocaleString('de-DE',{minimumFractionDigits:2});};
+    var sSel='<select class="status-select s-'+(i.status||'offen').replace('ü','ue')+'" onchange="_updateStatus(\'income\',\''+i.id+'\',this.value,this)">'
+      +'<option value="bezahlt"'+(i.status==='bezahlt'?' selected':'')+'>&#10003; Bezahlt</option>'
+      +'<option value="offen"'+(i.status==='offen'?' selected':'')+'>Offen</option>'
+      +'<option value="überfällig"'+(i.status==='überfällig'?' selected':'')+'>&#9888; Überfällig</option>'
+      +'<option value="storniert"'+(i.status==='storniert'?' selected':'')+'>Storniert</option>'
+      +'</select>';
+    return '<tr><td>'+_esc(i.invoice||'—')+'</td><td>'+_esc(i.date||'—')+'</td>'
+      +'<td>'+_esc(i.customer||'—')+'</td><td>'+_esc(i.desc||'—')+'</td>'
+      +'<td class="amount-positive">'+fmtV4(i.amount_gross||0)+'</td>'
+      +'<td><span class="badge badge-konto">'+kto+'</span></td>'
+      +'<td><span class="badge badge-gray">'+_esc(i.category||'—')+'</span></td>'
+      +'<td>'+(i.recurring?'<span class="badge badge-blue">&#128260; Monatl.</span>':'—')+'</td>'
+      +'<td>'+sSel+'</td>'
+      +'<td class="actions-cell">'
+        +'<button class="btn btn-xs btn-outline" onclick="_generateMahnung(\''+i.id+'\')">&#128196; Mahn.</button>'
+        +'<button class="btn btn-xs btn-red" onclick="_deleteEntry(\'income\',\''+i.id+'\')">&#128465;</button>'
+      +'</td></tr>';
+  }).join('');
+}
+
+function _updateStatus(type, id, newStatus, selectEl) {
+  var arr=type==='income'?(state.income||[]):(state.expenses||[]);
+  var item=arr.find(function(x){return x.id===id;});
+  if(item){
+    item.status=newStatus;
+    if(typeof saveState==='function')saveState();
+    if(selectEl)selectEl.className='status-select s-'+newStatus.replace('ü','ue');
+    if(typeof renderOverview==='function')renderOverview();
+    renderOpenItems(); renderReminders();
+  }
+}
+
+// ─── TAB HOOK — lazy render ───────────────────────────────────
+(function(){
+  var _orig = window.switchTab;
+  window.switchTab = function(tabId, el) {
+    if (typeof _orig === 'function') _orig(tabId, el);
+    switch(tabId) {
+      case 'income':    renderIncomeTable(); break;
+      case 'invoices':  renderInvoices(); break;
+      case 'customers': renderCustomers(); break;
+      case 'open-items': renderOpenItems(); break;
+      case 'reminders': renderReminders(); break;
+      case 'konten':    renderKonten(); break;
+      case 'eur':       renderEUR(); _loadEurOverridesUI(); break;
+      case 'settings':  _loadSettingsUI(); break;
+      case 'overview':  renderChart(); break;
+    }
+  };
+})();
+
+function _loadEurOverridesUI() {
+  var ov=state.eurOverrides||{};
+  var fi=document.getElementById('eur-adj-income');
+  var fe=document.getElementById('eur-adj-expenses');
+  var fn=document.getElementById('eur-adj-note');
+  if(fi&&ov.income)fi.value=ov.income;
+  if(fe&&ov.expenses)fe.value=ov.expenses;
+  if(fn&&ov.note)fn.value=ov.note;
+}
+
+// ─── INIT (on DOM ready) ──────────────────────────────────────
+document.addEventListener('DOMContentLoaded', function() {
+  if (typeof renderAll === 'function') renderAll();
+  renderChart();
+  renderOpenItems();
+  renderIncomeTable();
+  // header date
+  var hd = document.getElementById('headerDate');
+  if (hd) hd.textContent = 'GJ ' + new Date().getFullYear();
+});
 </script>
 </html>
