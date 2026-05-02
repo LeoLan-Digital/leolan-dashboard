@@ -2535,10 +2535,54 @@ function closeModalOutside(event) {
   }
 }
 
-function syncN26() {
-  var el = document.getElementById('n26-balance-display');
-  if (el) el.textContent = '— €';
-  alert('⚠️ N26 Direktzugang nicht verfügbar.\nBitte Kontostand über das Widget oben manuell eingeben.');
+var N26_REMOTE = 'https://n8n.leolan.net/webhook/n26-data';
+var N26_LOCAL  = 'http://localhost:8765/all';
+var N26_DATA   = null;
+
+async function fetchN26Data() {
+  try {
+    var r = await fetch(N26_LOCAL, {signal: AbortSignal.timeout(3000)});
+    if (r.ok) return r.json();
+  } catch(e) {}
+  try {
+    var r2 = await fetch(N26_REMOTE, {signal: AbortSignal.timeout(8000)});
+    if (r2.ok) return r2.json();
+  } catch(e) {}
+  return null;
+}
+
+function renderN26Transactions(data) {
+  var tbody = document.getElementById('n26-tx-body');
+  if (!tbody) return;
+  var txs = (data && data.transactions) || [];
+  if (!txs.length) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;opacity:.4;padding:20px;">Keine N26-Transaktionen</td></tr>'; return; }
+  tbody.innerHTML = txs.map(function(tx){
+    var amt = tx.amount;
+    var cls = amt < 0 ? 'color:#ff453a' : 'color:#34c759';
+    var sign = amt > 0 ? '+' : '';
+    return '<tr>'
+      + '<td>'+new Date(tx.date).toLocaleDateString('de-DE')+'</td>'
+      + '<td>'+(_esc ? _esc(tx.name||'') : (tx.name||''))+'</td>'
+      + '<td style="'+cls+';font-weight:700;">'+sign+amt.toFixed(2)+' €</td>'
+      + '<td style="font-size:11px;opacity:.5;">'+(tx.ref||'')+'</td>'
+      + '<td><span style="font-size:11px;padding:2px 8px;border-radius:99px;background:rgba(52,199,89,.12);color:#34c759;">'+( tx.status||'ok')+'</span></td>'
+      + '</tr>';
+  }).join('');
+}
+
+async function syncN26() {
+  var balEl = document.getElementById('n26-balance-display');
+  if (balEl) balEl.textContent = 'Lade...';
+  var data = await fetchN26Data();
+  N26_DATA = data;
+  if (!data) {
+    if (balEl) balEl.textContent = 'Fehler';
+    return;
+  }
+  if (balEl) balEl.textContent = '€' + (data.balance || 0).toLocaleString('de-DE', {minimumFractionDigits:2});
+  renderN26Transactions(data);
+  var tsEl = document.getElementById('tx-sync-info');
+  if (tsEl && data.updated) tsEl.textContent = 'Stand: ' + new Date(data.updated).toLocaleString('de-DE');
 }
 
 function openPDF() {
