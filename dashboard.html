@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LeoLan Digital Dashboard</title>
+  <style>
+    :root {
+      --bg: #0f1729;
+      --bg-soft: #16213a;
+      --card: rgba(26, 39, 68, 0.84);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --primary: #1a2744;
+      --accent: #f5a623;
+      --text: #ffffff;
+      --muted: rgba(255,255,255,0.72);
+      --danger: #ff5c5c;
+      --success: #2dd881;
+      --warning: #ffd166;
+      --shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+      --radius: 22px;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top right, rgba(245, 166, 35, 0.18), transparent 25%),
+        radial-gradient(circle at top left, rgba(67, 97, 157, 0.25), transparent 28%),
+        linear-gradient(160deg, #09101f 0%, #101a2f 45%, #0d1527 100%);
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+      background-size: 32px 32px;
+      pointer-events: none;
+      mask-image: radial-gradient(circle at center, black 40%, transparent 100%);
+    }
+    .lock-screen { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; padding: 24px; background: rgba(7, 12, 24, 0.86); backdrop-filter: blur(18px); z-index: 1000; }
+    .lock-card { width: min(460px, 100%); padding: 32px; border-radius: 28px; background: linear-gradient(180deg, rgba(26, 39, 68, 0.95), rgba(14, 24, 44, 0.95)); border: 1px solid rgba(245, 166, 35, 0.22); box-shadow: var(--shadow); text-align: center; }
+    .lock-badge { width: 72px; height: 72px; margin: 0 auto 18px; border-radius: 20px; display: grid; place-items: center; background: linear-gradient(135deg, rgba(245,166,35,0.2), rgba(245,166,35,0.08)); border: 1px solid rgba(245,166,35,0.35); font-size: 34px; }
+    .lock-card h1 { margin: 0 0 10px; font-size: clamp(1.6rem, 3vw, 2.2rem); }
+    .lock-card p { margin: 0 0 24px; color: var(--muted); line-height: 1.55; }
+    .password-row { display: flex; gap: 12px; flex-direction: column; }
+    .password-row input, .input, .select {
+      width: 100%; padding: 14px 16px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.06); color: var(--text); font-size: 1rem; outline: none; transition: 0.2s ease;
+    }
+    .password-row input:focus, .input:focus, .select:focus { border-color: rgba(245, 166, 35, 0.9); box-shadow: 0 0 0 4px rgba(245, 166, 35, 0.12); }
+    .primary-btn, .password-row button {
+      border: none; border-radius: 14px; background: linear-gradient(135deg, #f5a623 0%, #ffbe4d 100%); color: #1a2744; font-weight: 800;
+      cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease; box-shadow: 0 12px 24px rgba(245, 166, 35, 0.2);
+      padding: 14px 18px; font-size: 0.98rem;
+    }
+    .ghost-btn {
+      border: 1px solid rgba(255,255,255,0.12); border-radius: 14px; background: rgba(255,255,255,0.05); color: var(--text); font-weight: 700;
+      cursor: pointer; padding: 14px 18px; font-size: 0.95rem;
+    }
+    .primary-btn:hover, .password-row button:hover, .ghost-btn:hover { transform: translateY(-1px); }
+    .error-message { min-height: 22px; margin-top: 14px; font-size: 0.95rem; color: var(--danger); font-weight: 600; }
+    .app { max-width: 1380px; margin: 0 auto; padding: 28px 18px 40px; opacity: 0; pointer-events: none; transform: translateY(14px); transition: opacity 0.35s ease, transform 0.35s ease; }
+    .app.unlocked { opacity: 1; pointer-events: auto; transform: translateY(0); }
+    .topbar { display: flex; justify-content: space-between; align-items: center; gap: 18px; margin-bottom: 28px; padding: 24px; border-radius: 26px; background: linear-gradient(135deg, rgba(26, 39, 68, 0.92), rgba(18, 30, 54, 0.92)); border: 1px solid rgba(255,255,255,0.08); box-shadow: var(--shadow); position: sticky; top: 18px; backdrop-filter: blur(12px); z-index: 10; }
+    .brand { display: flex; align-items: center; gap: 18px; }
+    .brand-mark { width: 58px; height: 58px; border-radius: 18px; display: grid; place-items: center; background: linear-gradient(135deg, rgba(245,166,35,0.22), rgba(245,166,35,0.08)); border: 1px solid rgba(245,166,35,0.32); font-size: 28px; }
+    .brand h2 { margin: 0; font-size: clamp(1.4rem, 2vw, 2rem); }
+    .brand p, .meta { margin: 0; color: var(--muted); font-size: 0.96rem; }
+    .meta strong { color: var(--accent); }
+    .topbar-actions { display:flex; align-items:center; gap:12px; flex-wrap:wrap; justify-content:flex-end; }
+    .status-pill, .role-pill { display: inline-flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: 999px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); color: var(--muted); font-size: 0.9rem; white-space: nowrap; }
+    .role-pill strong { color: var(--accent); }
+    .pulse { width: 10px; height: 10px; border-radius: 999px; background: var(--success); box-shadow: 0 0 0 0 rgba(45,216,129,0.6); animation: pulse 1.8s infinite; }
+    @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(45,216,129,0.55); } 70% { box-shadow: 0 0 0 12px rgba(45,216,129,0); } 100% { box-shadow: 0 0 0 0 rgba(45,216,129,0); } }
+    .grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 12px; }
+    .section, .panel, .admin-section { margin-top: 12px; padding-top: 0; }
+    .card { grid-column: span 4; position: relative; overflow: hidden; padding: 16px; border-radius: var(--radius); background: linear-gradient(180deg, rgba(26,39,68,0.84), rgba(17,26,45,0.92)); border: 1px solid var(--card-border); box-shadow: var(--shadow); backdrop-filter: blur(10px); }
+    .card::after { content: ""; position: absolute; inset: auto -40px -40px auto; width: 120px; height: 120px; background: radial-gradient(circle, rgba(245,166,35,0.16), transparent 70%); pointer-events: none; }
+    .card.wide { grid-column: span 6; } .card.full { grid-column: span 12; }
+    .card-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 12px; }
+    .card-title { margin: 0; font-size: 1.15rem; font-weight: 700; }
+    .card-subtitle { margin: 6px 0 0; color: var(--muted); font-size: 0.95rem; }
+    .chip { padding: 8px 12px; border-radius: 999px; background: rgba(245,166,35,0.12); border: 1px solid rgba(245,166,35,0.18); color: #ffd487; font-size: 0.84rem; font-weight: 700; }
+    .stats, .automation-list, .user-list { display: grid; gap: 12px; }
+    .stat-row, .automation-item { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 14px; border-radius: 16px; background: rgba(255,255,255,0.045); border: 1px solid rgba(255,255,255,0.05); }
+    .label { color: var(--muted); font-size: 0.95rem; }
+    .value { font-size: 1rem; font-weight: 800; color: var(--text); text-align: right; }
+    .value.loading { color: #ffd487; opacity: 0.95; }
+    .badge-success, .badge-waiting, .badge-off { padding: 8px 12px; border-radius: 999px; font-weight: 800; font-size: 0.85rem; white-space: nowrap; display:inline-flex; align-items:center; gap:8px; }
+    .badge-success { background: rgba(45,216,129,0.14); color: #99f2c3; border: 1px solid rgba(45,216,129,0.22); }
+    .badge-waiting { background: rgba(255,209,102,0.14); color: #ffe4a6; border: 1px solid rgba(255,209,102,0.24); }
+    .badge-off { background: rgba(255,92,92,0.14); color: #ffabab; border: 1px solid rgba(255,92,92,0.24); }
+    .section-toggle { display:flex; gap:8px; flex-wrap:wrap; margin: 0 0 12px; }
+    .tab-btn { padding:10px 14px; border-radius:999px; border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.05); color:var(--text); cursor:pointer; font-weight:700; }
+    .tab-btn.active { background:rgba(245,166,35,0.16); border-color:rgba(245,166,35,0.35); color:#ffd487; }
+    .panel.hidden, .hidden { display:none !important; }
+    .table-wrap { overflow:auto; border-radius:18px; border:1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03); }
+    table { width:100%; border-collapse:collapse; min-width:640px; }
+    th, td { padding:14px 16px; text-align:left; border-bottom:1px solid rgba(255,255,255,0.06); }
+    th { color:#ffd487; font-size:0.84rem; text-transform:uppercase; letter-spacing:.06em; }
+    td { color:rgba(255,255,255,0.9); font-size:0.95rem; }
+    .toolbar { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:12px; flex-wrap:wrap; }
+    .toolbar .hint, .subtle, footer { color: var(--muted); font-size: 0.95rem; }
+    .automation-grid { display:grid; gap:10px; }
+    .automation-control { display:grid; grid-template-columns: minmax(220px, 1.3fr) auto auto auto; gap:10px; align-items:center; padding:12px; border-radius:18px; background:rgba(255,255,255,0.045); border:1px solid rgba(255,255,255,0.06); }
+    .analytics-section { margin-top: 16px; }
+    .section-heading { display:flex; align-items:flex-end; justify-content:space-between; gap:10px; margin: 0 0 12px; }
+    .section-heading h3 { margin:0; font-size: clamp(1.25rem, 2vw, 1.65rem); }
+    .section-heading p { margin:6px 0 0; color: var(--muted); }
+    .charts-grid { display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:20px; }
+    .chart-card { min-height: 300px; }
+    .chart-card canvas { width: 100% !important; height: 220px !important; max-height: 220px; }
+    .chart-note { color: var(--muted); font-size: 0.88rem; }
+    .switch { position:relative; display:inline-block; width:58px; height:32px; }
+    .switch input { opacity:0; width:0; height:0; }
+    .slider { position:absolute; cursor:pointer; inset:0; background:rgba(255,255,255,0.18); transition:.2s; border-radius:999px; }
+    .slider:before { position:absolute; content:""; height:24px; width:24px; left:4px; top:4px; background:white; transition:.2s; border-radius:50%; }
+    .switch input:checked + .slider { background:#2dd881; }
+    .switch input:checked + .slider:before { transform:translateX(26px); }
+    .status-message { min-height:22px; margin-top:12px; font-size:0.92rem; color: var(--muted); }
+    .modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,0.75); z-index:999; display:none; align-items:center; justify-content:center; padding:18px; }
+    .modal-backdrop.visible { display:flex; }
+    .modal { background:#1a2744; border-radius:20px; padding:2rem; width:min(460px, 100%); border:1px solid rgba(255,255,255,0.1); box-shadow: var(--shadow); }
+    .modal h3 { margin:0 0 1rem; color:#f5a623; }
+    .modal p { margin:0 0 1rem; color:rgba(255,255,255,0.78); line-height:1.55; }
+    .modal-actions { display:flex; gap:1rem; margin-top:1.4rem; }
+    .user-chip { position: fixed; right: 18px; bottom: 18px; display: inline-flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: 999px; background: rgba(15, 23, 41, 0.94); border: 1px solid rgba(255,255,255,0.12); box-shadow: var(--shadow); color: var(--text); font-size: 0.9rem; z-index: 20; }
+    .footer-content { display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; text-align: center; }
+    .footer-link-button { background: none; border: none; color: var(--accent); cursor: pointer; font-size: 0.85rem; font-weight: 700; padding: 0; }
+    footer a { color: var(--accent); text-decoration: none; font-weight: 700; }
+    @media (max-width: 1100px) { .card, .card.wide { grid-column: span 6; } .automation-control { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 760px) {
+      .topbar { position: static; flex-direction: column; align-items: flex-start; }
+      .card, .card.wide, .card.full { grid-column: span 12; }
+      .charts-grid { grid-template-columns: 1fr; }
+      .automation-control { grid-template-columns: 1fr; }
+      .user-chip { right: 12px; bottom: 12px; }
+      .modal-actions { flex-direction:column; }
+    }
+  </style>
+</head>
+<body>
+  <div class="lock-screen" id="lockScreen">
+    <div class="lock-card">
+      <div class="lock-badge">🔐</div>
+      <h1>LeoLan Dashboard</h1>
+      <p>Geschützter Bereich für interne Kennzahlen. Bitte mit E-Mail und Passwort anmelden, um das Dashboard zu öffnen.</p>
+      <form id="loginForm" class="password-row">
+        <input id="emailInput" type="email" placeholder="E-Mail eingeben" autocomplete="email" required />
+        <input id="passwordInput" type="password" placeholder="Passwort eingeben" autocomplete="current-password" required />
+        <button id="loginButton" type="submit">Anmelden</button>
+      </form>
+      <div id="errorMessage" class="error-message"></div>
+    </div>
+  </div>
+
+  <main class="app" id="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark">📊</div>
+        <div>
+          <h2>LeoLan Digital Dashboard</h2>
+          <p class="meta">Letzte Aktualisierung: <strong id="lastUpdated">Lade...</strong></p>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <div class="role-pill">Rolle: <strong id="userRoleLabel">viewer</strong></div>
+        <div class="status-pill"><span class="pulse"></span><span id="apiStatus">API wird geladen…</span></div>
+      </div>
+    </header>
+
+    <section class="section-toggle">
+      <button class="tab-btn active" data-tab="overview">📈 Übersicht</button>
+      <button class="tab-btn admin-only hidden" data-tab="users">👥 Nutzer verwalten</button>
+      <button class="tab-btn admin-only hidden" data-tab="automation">⚙️ Automatisierungen</button>
+      <button class="tab-btn admin-only hidden" data-tab="customers">👥 Kunden</button>
+    </section>
+
+    <section id="panel-overview" class="panel">
+      <div class="grid">
+        <article class="card">
+          <div class="card-header"><div><h3 class="card-title">📸 Instagram @leolan_digital</h3><p class="card-subtitle">Performance & Aktivität</p></div><span class="chip">Social</span></div>
+          <div class="stats">
+            <div class="stat-row"><span class="label">Follower</span><span class="value loading" data-key="instagram.followers">Lade...</span></div>
+            <div class="stat-row"><span class="label">Posts gesamt</span><span class="value loading" data-key="instagram.postsTotal">Lade...</span></div>
+            <div class="stat-row"><span class="label">Likes heute</span><span class="value loading" data-key="instagram.likesToday">Lade...</span></div>
+            <div class="stat-row"><span class="label">Story aktiv</span><span class="value loading" data-key="instagram.storyActive">Lade...</span></div>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="card-header"><div><h3 class="card-title">📘 Facebook Leo-Lan</h3><p class="card-subtitle">Page-Werte auf einen Blick</p></div><span class="chip">Meta</span></div>
+          <div class="stats">
+            <div class="stat-row"><span class="label">Page Likes</span><span class="value loading" data-key="facebook.pageLikes">Lade...</span></div>
+            <div class="stat-row"><span class="label">Posts heute</span><span class="value loading" data-key="facebook.postsToday">Lade...</span></div>
+            <div class="stat-row"><span class="label">Reichweite</span><span class="value loading" data-key="facebook.reach">Lade...</span></div>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="card-header"><div><h3 class="card-title">💬 WhatsApp Bot</h3><p class="card-subtitle">Nutzung & Gutscheine</p></div><span class="chip">Bot</span></div>
+          <div class="stats">
+            <div class="stat-row"><span class="label">Gespräche heute</span><span class="value loading" data-key="whatsapp.conversationsToday">Lade...</span></div>
+            <div class="stat-row"><span class="label">Aktive Nutzer</span><span class="value loading" data-key="whatsapp.activeUsers">Lade...</span></div>
+            <div class="stat-row"><span class="label">Stempel vergeben</span><span class="value loading" data-key="whatsapp.stampsIssued">Lade...</span></div>
+            <div class="stat-row"><span class="label">Aktive Gutscheine</span><span class="value loading" data-key="whatsapp.activeCoupons">Lade...</span></div>
+          </div>
+        </article>
+
+        <article class="card wide">
+          <div class="card-header"><div><h3 class="card-title">⭐ Google Reviews</h3><p class="card-subtitle">Bewertungsübersicht</p></div><span class="chip">Reputation</span></div>
+          <div class="stats">
+            <div class="stat-row"><span class="label">Durchschnitt</span><span class="value loading" data-key="reviews.average">Lade...</span></div>
+            <div class="stat-row"><span class="label">Neue Reviews</span><span class="value loading" data-key="reviews.newReviews">Lade...</span></div>
+            <div class="stat-row"><span class="label">Unbeantwortete</span><span class="value loading" data-key="reviews.unanswered">Lade...</span></div>
+          </div>
+        </article>
+
+        <article class="card wide">
+          <div class="card-header"><div><h3 class="card-title">📧 E-Mails</h3><p class="card-subtitle">Ungelesene Nachrichten pro Postfach</p></div><span class="chip">Inbox</span></div>
+          <div class="stats">
+            <div class="stat-row"><span class="label">business@leolan.net</span><span class="value loading" data-key="emails.business">Lade...</span></div>
+            <div class="stat-row"><span class="label">k.nazari@leolan.net</span><span class="value loading" data-key="emails.knazari">Lade...</span></div>
+            <div class="stat-row"><span class="label">knazari2604@gmail.com</span><span class="value loading" data-key="emails.gmail">Lade...</span></div>
+          </div>
+        </article>
+
+        <article class="card full">
+          <div class="card-header"><div><h3 class="card-title">🤖 Automatisierungen Status</h3><p class="card-subtitle">System- und Posting-Automationen</p></div><span class="chip">Live Ops</span></div>
+          <div class="automation-list" id="automationStatusList"></div>
+        </article>
+      </div>
+
+      <section class="analytics-section">
+        <div class="section-heading">
+          <div>
+            <h3>📈 Analytics &amp; Trends</h3>
+            <p>Interaktive KPIs für Social, WhatsApp, Reviews und Umsatzentwicklung.</p>
+          </div>
+          <span class="chip">Chart.js</span>
+        </div>
+
+        <div class="charts-grid">
+          <article class="card chart-card">
+            <div class="card-header">
+              <div>
+                <h3 class="card-title">📈 Follower-Wachstum</h3>
+                <p class="card-subtitle">Instagram vs. Facebook · letzte 7 Tage</p>
+              </div>
+              <span class="chip">Social Trend</span>
+            </div>
+            <canvas id="followersChart"></canvas>
+          </article>
+
+          <article class="card chart-card">
+            <div class="card-header">
+              <div>
+                <h3 class="card-title">💬 WhatsApp Gespräche</h3>
+                <p class="card-subtitle">Konversationen pro Tag · letzte 7 Tage</p>
+              </div>
+              <span class="chip">Messaging</span>
+            </div>
+            <canvas id="whatsappChart"></canvas>
+          </article>
+
+          <article class="card chart-card">
+            <div class="card-header">
+              <div>
+                <h3 class="card-title">⭐ Bewertungen</h3>
+                <p class="card-subtitle">Sterne-Verteilung auf einen Blick</p>
+              </div>
+              <span class="chip">Reputation</span>
+            </div>
+            <canvas id="ratingsChart"></canvas>
+          </article>
+
+          <article class="card chart-card">
+            <div class="card-header">
+              <div>
+                <h3 class="card-title">📊 Umsatz</h3>
+                <p class="card-subtitle">Monatlicher Umsatz in EUR · letzte 6 Monate</p>
+              </div>
+              <span class="chip">Revenue</span>
+            </div>
+            <canvas id="revenueChart"></canvas>
+          </article>
+        </div>
+      </section>
+    </section>
+
+    <section id="panel-users" class="panel hidden admin-only">
+      <article class="card full">
+        <div class="card-header"><div><h3 class="card-title">👥 Nutzer verwalten</h3><p class="card-subtitle">Admins können neue Nutzer anlegen und den Status einsehen.</p></div><span class="chip">Admin</span></div>
+        <div class="toolbar">
+          <span class="hint">Statuswerte werden aus dem n8n-Workflow geladen.</span>
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <button class="ghost-btn" id="refreshUsersButton">Neu laden</button>
+            <button class="primary-btn" id="openAddUserButton">+ Nutzer hinzufügen</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>E-Mail</th><th>Name</th><th>Rolle</th><th>Status</th></tr></thead>
+            <tbody id="usersTableBody"><tr><td colspan="4" class="subtle">Noch keine Nutzerdaten geladen.</td></tr></tbody>
+          </table>
+        </div>
+        <div class="status-message" id="usersStatusMessage"></div>
+      </article>
+    </section>
+
+    <section id="panel-automation" class="panel hidden admin-only">
+      <article class="card full">
+        <div class="card-header"><div><h3 class="card-title">⚙️ Automatisierungen-Steuerung</h3><p class="card-subtitle">Aktivieren, deaktivieren und Zeitfenster je Automation verwalten.</p></div><span class="chip">Admin</span></div>
+        <div class="automation-grid" id="automationControlList"></div>
+        <div class="status-message" id="automationStatusMessage"></div>
+      </article>
+    </section>
+
+    <footer>
+      <div class="footer-content">
+        <span>Powered by LeoLan Digital · <a href="https://ki.leolan.net" target="_blank" rel="noopener noreferrer">ki.leolan.net</a></span>
+        <span>·</span>
+        <button onclick="openSettings()" class="footer-link-button">⚙️ Einstellungen</button>
+        <span>·</span>
+        <button onclick="logout()" class="footer-link-button">🚪 Abmelden</button>
+      </div>
+    </footer>
+
+    <section id="panel-customers" class="panel hidden admin-only">
+      <div class="card">
+        <div class="card-header">
+          <div><h3 class="card-title">&#128101; Kunden</h3><p class="card-subtitle">Alle registrierten Kunden mit Status &amp; WA-Verbindung.</p></div>
+          <button onclick="loadCustomers()" style="padding:6px 14px;background:rgba(245,166,35,.15);border:1px solid rgba(245,166,35,.3);color:#ffd487;border-radius:8px;cursor:pointer;font-size:13px;">Neu laden</button>
+        </div>
+        <div id="customersKpis" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;"></div>
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <thead><tr style="border-bottom:1px solid rgba(255,255,255,0.1);">
+            <th style="padding:8px 12px;color:#8b949e;">Kunde</th>
+            <th style="padding:8px 12px;color:#8b949e;">Paket</th>
+            <th style="padding:8px 12px;color:#8b949e;">Status</th>
+            <th style="padding:8px 12px;color:#8b949e;">WhatsApp</th>
+            <th style="padding:8px 12px;color:#8b949e;">Erstellt</th>
+          </tr></thead>
+          <tbody id="customersBody"><tr><td colspan="5" style="padding:30px;text-align:center;color:#8b949e;">Lade Kunden...</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <div id="userChip" class="user-chip hidden">👤 <span id="userName">Leo</span> · <span id="userChipRole">viewer</span></div>
+
+  <div id="settingsModal" class="modal-backdrop">
+    <div class="modal">
+      <h3>⚙️ Einstellungen</h3>
+      <p>Passwort-Änderungen wurden aus diesem Modal entfernt. Ein separates Settings-Panel folgt später.</p>
+      <div class="modal-actions"><button onclick="closeSettings()" class="ghost-btn" style="flex:1;">Schließen</button></div>
+    </div>
+  </div>
+
+  <div id="addUserModal" class="modal-backdrop">
+    <div class="modal">
+      <h3>+ Nutzer hinzufügen</h3>
+      <p>Neue Nutzer erhalten nach dem Anlegen automatisch eine Bestätigungs-E-Mail.</p>
+      <input id="newUserEmail" class="input" type="email" placeholder="E-Mail-Adresse" />
+      <div style="height:12px"></div>
+      <input id="newUserName" class="input" type="text" placeholder="Name (optional)" />
+      <div style="height:12px"></div>
+      <select id="newUserRole" class="select">
+        <option value="viewer">viewer</option>
+        <option value="editor">editor</option>
+        <option value="admin">admin</option>
+      </select>
+      <div class="status-message" id="addUserStatus"></div>
+      <div class="modal-actions">
+        <button class="ghost-btn" style="flex:1;" onclick="closeAddUserModal()">Abbrechen</button>
+        <button class="primary-btn" style="flex:1;" id="submitAddUserButton">Nutzer anlegen</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    const API_URL = 'https://n8n.leolan.net/webhook/dashboard-data';
+    const LOGIN_URL = 'https://n8n.leolan.net/webhook/dashboard-login';
+    const ADD_USER_URL = 'https://n8n.leolan.net/webhook/dashboard-add-user';
+    const AUTOMATION_CONTROL_URL = 'https://n8n.leolan.net/webhook/dashboard-automation-control';
+    const SESSION_TOKEN_KEY = 'dashboard_token';
+    const SESSION_USER_KEY = 'dashboard_user';
+
+    const automationCatalog = {
+      instagramFeed: { key: 'instagramFeed', label: 'Instagram Feed', description: 'Feed-Post Workflow', defaultTime: '10:00' },
+      instagramStory: { key: 'instagramStory', label: 'Instagram Story', description: 'Story-Workflow', defaultTime: '18:00' },
+      facebookPost: { key: 'facebookPost', label: 'Facebook', description: 'Facebook Daily Post', defaultTime: '11:00' },
+      reviewManagement: { key: 'reviewManagement', label: 'Reviews', description: 'Bewertungsmanagement', defaultTime: '06:00' },
+      whatsappBot: { key: 'whatsappBot', label: 'WhatsApp', description: 'WhatsApp Bot / Service', defaultTime: '00:00' }
+    };
+
+    const fallbackData = {
+      instagram: { followers: 'Lade...', postsTotal: 3, likesToday: 'Lade...', storyActive: 'Lade...' },
+      facebook: { pageLikes: 'Lade...', postsToday: 'Lade...', reach: 'Lade...' },
+      whatsapp: { conversationsToday: 'Lade...', activeUsers: 'Lade...', stampsIssued: 'Lade...', activeCoupons: 'Lade...' },
+      reviews: { average: 'Lade...', newReviews: 'Lade...', unanswered: 'Lade...' },
+      emails: { business: 'Lade...', knazari: 'Lade...', gmail: 'Lade...' },
+      charts: {
+        followers: {
+          labels: ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'],
+          instagram: [62, 63, 63, 64, 64, 64, 64],
+          facebook: [47, 47, 48, 48, 48, 48, 48]
+        },
+        whatsapp: {
+          labels: ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'],
+          conversations: [3, 7, 5, 12, 8, 4, 2]
+        },
+        ratings: {
+          labels: ['5★', '4★', '3★', '2★', '1★'],
+          data: [45, 30, 15, 7, 3]
+        },
+        revenue: {
+          labels: ['Nov', 'Dez', 'Jan', 'Feb', 'Mär', 'Apr'],
+          data: [0, 0, 0, 0, 0, 149]
+        }
+      },
+      automation: {
+        instagramFeed: { active: true, time: '10:00', label: 'Instagram Feed' },
+        instagramStory: { active: true, time: '18:00', label: 'Instagram Story' },
+        facebookPost: { active: true, time: '11:00', label: 'Facebook Post' },
+        reviewManagement: { active: true, time: '06:00', label: 'Bewertungsmanagement' },
+        whatsappBot: { active: true, time: '00:00', label: 'WhatsApp Bot' }
+      }
+    };
+
+    const app = document.getElementById('app');
+    const lockScreen = document.getElementById('lockScreen');
+    const loginForm = document.getElementById('loginForm');
+    const emailInput = document.getElementById('emailInput');
+    const passwordInput = document.getElementById('passwordInput');
+    const loginButton = document.getElementById('loginButton');
+    const errorMessage = document.getElementById('errorMessage');
+    const lastUpdated = document.getElementById('lastUpdated');
+    const apiStatus = document.getElementById('apiStatus');
+    const userChip = document.getElementById('userChip');
+    const userName = document.getElementById('userName');
+    const userRoleLabel = document.getElementById('userRoleLabel');
+    const userChipRole = document.getElementById('userChipRole');
+    const usersTableBody = document.getElementById('usersTableBody');
+    const usersStatusMessage = document.getElementById('usersStatusMessage');
+    const automationStatusList = document.getElementById('automationStatusList');
+    const automationControlList = document.getElementById('automationControlList');
+    const automationStatusMessage = document.getElementById('automationStatusMessage');
+
+    let currentUser = null;
+    let automationState = structuredClone(fallbackData.automation);
+    let chartsState = structuredClone(fallbackData.charts);
+    let chartInstances = {};
+
+    function formatDateTime(dateLike) {
+      const date = dateLike ? new Date(dateLike) : new Date();
+      if (Number.isNaN(date.getTime())) return 'Unbekannt';
+      return new Intl.DateTimeFormat('de-DE', { dateStyle: 'medium', timeStyle: 'short' }).format(date);
+    }
+    function getValueByPath(obj, path) { return path.split('.').reduce((acc, key) => (acc && acc[key] !== undefined ? acc[key] : undefined), obj); }
+    function normalizeBoolean(value) {
+      if (typeof value === 'boolean') return value ? 'Ja' : 'Nein';
+      if (typeof value === 'string') {
+        const normalized = value.trim().toLowerCase();
+        if (['true', 'ja', 'yes', 'aktiv', 'active', '1'].includes(normalized)) return 'Ja';
+        if (['false', 'nein', 'no', 'inaktiv', 'inactive', '0'].includes(normalized)) return 'Nein';
+      }
+      return value;
+    }
+    function formatValue(key, value) {
+      if (value === undefined || value === null || value === '') return '—';
+      const normalizedValue = key.toLowerCase().includes('storyactive') ? normalizeBoolean(value) : value;
+      if (typeof normalizedValue === 'number') {
+        if (key === 'reviews.average') return normalizedValue.toFixed(1).replace('.', ',') + '/5';
+        if (key.startsWith('emails.')) return normalizedValue + ' ungelesen';
+        return new Intl.NumberFormat('de-DE').format(normalizedValue);
+      }
+      if (key === 'reviews.average' && !String(normalizedValue).includes('/5')) return String(normalizedValue).replace('.', ',') + '/5';
+      if (key.startsWith('emails.') && !String(normalizedValue).includes('ungelesen')) return normalizedValue + ' ungelesen';
+      return normalizedValue;
+    }
+    function parseAutomationEntry(key, raw) {
+      const defaults = fallbackData.automation[key] || { active: false, time: automationCatalog[key]?.defaultTime || '09:00' };
+      if (raw && typeof raw === 'object') {
+        return {
+          active: raw.active ?? raw.enabled ?? defaults.active,
+          time: raw.time ?? raw.schedule ?? raw.cronTime ?? defaults.time,
+          label: raw.label ?? automationCatalog[key]?.label ?? key
+        };
+      }
+      if (typeof raw === 'string') {
+        return {
+          active: /aktiv|active|true|on|enabled/i.test(raw),
+          time: defaults.time,
+          label: automationCatalog[key]?.label ?? key
+        };
+      }
+      if (typeof raw === 'boolean') {
+        return { active: raw, time: defaults.time, label: automationCatalog[key]?.label ?? key };
+      }
+      return { ...defaults, label: automationCatalog[key]?.label ?? key };
+    }
+    function mergeKnownShapes(payload) {
+      return {
+        instagram: {
+          followers: payload?.instagram?.followers ?? payload?.instagramFollowers ?? fallbackData.instagram.followers,
+          postsTotal: payload?.instagram?.media_count ?? payload?.instagram?.mediaCount ?? payload?.instagram?.postsTotal ?? payload?.instagramPostsTotal ?? payload?.instagramPostsToday ?? fallbackData.instagram.postsTotal,
+          likesToday: payload?.instagram?.likesToday ?? payload?.instagramLikesToday ?? fallbackData.instagram.likesToday,
+          storyActive: payload?.instagram?.storyActive ?? payload?.instagramStoryActive ?? fallbackData.instagram.storyActive
+        },
+        facebook: {
+          pageLikes: payload?.facebook?.pageLikes ?? payload?.facebookLikes ?? fallbackData.facebook.pageLikes,
+          postsToday: payload?.facebook?.postsToday ?? payload?.facebookPostsToday ?? fallbackData.facebook.postsToday,
+          reach: payload?.facebook?.reach ?? payload?.facebookReach ?? fallbackData.facebook.reach
+        },
+        whatsapp: {
+          conversationsToday: payload?.whatsapp?.conversationsToday ?? payload?.whatsappConversationsToday ?? fallbackData.whatsapp.conversationsToday,
+          activeUsers: payload?.whatsapp?.activeUsers ?? payload?.whatsappActiveUsers ?? fallbackData.whatsapp.activeUsers,
+          stampsIssued: payload?.whatsapp?.stampsIssued ?? payload?.whatsappStampsIssued ?? fallbackData.whatsapp.stampsIssued,
+          activeCoupons: payload?.whatsapp?.activeCoupons ?? payload?.whatsappActiveCoupons ?? fallbackData.whatsapp.activeCoupons
+        },
+        reviews: {
+          average: payload?.reviews?.average ?? payload?.googleReviews?.average ?? payload?.reviewsAverage ?? fallbackData.reviews.average,
+          newReviews: payload?.reviews?.newReviews ?? payload?.googleReviews?.newReviews ?? payload?.newReviews ?? fallbackData.reviews.newReviews,
+          unanswered: payload?.reviews?.unanswered ?? payload?.googleReviews?.unanswered ?? payload?.unansweredReviews ?? fallbackData.reviews.unanswered
+        },
+        emails: {
+          business: payload?.emails?.business ?? payload?.emailBusiness ?? fallbackData.emails.business,
+          knazari: payload?.emails?.knazari ?? payload?.emails?.kNazari ?? payload?.emailKNazari ?? fallbackData.emails.knazari,
+          gmail: payload?.emails?.gmail ?? payload?.emailGmail ?? fallbackData.emails.gmail
+        },
+        charts: {
+          followers: {
+            labels: payload?.charts?.followers?.labels ?? payload?.analytics?.followers?.labels ?? fallbackData.charts.followers.labels,
+            instagram: payload?.charts?.followers?.instagram ?? payload?.analytics?.followers?.instagram ?? fallbackData.charts.followers.instagram,
+            facebook: payload?.charts?.followers?.facebook ?? payload?.analytics?.followers?.facebook ?? fallbackData.charts.followers.facebook
+          },
+          whatsapp: {
+            labels: payload?.charts?.whatsapp?.labels ?? payload?.analytics?.whatsapp?.labels ?? fallbackData.charts.whatsapp.labels,
+            conversations: payload?.charts?.whatsapp?.conversations ?? payload?.analytics?.whatsapp?.conversations ?? fallbackData.charts.whatsapp.conversations
+          },
+          ratings: {
+            labels: payload?.charts?.ratings?.labels ?? payload?.analytics?.ratings?.labels ?? fallbackData.charts.ratings.labels,
+            data: payload?.charts?.ratings?.data ?? payload?.analytics?.ratings?.data ?? fallbackData.charts.ratings.data
+          },
+          revenue: {
+            labels: payload?.charts?.revenue?.labels ?? payload?.analytics?.revenue?.labels ?? fallbackData.charts.revenue.labels,
+            data: payload?.charts?.revenue?.data ?? payload?.analytics?.revenue?.data ?? fallbackData.charts.revenue.data
+          }
+        },
+        automation: Object.keys(automationCatalog).reduce((acc, key) => {
+          const source = payload?.automation?.[key] ?? payload?.automationControl?.[key] ?? payload?.[key];
+          acc[key] = parseAutomationEntry(key, source);
+          return acc;
+        }, {}),
+        updatedAt: payload?.updatedAt ?? payload?.lastUpdated ?? new Date().toISOString()
+      };
+    }
+    function applyData(data) {
+      document.querySelectorAll('[data-key]').forEach((element) => {
+        const key = element.dataset.key;
+        const rawValue = getValueByPath(data, key);
+        if (rawValue === undefined) return;
+        element.textContent = formatValue(key, rawValue);
+        element.classList.remove('loading');
+      });
+      automationState = data.automation || automationState;
+      chartsState = data.charts || chartsState;
+      renderAutomationStatus();
+      renderAutomationControls();
+      renderCharts(chartsState);
+    }
+    function chartTextColor(opacity = 0.7) { return `rgba(255,255,255,${opacity})`; }
+    function createOrReplaceChart(key, config) {
+      if (chartInstances[key]) chartInstances[key].destroy();
+      chartInstances[key] = new Chart(document.getElementById(key), config);
+    }
+    function chartDefaults() {
+      return {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: {
+            labels: {
+              color: chartTextColor(0.76),
+              usePointStyle: true,
+              boxWidth: 8,
+              boxHeight: 8,
+              padding: 18
+            }
+          },
+          tooltip: {
+            backgroundColor: 'rgba(15,23,41,0.94)',
+            borderColor: 'rgba(255,255,255,0.08)',
+            borderWidth: 1,
+            titleColor: '#ffffff',
+            bodyColor: chartTextColor(0.86),
+            padding: 12,
+            displayColors: true
+          }
+        },
+        scales: {
+          x: {
+            grid: { color: 'rgba(255,255,255,0.05)', drawBorder: false },
+            ticks: { color: chartTextColor() }
+          },
+          y: {
+            grid: { color: 'rgba(255,255,255,0.05)', drawBorder: false },
+            ticks: { color: chartTextColor() }
+          }
+        }
+      };
+    }
+    function renderCharts(data) {
+      const defaults = chartDefaults();
+
+      createOrReplaceChart('followersChart', {
+        type: 'line',
+        data: {
+          labels: data.followers.labels,
+          datasets: [
+            {
+              label: 'Instagram Follower',
+              data: data.followers.instagram,
+              borderColor: '#f5a623',
+              backgroundColor: 'rgba(245,166,35,0.18)',
+              pointBackgroundColor: '#f5a623',
+              pointBorderColor: '#f5a623',
+              pointRadius: 4,
+              pointHoverRadius: 5,
+              borderWidth: 3,
+              tension: 0.38,
+              fill: false
+            },
+            {
+              label: 'Facebook Likes',
+              data: data.followers.facebook,
+              borderColor: '#4facfe',
+              backgroundColor: 'rgba(79,172,254,0.18)',
+              pointBackgroundColor: '#4facfe',
+              pointBorderColor: '#4facfe',
+              pointRadius: 4,
+              pointHoverRadius: 5,
+              borderWidth: 3,
+              tension: 0.38,
+              fill: false
+            }
+          ]
+        },
+        options: defaults
+      });
+
+      createOrReplaceChart('whatsappChart', {
+        type: 'bar',
+        data: {
+          labels: data.whatsapp.labels,
+          datasets: [{
+            label: 'Gespräche',
+            data: data.whatsapp.conversations,
+            backgroundColor: 'rgba(45,216,129,0.72)',
+            borderColor: '#2dd881',
+            borderWidth: 1.5,
+            borderRadius: 12,
+            borderSkipped: false,
+            maxBarThickness: 36
+          }]
+        },
+        options: {
+          ...defaults,
+          plugins: {
+            ...defaults.plugins,
+            legend: { display: false }
+          }
+        }
+      });
+
+      createOrReplaceChart('ratingsChart', {
+        type: 'doughnut',
+        data: {
+          labels: data.ratings.labels,
+          datasets: [{
+            data: data.ratings.data,
+            backgroundColor: ['#f5a623', '#4facfe', '#2dd881', '#f093fb', 'rgba(255,255,255,0.28)'],
+            borderColor: '#0f1729',
+            borderWidth: 4,
+            hoverOffset: 8
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '68%',
+          plugins: defaults.plugins
+        }
+      });
+
+      createOrReplaceChart('revenueChart', {
+        type: 'line',
+        data: {
+          labels: data.revenue.labels,
+          datasets: [{
+            label: 'Umsatz',
+            data: data.revenue.data,
+            borderColor: '#f093fb',
+            backgroundColor: 'rgba(240,147,251,0.2)',
+            fill: true,
+            pointBackgroundColor: '#f093fb',
+            pointBorderColor: '#f093fb',
+            pointRadius: 4,
+            pointHoverRadius: 6,
+            borderWidth: 3,
+            tension: 0.4
+          }]
+        },
+        options: {
+          ...defaults,
+          plugins: {
+            ...defaults.plugins,
+            legend: { display: false },
+            tooltip: {
+              ...defaults.plugins.tooltip,
+              callbacks: {
+                label: (context) => ` Umsatz: ${new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(context.parsed.y || 0)}`
+              }
+            }
+          },
+          scales: {
+            ...defaults.scales,
+            y: {
+              ...defaults.scales.y,
+              ticks: {
+                color: chartTextColor(),
+                callback: (value) => new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(value)
+              }
+            }
+          }
+        }
+      });
+    }
+    function getStoredUser() {
+      try { return JSON.parse(sessionStorage.getItem(SESSION_USER_KEY) || 'null'); } catch { return null; }
+    }
+    function isAdmin() { return (currentUser?.role || '').toLowerCase() === 'admin'; }
+    function updateAdminVisibility() {
+      document.querySelectorAll('.admin-only').forEach((el) => el.classList.toggle('hidden', !isAdmin()));
+      if (!isAdmin() && document.querySelector('.tab-btn.active')?.dataset.tab !== 'overview') showTab('overview');
+    }
+    function setUser(user) {
+      currentUser = { name: user?.name || user?.fullName || user?.firstName || 'Leo', email: user?.email || '', role: user?.role || 'viewer' };
+      userName.textContent = currentUser.name;
+      userRoleLabel.textContent = currentUser.role;
+      userChipRole.textContent = currentUser.role;
+      userChip.classList.remove('hidden');
+      updateAdminVisibility();
+    }
+    function authHeaders() {
+      const headers = { 'Accept': 'application/json', 'Content-Type': 'application/json' };
+      const token = sessionStorage.getItem(SESSION_TOKEN_KEY);
+      if (token) headers.Authorization = `Bearer ${token}`;
+      return headers;
+    }
+    function unlockDashboard(user) {
+      errorMessage.textContent = '';
+      lockScreen.classList.add('hidden');
+      app.classList.add('unlocked');
+      setUser(user || getStoredUser() || {});
+      loadDashboardData();
+      if (isAdmin()) loadUsers();
+    }
+    function clearSession() {
+      sessionStorage.removeItem(SESSION_TOKEN_KEY);
+      sessionStorage.removeItem(SESSION_USER_KEY);
+    }
+    function logout() { clearSession(); window.location.reload(); }
+    async function loadDashboardData() {
+      applyData(fallbackData);
+      lastUpdated.textContent = formatDateTime();
+      try {
+        const response = await fetch(API_URL, { method: 'GET', headers: authHeaders(), cache: 'no-store' });
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+        const payload = await response.json();
+        const data = mergeKnownShapes(payload);
+        applyData(data);
+        lastUpdated.textContent = formatDateTime(data.updatedAt);
+        apiStatus.textContent = 'Live-Daten aktiv';
+      } catch (error) {
+        console.error('Dashboard API konnte nicht geladen werden:', error);
+        apiStatus.textContent = 'API aktuell nicht erreichbar';
+      }
+    }
+    function badgeMarkup(status) {
+      const normalized = String(status || '').toLowerCase();
+      if (normalized.includes('aktiv') || normalized.includes('active')) return '<span class="badge-success">✅ Aktiv</span>';
+      if (normalized.includes('wart') || normalized.includes('pending')) return '<span class="badge-waiting">⏳ Wartend</span>';
+      return '<span class="badge-off">⛔ Inaktiv</span>';
+    }
+    function renderAutomationStatus() {
+      automationStatusList.innerHTML = Object.keys(automationCatalog).map((key) => {
+        const item = automationState[key] || fallbackData.automation[key];
+        return `
+          <div class="automation-item">
+            <div><strong>${automationCatalog[key].label}</strong><small>${item.time === '00:00' ? '24/7 aktiv' : `geplant um ${item.time}`}</small></div>
+            ${item.active ? '<span class="badge-success">✅ Aktiv</span>' : '<span class="badge-off">⛔ Aus</span>'}
+          </div>`;
+      }).join('');
+    }
+    function renderAutomationControls() {
+      automationControlList.innerHTML = Object.keys(automationCatalog).map((key) => {
+        const item = automationState[key] || fallbackData.automation[key];
+        return `
+          <div class="automation-control" data-automation="${key}">
+            <div><strong>${automationCatalog[key].label}</strong><div class="subtle">${automationCatalog[key].description}</div></div>
+            <label class="switch"><input type="checkbox" data-toggle="${key}" ${item.active ? 'checked' : ''}><span class="slider"></span></label>
+            <input class="input" type="time" data-time="${key}" value="${item.time || automationCatalog[key].defaultTime}">
+            <button class="primary-btn" data-save="${key}">Speichern</button>
+          </div>`;
+      }).join('');
+    }
+    function renderUsers(users) {
+      if (!Array.isArray(users) || users.length === 0) {
+        usersTableBody.innerHTML = '<tr><td colspan="4" class="subtle">Noch keine Nutzer vorhanden.</td></tr>';
+        return;
+      }
+      usersTableBody.innerHTML = users.map((user) => `
+        <tr>
+          <td>${user.email || '—'}</td>
+          <td>${user.name || user.fullName || '—'}</td>
+          <td>${user.role || 'viewer'}</td>
+          <td>${badgeMarkup(user.status || 'pending')}</td>
+        </tr>`).join('');
+    }
+    async function loadUsers() {
+      if (!isAdmin()) return;
+      usersStatusMessage.textContent = 'Lade Nutzerdaten…';
+      try {
+        const response = await fetch(ADD_USER_URL, {
+          method: 'POST',
+          headers: authHeaders(),
+          body: JSON.stringify({ action: 'list', requester: currentUser?.email || currentUser?.name || 'dashboard' })
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok || payload.success === false) throw new Error(payload.error || 'Nutzerliste konnte nicht geladen werden');
+        renderUsers(payload.users || []);
+        usersStatusMessage.textContent = `${(payload.users || []).length} Nutzer geladen.`;
+      } catch (error) {
+        usersStatusMessage.textContent = error.message || 'Nutzerliste konnte nicht geladen werden';
+      }
+    }
+    async function submitAddUser() {
+      const email = document.getElementById('newUserEmail').value.trim();
+      const name = document.getElementById('newUserName').value.trim();
+      const role = document.getElementById('newUserRole').value;
+      const statusNode = document.getElementById('addUserStatus');
+      if (!email) { statusNode.textContent = 'Bitte eine E-Mail-Adresse eingeben.'; return; }
+      statusNode.textContent = 'Nutzer wird angelegt…';
+      try {
+        const response = await fetch(ADD_USER_URL, {
+          method: 'POST', headers: authHeaders(),
+          body: JSON.stringify({ action: 'add', email, name, role, requestedBy: currentUser?.email || currentUser?.name || 'admin' })
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok || payload.success === false) throw new Error(payload.error || 'Nutzer konnte nicht angelegt werden');
+        statusNode.textContent = 'Nutzer erfolgreich angelegt.';
+        await loadUsers();
+        setTimeout(closeAddUserModal, 900);
+      } catch (error) {
+        statusNode.textContent = error.message || 'Nutzer konnte nicht angelegt werden';
+      }
+    }
+    async function saveAutomation(key) {
+      const toggle = document.querySelector(`[data-toggle="${key}"]`);
+      const time = document.querySelector(`[data-time="${key}"]`);
+      automationStatusMessage.textContent = `${automationCatalog[key].label} wird gespeichert…`;
+      try {
+        const response = await fetch(AUTOMATION_CONTROL_URL, {
+          method: 'POST', headers: authHeaders(),
+          body: JSON.stringify({ automation: key, enabled: !!toggle.checked, time: time.value || automationCatalog[key].defaultTime, requestedBy: currentUser?.email || currentUser?.name || 'admin' })
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok || payload.success === false) throw new Error(payload.error || 'Änderung konnte nicht gespeichert werden');
+        automationState[key] = { active: !!toggle.checked, time: time.value || automationCatalog[key].defaultTime, label: automationCatalog[key].label };
+        renderAutomationStatus();
+        automationStatusMessage.textContent = `${automationCatalog[key].label} gespeichert.`;
+      } catch (error) {
+        automationStatusMessage.textContent = error.message || 'Änderung konnte nicht gespeichert werden';
+      }
+    }
+    function showTab(tab) {
+      document.querySelectorAll('.tab-btn').forEach((button) => button.classList.toggle('active', button.dataset.tab === tab));
+      document.querySelectorAll('.panel').forEach((panel) => panel.classList.add('hidden'));
+      document.getElementById(`panel-${tab}`).classList.remove('hidden');
+      if (tab === 'users') loadUsers();
+      if (tab === 'customers') loadCustomers();
+    }
+    loginForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      errorMessage.textContent = '';
+      loginButton.disabled = true;
+      loginButton.textContent = 'Anmeldung läuft…';
+      try {
+        const response = await fetch(LOGIN_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify({ email: emailInput.value.trim(), password: passwordInput.value })
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok || payload?.success === false) throw new Error(payload?.error || 'Anmeldung fehlgeschlagen');
+        if (!payload?.token) throw new Error('Login erfolgreich, aber kein Token erhalten');
+        const user = {
+          name: payload.name || payload.user?.name || payload.user?.fullName || 'Leo',
+          email: payload.email || payload.user?.email || emailInput.value.trim(),
+          role: payload.role || payload.user?.role || 'viewer'
+        };
+        sessionStorage.setItem(SESSION_TOKEN_KEY, payload.token);
+        sessionStorage.setItem(SESSION_USER_KEY, JSON.stringify(user));
+        unlockDashboard(user);
+      } catch (error) {
+        clearSession();
+        errorMessage.textContent = error.message || 'Anmeldung fehlgeschlagen';
+        passwordInput.value = '';
+        passwordInput.focus();
+      } finally {
+        loginButton.disabled = false;
+        loginButton.textContent = 'Anmelden';
+      }
+    });
+    document.querySelectorAll('.tab-btn').forEach((btn) => btn.addEventListener('click', () => showTab(btn.dataset.tab)));
+    document.getElementById('refreshUsersButton').addEventListener('click', loadUsers);
+    document.getElementById('openAddUserButton').addEventListener('click', () => document.getElementById('addUserModal').classList.add('visible'));
+    document.getElementById('submitAddUserButton').addEventListener('click', submitAddUser);
+    automationControlList.addEventListener('click', (event) => { const key = event.target?.dataset?.save; if (key) saveAutomation(key); });
+    const existingToken = sessionStorage.getItem(SESSION_TOKEN_KEY);
+    const existingUser = getStoredUser();
+    if (existingToken) unlockDashboard(existingUser); else emailInput.focus();
+    function openSettings() { document.getElementById('settingsModal').classList.add('visible'); }
+    function closeSettings() { document.getElementById('settingsModal').classList.remove('visible'); }
+    function closeAddUserModal() {
+      document.getElementById('addUserModal').classList.remove('visible');
+      document.getElementById('newUserEmail').value = '';
+      document.getElementById('newUserName').value = '';
+      document.getElementById('newUserRole').value = 'viewer';
+      document.getElementById('addUserStatus').textContent = '';
+    }
+    window.openSettings = openSettings;
+    window.closeSettings = closeSettings;
+    window.closeAddUserModal = closeAddUserModal;
+    window.logout = logout;
+  </script>
+</body>
+</html>
+<script>
+async function loadCustomers(){const t=document.getElementById('customersBody'),k=document.getElementById('customersKpis');if(!t)return;t.innerHTML='<tr><td colspan="5" style="text-align:center;padding:30px;color:#8b949e;">Lade...</td></tr>';try{const r=await fetch('https://n8n.leolan.net/webhook/admin-customers?key=LeoLan2026Admin!',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({})});const d=await r.json();const cs=d.customers||d||[];if(k){const s=[['Gesamt','#e8eaed',cs.length],['Aktiv','#4cd97b',cs.filter(c=>c.status==='active').length],['Einrichten','#ffd60a',cs.filter(c=>c.status==='setup_pending').length],['WA Connected','#5e81f4',cs.filter(c=>c.waStatus==='connected').length]];k.innerHTML=s.map(([l,c,v])=>'<div style="background:rgba(255,255,255,0.04);border-radius:10px;padding:14px;text-align:center;"><div style="font-size:22px;font-weight:800;color:'+c+'">'+v+'</div><div style="font-size:11px;color:#8b949e;margin-top:4px;">'+l+'</div></div>').join('');}if(!cs.length){t.innerHTML='<tr><td colspan="5" style="text-align:center;padding:30px;color:#8b949e;">Keine Kunden</td></tr>';return;}const st=s=>s==='active'?'<span style="background:rgba(76,217,122,.15);color:#4cd97b;padding:2px 8px;border-radius:6px;font-size:11px;">Aktiv</span>':s==='setup_pending'?'<span style="background:rgba(255,214,10,.15);color:#ffd60a;padding:2px 8px;border-radius:6px;font-size:11px;">Einrichten</span>':'<span style="background:rgba(255,69,58,.15);color:#ff453a;padding:2px 8px;border-radius:6px;font-size:11px;">Inaktiv</span>';const wa=w=>w==='connected'?'<span style="color:#4cd97b;">&#x1F7E2; Connected</span>':w==='pending'?'<span style="color:#ffd60a;">&#x23F3; Pending</span>':'<span style="color:#8b949e;">&#x26AB; Nein</span>';t.innerHTML=cs.map(c=>'<tr style="border-bottom:1px solid rgba(255,255,255,0.05);"><td style="padding:10px 12px;"><b style="color:#f0f6fc;">'+(c.name||c.restaurantName||'-')+'</b><br><span style="font-size:11px;color:#8b949e;">'+(c.email||'')+' &middot; '+(c.customerCode||'')+'</span></td><td style="padding:10px 12px;"><span style="background:rgba(94,129,244,.15);color:#5e81f4;padding:2px 8px;border-radius:6px;font-size:11px;">'+(c.paket||'').toUpperCase()+'</span></td><td style="padding:10px 12px;">'+st(c.status)+'</td><td style="padding:10px 12px;">'+wa(c.waStatus)+'</td><td style="padding:10px 12px;color:#8b949e;">'+(c.createdAt?new Date(c.createdAt).toLocaleDateString('de-DE'):'—')+'</td></tr>').join('');}catch(e){t.innerHTML='<tr><td colspan="5" style="text-align:center;padding:30px;color:#ff453a;">Fehler: '+e.message+'</td></tr>';}}
+// Hook showTab für customers
+const _origST=window.showTab||function(){};
+document.addEventListener('DOMContentLoaded',()=>{const ob=document.querySelectorAll('.tab-btn[data-tab="customers"]');ob.forEach(b=>b.addEventListener('click',()=>loadCustomers()));});
+</script>
+<!-- KUNDEN-SECTION -->
+<style>#tab-customers.tab-section{display:none}#tab-customers.tab-section.active{display:block}</style>
