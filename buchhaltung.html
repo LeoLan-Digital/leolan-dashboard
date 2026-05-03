@@ -1998,25 +1998,29 @@ function fmtDate(d) {
 }
 
 // ─── DEFAULT STATE MIT ALLEN AUSGABEN ────────────────────────
-const DATA_VERSION = 5;
+const DATA_VERSION = 6;
 const DEFAULT_EXPENSES = [
-  {id:'e1',date:'2026-04-28',desc:'Claude API Invoice #2233-7925',vendor:'Anthropic Ireland Ltd',amount_usd:250.00,amount_eur:null,category:'Software/API',konto:'4970',stk:'VSt 0%',note:'✅ Bezahlt',status:'bezahlt'},
-  {id:'e2',date:'2026-04-28',desc:'Claude API Invoice #2680-1637',vendor:'Anthropic Ireland Ltd',amount_usd:20.00,amount_eur:null,category:'Software/API',konto:'4970',stk:'VSt 0%',note:'✅ Bezahlt',status:'bezahlt'},
-  {id:'e3',date:'2026-04-27',desc:'Claude API (mehrere Rechnungen)',vendor:'Anthropic Ireland Ltd',amount_usd:5345.38,amount_eur:null,category:'Software/API',konto:'4970',stk:'VSt 0%',note:'✅ Bezahlt',status:'bezahlt'},
-  {id:'e4',date:'2026-04-27',desc:'GPT-4o API Credits April',vendor:'OpenAI',amount_usd:97.24,amount_eur:null,category:'Software/API',konto:'4970',stk:'VSt 0%',note:'✅ Bezahlt',status:'bezahlt'},
+  {id:'e1',date:'2026-04-28',desc:'Claude API Invoice #2233-7925 — Mira KI-Assistent (intern)',vendor:'Anthropic Ireland Ltd',amount_usd:250.00,amount_eur:null,category:'Intern/KI-Assistent',konto:'4970',stk:'VSt 0%',note:'✅ Bezahlt | Interne Nutzung (Mira/Entwicklung)',status:'bezahlt'},
+  {id:'e2',date:'2026-04-28',desc:'Claude API Invoice #2680-1637 — Mira KI-Assistent (intern)',vendor:'Anthropic Ireland Ltd',amount_usd:20.00,amount_eur:null,category:'Intern/KI-Assistent',konto:'4970',stk:'VSt 0%',note:'✅ Bezahlt | Interne Nutzung (Mira/Entwicklung)',status:'bezahlt'},
+  {id:'e3',date:'2026-04-27',desc:'Claude API — Mira + Systemaufbau April (intern)',vendor:'Anthropic Ireland Ltd',amount_usd:5345.38,amount_eur:null,category:'Intern/KI-Assistent',konto:'4970',stk:'VSt 0%',note:'✅ Bezahlt | Aufbaukosten: Mira, Entwicklung, Testing — einmalig',status:'bezahlt'},
+  {id:'e4',date:'2026-04-27',desc:'GPT-4o API Credits April — WhatsApp Kunden-Bot',vendor:'OpenAI',amount_usd:97.24,amount_eur:null,category:'Kunden-Bot (WhatsApp)',konto:'4970',stk:'VSt 0%',note:'✅ Bezahlt | Kundenbot-Betrieb (laufend)',status:'bezahlt'},
   {id:'e5',date:'2026-04-12',desc:'EAS Build Credits #2123-5068',vendor:'Expo (650 Industries)',amount_usd:19.00,amount_eur:null,category:'Entwicklung',konto:'4980',stk:'VSt 0%',note:'✅ Bezahlt',status:'bezahlt'},
   {id:'e6',date:'2026-04-01',desc:'Google Workspace leolan.net',vendor:'Google Ireland Ltd',amount_usd:null,amount_eur:16.20,category:'Software/SaaS',konto:'4970',stk:'VSt 19%',note:'✅ Bezahlt',status:'bezahlt'},
   {id:'e7',date:'2026-04-23',desc:'IHK Stellungnahme Gründungszuschuss (Rg. 60055360)',vendor:'IHK Dresden',amount_usd:null,amount_eur:50.00,category:'Behörden/Beratung',konto:'6300',stk:'VSt 19%',note:'✅ Bezahlt 23.04.',status:'bezahlt'},
   {id:'e8',date:'2026-04-17',desc:'Gewerbeanzeige GEWANZ-20260417',vendor:'Gewerbeamt Dresden',amount_usd:null,amount_eur:26.00,category:'Behörden',konto:'6300',stk:'steuerfrei',note:'✅ Bezahlt',status:'bezahlt'},
   {id:'m1',date:'2026-04-17',desc:'Markenüberwachung WBM DE LeoLan (RVG 2601652)',vendor:'horak. Rechtsanwälte',amount_usd:null,amount_eur:83.30,category:'Rechtskosten',konto:'6810',stk:'VSt 19%',note:'✅ Bezahlt 28.04.',status:'bezahlt'},
   {id:'m2',date:'2026-04-17',desc:'Markenüberwachung WBM DE LeoLan (RVG 2600590)',vendor:'IP Services GmbH',amount_usd:null,amount_eur:71.40,category:'Rechtskosten',konto:'6810',stk:'VSt 19%',note:'🔴 NOCH OFFEN!',status:'offen'},
-  {id:'m3',date:'2026-01-15',desc:'Markenüberwachung WBM DE LeoLan (RVG 2600219)',vendor:'IP Services GmbH',amount_usd:null,amount_eur:71.40,category:'Rechtskosten',konto:'6810',stk:'VSt 19%',note:'⚠️ Doppelt bezahlt → €71,40 zurückfordern!',status:'bezahlt'}
+  {id:'m3',date:'2026-01-15',desc:'Markenüberwachung WBM DE LeoLan (RVG 2600219)',vendor:'IP Services GmbH',amount_usd:null,amount_eur:71.40,category:'Rechtskosten',konto:'6810',stk:'VSt 19%',note:'⚠️ Doppelt bezahlt → €71,40 zurückfordern!',status:'bezahlt'},
+  {id:'mai1',date:'2026-05-02',desc:'Claude API (10× Rechnungen #2265-3574 u.a.) — Mira intern',vendor:'Anthropic Ireland Ltd',amount_usd:198.77,amount_eur:null,category:'Intern/KI-Assistent',konto:'4970',stk:'VSt 0%',note:'✅ Bezahlt | Interne Nutzung (Mira)',status:'bezahlt'},
+  {id:'mai2',date:'2026-05-02',desc:'Google Cloud Platform & APIs (CLOUD MwV2z8)',vendor:'Google Cloud',amount_usd:null,amount_eur:17.78,category:'Infrastruktur',konto:'4970',stk:'VSt 0%',note:'✅ Bezahlt | Reverse Charge',status:'bezahlt'},
+  {id:'mai3',date:'2026-05-01',desc:'Google Workspace leolan.net (Rg. 5557798090)',vendor:'Google Ireland Ltd',amount_usd:null,amount_eur:16.20,category:'Software/SaaS',konto:'4970',stk:'VSt 0%',note:'✅ Bezahlt | Monatl. Abo — Reverse Charge',status:'bezahlt'},
+  {id:'mai4',date:'2026-04-17',desc:'ElevenLabs TTS #2738-2835-8396',vendor:'Eleven Labs Inc.',amount_usd:11.00,amount_eur:null,category:'Intern/KI-Assistent',konto:'4970',stk:'VSt 0%',note:'✅ Bezahlt | Mira Sprachausgabe',status:'bezahlt'}
 ];
 
 // State initalisieren mit Daten
 function loadState() {
   try {
-    var saved = localStorage.getItem('leolan_buch_v5');
+    var saved = localStorage.getItem('leolan_buch_v6');
     if (saved) {
       var p = JSON.parse(saved);
       if (p.version >= DATA_VERSION) return p;
@@ -2039,7 +2043,7 @@ function loadState() {
 
 function saveState() {
   state.version = DATA_VERSION;
-  try { localStorage.setItem('leolan_buch_v5', JSON.stringify(state)); } catch(e) {}
+  try { localStorage.setItem('leolan_buch_v6', JSON.stringify(state)); } catch(e) {}
 }
 
 var state = loadState();
@@ -3112,7 +3116,7 @@ function _removeCategory(type, idx) {
 
 function resetAll() {
   if (!confirm('Wirklich ALLE Daten zurücksetzen? Das kann nicht rükgängig gemacht werden!')) return;
-  ['leolan_buch_v4','leolan_buch_v5'].forEach(function(k){localStorage.removeItem(k);});
+  ['leolan_buch_v4','leolan_buch_v6'].forEach(function(k){localStorage.removeItem(k);});
   location.reload();
 }
 
