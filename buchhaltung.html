@@ -1013,6 +1013,67 @@ function switchTab(tabId, el) {
     if (typeof makeGrowthChart === 'function') setTimeout(() => { makeGrowthChart(window.DATA?.april||{}); makeDonut?.(); makeCashflow?.(); }, 100);
   }
 }
+// Hook: load customers-overview when tab opens
+  const origSwitch_cov = switchTab;
+  window.switchTab = function(tabId, el) {
+    origSwitch_cov(tabId, el);
+    if (tabId === 'customers-overview') loadAdminCustomers();
+  };
+// ─────────────────────────────────────────────────────────────
+
+// ─── ADMIN CUSTOMERS OVERVIEW ────────────────────────────────
+let _covLoaded = false;
+async function loadAdminCustomers() {
+  const tbody = document.getElementById('cov-tbody');
+  if (!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:32px;opacity:.4">Lädt…</td></tr>';
+  try {
+    const res = await fetch('https://n8n.leolan.net/webhook/admin-customers?key=LeoLan2026Admin!', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: '{}'
+    });
+    const data = await res.json();
+    const customers = data.customers || [];
+    // KPIs
+    document.getElementById('cov-total').textContent = customers.length;
+    document.getElementById('cov-active').textContent = customers.filter(c=>c.status==='active').length;
+    document.getElementById('cov-pending').textContent = customers.filter(c=>c.status==='setup_pending').length;
+    document.getElementById('cov-inactive').textContent = customers.filter(c=>c.status==='inactive').length;
+    // Table rows
+    if (!customers.length) {
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:32px;opacity:.4">Noch keine Kunden.</td></tr>';
+      return;
+    }
+    const statusBadge = s => ({
+      active: '<span style="background:rgba(48,209,88,.15);color:#30d158;border:1px solid #30d158;padding:2px 8px;border-radius:6px;font-size:12px;white-space:nowrap">✅ Aktiv</span>',
+      setup_pending: '<span style="background:rgba(255,214,10,.12);color:#ffd60a;border:1px solid #ffd60a;padding:2px 8px;border-radius:6px;font-size:12px;white-space:nowrap">🆕 Einrichten</span>',
+      inactive: '<span style="background:rgba(255,69,58,.12);color:#ff453a;border:1px solid #ff453a;padding:2px 8px;border-radius:6px;font-size:12px;white-space:nowrap">⚠️ Inaktiv</span>',
+    }[s] || s);
+    const waBadge = w => ({
+      connected: '<span style="color:#30d158;font-size:12px">🟢 Connected</span>',
+      pending: '<span style="color:#ffd60a;font-size:12px">⏳ Pending</span>',
+      none: '<span style="color:#636366;font-size:12px">⚫ Nicht eingerichtet</span>',
+    }[w] || w);
+    tbody.innerHTML = customers.map(c => `
+      <tr>
+        <td>
+          <div style="font-weight:600;color:var(--text)">${c.name||'—'}</div>
+          <div style="font-size:11px;color:var(--text-secondary)">${c.customerCode} · ${c.email||'—'}</div>
+        </td>
+        <td><span style="background:rgba(94,129,244,.18);color:#5e81f4;padding:2px 8px;border-radius:6px;font-size:12px">${(c.paket||'').toUpperCase()||'—'}</span></td>
+        <td>${statusBadge(c.status)}</td>
+        <td>${waBadge(c.waStatus)}</td>
+        <td style="color:var(--text-secondary);font-size:13px">${c.sector||'—'}</td>
+        <td style="color:var(--text-secondary);font-size:13px">${c.createdAt ? new Date(c.createdAt).toLocaleDateString('de-DE') : '—'}</td>
+        <td style="color:var(--text-secondary);font-size:13px">${c.messagesLimit ? c.messagesUsed+' / '+c.messagesLimit : '—'}</td>
+      </tr>
+    `).join('');
+    _covLoaded = true;
+  } catch(e) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--red)">⚠️ Fehler: ${e.message}</td></tr>`;
+  }
+}
 // ─────────────────────────────────────────────────────────────
 
 function doLogin() {
@@ -1072,6 +1133,7 @@ if (sessionStorage.getItem('leolan_auth')) {
         </div>
         <div class="sidebar-sub-body">
           <div class="sidebar-sub-item" id="nav-expenses" onclick="switchTab('expenses',this)" data-tab="expenses">Ausgaben</div>
+          <div class="sidebar-sub-item" id="nav-customers-overview" onclick="switchTab('customers-overview',this)" data-tab="customers-overview">Kunden</div>
           <div class="sidebar-sub-item" id="nav-cost-per-customer" onclick="switchTab('cost-per-customer',this)" data-tab="cost-per-customer">Kosten/Kunde</div>
           <div class="sidebar-sub-item" id="nav-income" onclick="switchTab('income',this)" data-tab="income">Einnahmen</div>
           <div class="sidebar-sub-item" id="nav-open-items" onclick="switchTab('open-items',this)" data-tab="open-items">Offene Posten <span class="sidebar-badge" id="op-badge">0</span></div>
@@ -1524,6 +1586,50 @@ if (sessionStorage.getItem('leolan_auth')) {
           <tr><th>Name / Firma</th><th>E-Mail</th><th>Ort</th><th>Rechnungen</th><th>Umsatz</th><th>Aktionen</th></tr>
         </thead>
         <tbody id="customersBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════ TAB: KUNDEN-ÜBERSICHT (Admin) -->
+  <div id="tab-customers-overview" class="tab-content">
+    <div class="page-header">
+      <div class="page-title">👥 Kunden-Übersicht</div>
+      <button class="btn btn-outline btn-sm" onclick="loadAdminCustomers()">🔄 Aktualisieren</button>
+    </div>
+    <!-- KPI Row -->
+    <div id="cov-kpi" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px">
+      <div class="kpi-card" style="flex:1;min-width:140px">
+        <div class="kpi-value" id="cov-total">—</div>
+        <div class="kpi-label">Gesamt</div>
+      </div>
+      <div class="kpi-card" style="flex:1;min-width:140px">
+        <div class="kpi-value" style="color:var(--green)" id="cov-active">—</div>
+        <div class="kpi-label">Aktiv</div>
+      </div>
+      <div class="kpi-card" style="flex:1;min-width:140px">
+        <div class="kpi-value" style="color:var(--yellow)" id="cov-pending">—</div>
+        <div class="kpi-label">Einrichten</div>
+      </div>
+      <div class="kpi-card" style="flex:1;min-width:140px">
+        <div class="kpi-value" style="color:var(--red)" id="cov-inactive">—</div>
+        <div class="kpi-label">Inaktiv</div>
+      </div>
+    </div>
+    <!-- Table -->
+    <div class="table-wrap">
+      <table id="cov-table">
+        <thead>
+          <tr>
+            <th>Kunde</th>
+            <th>Paket</th>
+            <th>Status</th>
+            <th>WhatsApp</th>
+            <th>Sektor</th>
+            <th>Erstellt</th>
+            <th>Nachrichten</th>
+          </tr>
+        </thead>
+        <tbody id="cov-tbody"><tr><td colspan="7" style="text-align:center;padding:32px;opacity:.4">Lädt…</td></tr></tbody>
       </table>
     </div>
   </div>
