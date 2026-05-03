@@ -3169,7 +3169,6 @@ function exportCSV(type) {
     rows=rows.concat(incRows);
   }
   var csv=headers.map(_csvCell).join(';')+'\n'+rows.join('\n');
-');
   _dlBlob(csv,'leolan-'+type+'-'+new Date().toISOString().slice(0,10)+'.csv','text/csv;charset=utf-8;');
 }
 
@@ -3212,38 +3211,27 @@ function generateElsterEUER(event) {
   };
   var tExp=(state.expenses||[]).reduce(function(s,e){var d=new Date(e.date||'');return d.getFullYear()===year?s+getEurG(e):s;},0);
   var tInc=(state.income||[]).reduce(function(s,i){var d=new Date(i.date||'');return d.getFullYear()===year?s+(i.amount_gross||0):s;},0);
-  var xml='<?xml version="1.0" encoding="UTF-8"?>
-<!-- ELSTER EÜR Export — LeoLan Digital -->
-<!-- '+new Date().toISOString()+' -->
-'
-    +'<EuerFormular Jahr="'+year+'">
-  <Steuerpflichtiger>
-'
-    +'    <Name>'+_esc(s.owner||'Kamaleddin Nazari')+'</Name>
-'
-    +'    <Unternehmen>'+_esc(s.company||'LeoLan Digital')+'</Unternehmen>
-'
-    +'    <Steuernummer>'+_esc(s.taxId||'')+'</Steuernummer>
-'
-    +'    <Finanzamt>'+_esc(s.finanzamt||'Finanzamt Dresden')+'</Finanzamt>
-'
-    +'  </Steuerpflichtiger>
-  <EUeR>
-'
-    +'    <Betriebseinnahmen>
-      <Erloese_Kleinunternehmer umsatzsteuer="0">'+tInc.toFixed(2)+'</Erloese_Kleinunternehmer>
-    </Betriebseinnahmen>
-'
-    +'    <Betriebsausgaben>
-      <Summe>'+tExp.toFixed(2)+'</Summe>
-    </Betriebsausgaben>
-'
-    +'    <Gewinn_Verlust>'+((tInc-tExp).toFixed(2))+'</Gewinn_Verlust>
-'
-    +'    <!-- Kleinunternehmer §19 UStG: keine USt -->
-  </EUeR>
-</EuerFormular>
-';
+  var xml='<?xml version="1.0" encoding="UTF-8"?>\n'
+    +'<!-- ELSTER EU\u00dcR Export \u2014 LeoLan Digital -->\n'
+    +'<!-- '+new Date().toISOString()+' -->\n'
+    +'<EuerFormular Jahr="'+year+'">\n'
+    +'  <Steuerpflichtiger>\n'
+    +'    <Name>'+_esc(s.owner||'Kamaleddin Nazari')+'</Name>\n'
+    +'    <Unternehmen>'+_esc(s.company||'LeoLan Digital')+'</Unternehmen>\n'
+    +'    <Steuernummer>'+_esc(s.taxId||'')+'</Steuernummer>\n'
+    +'    <Finanzamt>'+_esc(s.finanzamt||'Finanzamt Dresden')+'</Finanzamt>\n'
+    +'  </Steuerpflichtiger>\n'
+    +'  <EUeR>\n'
+    +'    <Betriebseinnahmen>\n'
+    +'      <Erloese_Kleinunternehmer umsatzsteuer="0">'+tInc.toFixed(2)+'</Erloese_Kleinunternehmer>\n'
+    +'    </Betriebseinnahmen>\n'
+    +'    <Betriebsausgaben>\n'
+    +'      <Summe>'+tExp.toFixed(2)+'</Summe>\n'
+    +'    </Betriebsausgaben>\n'
+    +'    <Gewinn_Verlust>'+((tInc-tExp).toFixed(2))+'</Gewinn_Verlust>\n'
+    +'    <!-- Kleinunternehmer \u00a719 UStG: keine USt -->\n'
+    +'  </EUeR>\n'
+    +'</EuerFormular>\n';
   _dlBlob(xml,'ELSTER-EUeR-'+year+'.xml','application/xml');
 }
 
