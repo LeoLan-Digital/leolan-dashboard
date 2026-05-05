@@ -2185,7 +2185,13 @@ const DEFAULT_EXPENSES = [
 ];
 
 // State initalisieren mit Daten
+// ── Server API ──────────────────────────────────────────────────────────────
+var API_BASE = 'https://n8n.leolan.net/webhook';
+var API_SAVE_PENDING = false;
+var API_SAVE_TIMER = null;
+
 function loadState() {
+  // Sync: lokalen Fallback-State zurückgeben (API-Daten werden async geladen)
   try {
     var saved = localStorage.getItem('leolan_buch_v7');
     if (saved) {
@@ -2208,9 +2214,43 @@ function loadState() {
   };
 }
 
+function loadStateFromAPI() {
+  // Async: Server-State laden (überschreibt lokalen State)
+  fetch(API_BASE + '/buch-data')
+    .then(function(r){ return r.json(); })
+    .then(function(data) {
+      if (!data || !data.expenses) return;
+      // Merge: API-State als Basis, Settings aus lokalem State behalten falls vorhanden
+      if (data.expenses.length > 0 || data.income.length > 0) {
+        var localSettings = state.settings;
+        state = data;
+        if (!state.version) state.version = DATA_VERSION;
+        if (!state.usdRate) state.usdRate = 0.9259;
+        if (!state.settings || !state.settings.company) state.settings = localSettings;
+        if (!state.expenses) state.expenses = [];
+        if (!state.income) state.income = [];
+        // Lokal cachen
+        try { localStorage.setItem('leolan_buch_v7', JSON.stringify(state)); } catch(e) {}
+        renderAll();
+        showToast('✅ Daten vom Server geladen (' + state.expenses.length + ' Ausgaben)');
+      }
+    })
+    .catch(function(e) { console.warn('API nicht erreichbar, nutze lokalen Cache'); });
+}
+
 function saveState() {
   state.version = DATA_VERSION;
+  // Lokal sofort speichern
   try { localStorage.setItem('leolan_buch_v7', JSON.stringify(state)); } catch(e) {}
+  // Server-Save debounced (max alle 2s)
+  if (API_SAVE_TIMER) clearTimeout(API_SAVE_TIMER);
+  API_SAVE_TIMER = setTimeout(function() {
+    fetch(API_BASE + '/buch-save', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(state)
+    }).catch(function(e) { console.warn('API Save fehlgeschlagen:', e); });
+  }, 2000);
 }
 
 var state = loadState();
@@ -2223,6 +2263,20 @@ function eurAmt(e) {
 }
 
 function esc(s) { if (!s) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function showToast(msg, dur) {
+  var t = document.getElementById('mira-toast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'mira-toast';
+    t.style.cssText = 'position:fixed;bottom:24px;right:24px;background:#1c1c1e;color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,.4);transition:opacity .3s;opacity:0;pointer-events:none;';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.opacity = '1';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(function(){ t.style.opacity='0'; }, dur || 3000);
+}
 
 
 function renderAll() {
@@ -2258,6 +2312,8 @@ function renderExpenses() {
 
 document.addEventListener('DOMContentLoaded', function() {
   renderAll();
+  // Server-Daten async nachladen
+  loadStateFromAPI();
   // Init tab
   var first = document.getElementById('tab-overview');
   if (first && !document.querySelector('.tab-content.active')) {
