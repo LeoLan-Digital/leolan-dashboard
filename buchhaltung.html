@@ -1466,12 +1466,39 @@ if (sessionStorage.getItem('leolan_auth')) {
     </div>
   </div>
 
+  <div class="section-card" style="margin-bottom:16px;">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:16px;">
+      <div>
+        <div style="font-size:16px;font-weight:700;">Bankverbindungen</div>
+        <div style="font-size:12px;opacity:.5;margin-top:3px;">Sicherer Zugriff mit Ihrer Freigabe. NOVA speichert keine Bank-Passwörter.</div>
+      </div>
+      <button class="btn btn-outline btn-sm" onclick="loadBankConnections()">🔄 Status prüfen</button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;">
+      <div style="border:1px solid var(--separator);border-radius:12px;padding:16px;background:rgba(255,255,255,.025);">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+          <strong>Qonto</strong><span id="qonto-connection-badge" class="badge badge-gray">Nicht verbunden</span>
+        </div>
+        <div id="qonto-connection-meta" style="font-size:12px;opacity:.5;margin:8px 0 14px;">Konten und Transaktionen per OAuth synchronisieren</div>
+        <button id="qonto-connect-btn" class="btn btn-primary btn-sm" onclick="connectBank('qonto')">Qonto verbinden</button>
+      </div>
+      <div style="border:1px solid var(--separator);border-radius:12px;padding:16px;background:rgba(255,255,255,.025);">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+          <strong>N26</strong><span id="n26-connection-badge" class="badge badge-gray">Nicht verbunden</span>
+        </div>
+        <div id="n26-connection-meta" style="font-size:12px;opacity:.5;margin:8px 0 14px;">Offizielle PSD2-Verbindung über einen regulierten Anbieter</div>
+        <button id="n26-connect-btn" class="btn btn-primary btn-sm" onclick="connectBank('n26')">N26 verbinden</button>
+      </div>
+    </div>
+    <div id="bank-connection-message" style="display:none;margin-top:12px;font-size:12px;padding:10px 12px;border-radius:9px;background:rgba(10,132,255,.1);color:#5ac8fa;"></div>
+  </div>
+
   <!-- N26 Status -->
   <div style="background:rgba(100,100,100,0.08);border:1px solid rgba(100,100,100,0.2);border-radius:12px;padding:16px;margin-bottom:12px;display:flex;align-items:center;gap:12px;">
     <div style="background:#333;color:#fff;padding:6px 14px;border-radius:8px;font-weight:700;font-size:14px;">N26</div>
     <div>
       <div style="font-weight:600;font-size:14px;">N26 Business Standard</div>
-      <div style="font-size:12px;opacity:.45;">DE25 1001 1001 2226 5950 79</div>
+      <div style="font-size:12px;opacity:.45;">IBAN wird nach Verbindung angezeigt</div>
     </div>
     <div style="margin-left:auto;text-align:right;">
       <div style="font-size:24px;font-weight:700;font-variant-numeric:tabular-nums;" id="n26-balance-display">— €</div>
@@ -1484,7 +1511,7 @@ if (sessionStorage.getItem('leolan_auth')) {
     <div style="background:#0a84ff;color:#fff;padding:6px 14px;border-radius:8px;font-weight:700;font-size:14px;">Q</div>
     <div>
       <div style="font-weight:600;font-size:14px;">Qonto Hauptkonto</div>
-      <div style="font-size:12px;opacity:.45;">DE40 1001 0123 9845 0754 49</div>
+      <div style="font-size:12px;opacity:.45;">IBAN wird nach Verbindung angezeigt</div>
     </div>
     <div style="margin-left:auto;text-align:right;">
       <div style="font-size:24px;font-weight:700;font-variant-numeric:tabular-nums;" id="bank-balance">€ 0,00</div>
@@ -1498,11 +1525,22 @@ if (sessionStorage.getItem('leolan_auth')) {
       <div style="font-size:13px;font-weight:600;opacity:.5;text-transform:uppercase;letter-spacing:.08em;">💳 Qonto Transaktionen</div>
       <div style="font-size:11px;opacity:.4;" id="tx-sync-info">Lade...</div>
     </div>
-    <table id="n26-tx-table">
+    <table id="qonto-tx-table">
       <tr><th>Datum</th><th>Beschreibung</th><th>Betrag</th><th>Seite</th><th>Status</th></tr>
-      <tbody id="n26-tx-body">
+      <tbody id="qonto-tx-body">
         <tr><td colspan="5" style="text-align:center;opacity:.4;padding:20px;">🔄 Lade Qonto-Transaktionen...</td></tr>
       </tbody>
+    </table>
+  </div>
+
+  <div class="section-card" style="margin-bottom:16px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <div style="font-size:13px;font-weight:600;opacity:.5;text-transform:uppercase;letter-spacing:.08em;">🏦 N26 Transaktionen</div>
+      <div style="font-size:11px;opacity:.4;" id="n26-sync-info">Noch nicht synchronisiert</div>
+    </div>
+    <table id="n26-tx-table">
+      <tr><th>Datum</th><th>Beschreibung</th><th>Betrag</th><th>Referenz</th><th>Status</th></tr>
+      <tbody id="n26-tx-body"><tr><td colspan="5" style="text-align:center;opacity:.4;padding:20px;">N26 noch nicht verbunden</td></tr></tbody>
     </table>
   </div>
 
@@ -2416,6 +2454,72 @@ document.addEventListener('DOMContentLoaded', function() {
 var QONTO_BALANCE_URL = 'https://n8n.leolan.net/webhook/qonto-balance';
 var QONTO_TX_URL      = 'https://n8n.leolan.net/webhook/qonto-transactions';
 var QONTO_DATA        = null; // Cache
+var BANK_CONNECTIONS_URL = 'https://n8n.leolan.net/webhook/bank-connections-status';
+var BANK_CONNECT_URL = {
+  qonto: 'https://n8n.leolan.net/webhook/bank-connect-qonto',
+  n26: 'https://n8n.leolan.net/webhook/bank-connect-n26'
+};
+
+function bankMessage(text, isError) {
+  var el = document.getElementById('bank-connection-message');
+  if (!el) return;
+  el.style.display = 'block';
+  el.style.background = isError ? 'rgba(255,69,58,.12)' : 'rgba(10,132,255,.1)';
+  el.style.color = isError ? '#ff6961' : '#5ac8fa';
+  el.textContent = text;
+}
+
+function renderBankConnection(provider, info) {
+  var connected = !!(info && info.connected);
+  var badge = document.getElementById(provider + '-connection-badge');
+  var meta = document.getElementById(provider + '-connection-meta');
+  var btn = document.getElementById(provider + '-connect-btn');
+  if (badge) {
+    badge.className = 'badge ' + (connected ? 'badge-green' : 'badge-gray');
+    badge.textContent = connected ? '✓ Verbunden' : 'Nicht verbunden';
+  }
+  if (meta) {
+    var account = info && (info.accountName || info.ibanMasked);
+    var synced = info && info.lastSync ? ' · Stand: ' + new Date(info.lastSync).toLocaleString('de-DE') : '';
+    meta.textContent = connected ? ((account || 'Bankkonto verbunden') + synced) : (provider === 'n26' ? 'Offizielle PSD2-Verbindung über einen regulierten Anbieter' : 'Konten und Transaktionen per OAuth synchronisieren');
+  }
+  if (btn) btn.textContent = connected ? '🔄 Verbindung erneuern' : (provider === 'n26' ? 'N26 verbinden' : 'Qonto verbinden');
+}
+
+async function loadBankConnections() {
+  try {
+    var response = await fetch(BANK_CONNECTIONS_URL, {credentials:'include', signal:AbortSignal.timeout(8000)});
+    if (!response.ok) throw new Error('HTTP ' + response.status);
+    var data = await response.json();
+    renderBankConnection('qonto', data.qonto);
+    renderBankConnection('n26', data.n26);
+  } catch (e) {
+    var checks = await Promise.all([
+      fetch(QONTO_BALANCE_URL, {signal:AbortSignal.timeout(5000)}).then(function(r){return r.ok;}).catch(function(){return false;}),
+      fetch(N26_REMOTE, {credentials:'include', signal:AbortSignal.timeout(5000)}).then(function(r){return r.ok;}).catch(function(){return false;})
+    ]);
+    renderBankConnection('qonto', {connected:checks[0]});
+    renderBankConnection('n26', {connected:checks[1]});
+    bankMessage('Die sichere Bankverbindung ist vorbereitet. Für die Aktivierung werden noch die Anbieter-Zugangsdaten im Server hinterlegt.', false);
+  }
+}
+
+async function connectBank(provider) {
+  var url = BANK_CONNECT_URL[provider];
+  var btn = document.getElementById(provider + '-connect-btn');
+  if (!url || !btn) return;
+  btn.disabled = true; btn.textContent = '⏳ Verbindung wird vorbereitet …';
+  try {
+    var response = await fetch(url, {method:'POST', credentials:'include', headers:{'Content-Type':'application/json'}, body:JSON.stringify({returnUrl:location.origin + location.pathname + '?tab=payments'})});
+    var data = await response.json().catch(function(){return {};});
+    if (!response.ok || !data.authorizationUrl) throw new Error(data.message || 'Verbindung noch nicht freigeschaltet');
+    if (!/^https:\/\//i.test(data.authorizationUrl)) throw new Error('Ungültige Autorisierungsadresse');
+    window.location.assign(data.authorizationUrl);
+  } catch (e) {
+    bankMessage((provider === 'n26' ? 'N26' : 'Qonto') + ': ' + e.message, true);
+    btn.disabled = false; btn.textContent = provider === 'n26' ? 'N26 verbinden' : 'Qonto verbinden';
+  }
+}
 
 // Formatierung
 function fmtQontoDate(isoStr) {
@@ -2435,7 +2539,7 @@ function fmtQontoAmount(amount, side) {
 
 // Transaktionen-Tabelle rendern
 function renderQontoTransactions(data) {
-  var tbody = document.getElementById('n26-tx-body');
+  var tbody = document.getElementById('qonto-tx-body');
   if (!tbody) return;
 
   var txs = (data && data.transactions) || [];
@@ -2808,16 +2912,11 @@ function closeModalOutside(event) {
 }
 
 var N26_REMOTE = 'https://n8n.leolan.net/webhook/n26-data';
-var N26_LOCAL  = 'http://localhost:8765/all';
 var N26_DATA   = null;
 
 async function fetchN26Data() {
   try {
-    var r = await fetch(N26_LOCAL, {signal: AbortSignal.timeout(3000)});
-    if (r.ok) return r.json();
-  } catch(e) {}
-  try {
-    var r2 = await fetch(N26_REMOTE, {signal: AbortSignal.timeout(8000)});
+    var r2 = await fetch(N26_REMOTE, {credentials:'include', signal: AbortSignal.timeout(8000)});
     if (r2.ok) return r2.json();
   } catch(e) {}
   return null;
@@ -2848,17 +2947,13 @@ async function syncN26() {
   var data = await fetchN26Data();
   N26_DATA = data;
   if (!data) {
-    if (balEl) balEl.textContent = '⏳ N26 App bestätigen...';
-    // N26 MFA Challenge direkt triggern
-    try {
-      await fetch('https://n8n.leolan.net/webhook/n26-mfa-trigger', {signal: AbortSignal.timeout(5000)});
-    } catch(e) {}
-    if (balEl) balEl.textContent = 'N26 App öffnen + bestätigen, dann nochmal Sync drücken';
+    if (balEl) balEl.textContent = 'Noch nicht verbunden';
+    bankMessage('N26 muss einmal über die sichere PSD2-Verbindung freigegeben werden.', false);
     return;
   }
   if (balEl) balEl.textContent = '€' + (data.balance || 0).toLocaleString('de-DE', {minimumFractionDigits:2, maximumFractionDigits:2});
   renderN26Transactions(data);
-  var tsEl = document.getElementById('tx-sync-info');
+  var tsEl = document.getElementById('n26-sync-info');
   if (tsEl && data.updated) tsEl.textContent = 'Stand: ' + new Date(data.updated).toLocaleString('de-DE');
 }
 
@@ -3573,6 +3668,13 @@ document.addEventListener('DOMContentLoaded', function() {
   // header date
   var hd = document.getElementById('headerDate');
   if (hd) hd.textContent = 'GJ ' + new Date().getFullYear();
+  if (typeof loadBankConnections === 'function') loadBankConnections();
+  var bankParams = new URLSearchParams(location.search);
+  if (bankParams.get('bank') && bankParams.get('status') === 'connected') {
+    bankMessage((bankParams.get('bank') === 'n26' ? 'N26' : 'Qonto') + ' wurde erfolgreich verbunden.', false);
+  } else if (bankParams.get('bank_error')) {
+    bankMessage('Bankverbindung konnte nicht abgeschlossen werden. Bitte erneut versuchen.', true);
+  }
   // Auto-sync N26 + Qonto on load
   setTimeout(function() {
     if (typeof syncN26 === 'function') syncN26();
