@@ -123,6 +123,14 @@
     .switch input:checked + .slider { background:#2dd881; }
     .switch input:checked + .slider:before { transform:translateX(26px); }
     .status-message { min-height:22px; margin-top:12px; font-size:0.92rem; color: var(--muted); }
+    .ops-grid { display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px }
+    .ops-card { padding:16px;border:1px solid rgba(255,255,255,.08);border-radius:16px;background:rgba(255,255,255,.035) }
+    .ops-card h4 { margin:0 0 6px;font-size:1rem }.ops-card p{margin:0;color:var(--muted);font-size:.86rem;line-height:1.5}
+    .connection-dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:#6b7280;margin-right:6px}.connection-dot.ok{background:var(--success)}.connection-dot.warn{background:var(--warning)}
+    .secret-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.secret-field{display:grid;gap:6px}.secret-field label{color:var(--muted);font-size:.82rem;font-weight:700}.secret-field.full{grid-column:1/-1}
+    .provider-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.small-btn{padding:9px 12px;border-radius:10px;font-size:.82rem}
+    .audit-list{display:grid;gap:8px}.audit-item{padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.035);display:flex;justify-content:space-between;gap:12px;font-size:.85rem}
+    .finance-frame{width:100%;height:72vh;min-height:650px;border:1px solid rgba(255,255,255,.1);border-radius:18px;background:#000}
     .modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,0.75); z-index:999; display:none; align-items:center; justify-content:center; padding:18px; }
     .modal-backdrop.visible { display:flex; }
     .modal { background:#1a2744; border-radius:20px; padding:2rem; width:min(460px, 100%); border:1px solid rgba(255,255,255,0.1); box-shadow: var(--shadow); }
@@ -140,7 +148,7 @@
       .charts-grid { grid-template-columns: 1fr; }
       .automation-control { grid-template-columns: 1fr; }
       .user-chip { right: 12px; bottom: 12px; }
-      .modal-actions { flex-direction:column; }
+      .modal-actions { flex-direction:column; }.secret-grid{grid-template-columns:1fr}.finance-frame{height:75vh;min-height:560px}
     }
   </style>
 </head>
@@ -179,6 +187,9 @@
       <button class="tab-btn admin-only hidden" data-tab="users">👥 Nutzer verwalten</button>
       <button class="tab-btn admin-only hidden" data-tab="automation">⚙️ Automatisierungen</button>
       <button class="tab-btn admin-only hidden" data-tab="customers">👥 Kunden</button>
+      <button class="tab-btn admin-only hidden" data-tab="operations">🏨 Hotelbetrieb</button>
+      <button class="tab-btn admin-only hidden" data-tab="integrations">🔐 Integrationen &amp; API</button>
+      <button class="tab-btn admin-only hidden" data-tab="finance">💶 Finanzen &amp; Steuern</button>
     </section>
 
     <section id="panel-overview" class="panel">
@@ -351,6 +362,66 @@
       </div>
     </section>
 
+    <section id="panel-operations" class="panel hidden admin-only">
+      <article class="card full">
+        <div class="card-header"><div><h3 class="card-title">🏨 NOVA Hotelbetrieb</h3><p class="card-subtitle">Pakete, Zahlungen, Einrichtung, PMS, Verbrauch und Support an einem Ort.</p></div><button class="ghost-btn small-btn" onclick="loadOperations()">Neu laden</button></div>
+        <div class="ops-grid" id="operationsKpis">
+          <div class="ops-card"><h4>Kunden &amp; Pakete</h4><p id="opCustomers">Wird geladen …</p></div>
+          <div class="ops-card"><h4>Monatlich / Jährlich</h4><p id="opBilling">Wird geladen …</p></div>
+          <div class="ops-card"><h4>Stripe-Abonnements</h4><p id="opStripe">Wird geladen …</p></div>
+          <div class="ops-card"><h4>Hotel-Onboarding</h4><p id="opOnboarding">Wird geladen …</p></div>
+          <div class="ops-card"><h4>PMS-Integrationen</h4><p id="opPms">Wird geladen …</p></div>
+          <div class="ops-card"><h4>Nachrichten &amp; Limits</h4><p id="opUsage">Wird geladen …</p></div>
+          <div class="ops-card"><h4>Aufgaben, Fehler &amp; Support</h4><p id="opSupport">Wird geladen …</p></div>
+          <div class="ops-card"><h4>E-Mail-Automationen</h4><p id="opEmail">Wird geladen …</p></div>
+        </div>
+        <div class="table-wrap" style="margin-top:16px"><table><thead><tr><th>Hotel</th><th>Paket</th><th>Zahlung</th><th>Onboarding</th><th>PMS</th><th>Verbrauch</th><th>Support</th><th>E-Mail</th></tr></thead><tbody id="operationsBody"><tr><td colspan="8" class="subtle">Noch keine Betriebsdaten geladen.</td></tr></tbody></table></div>
+        <div id="operationsStatus" class="status-message"></div>
+      </article>
+    </section>
+
+    <section id="panel-integrations" class="panel hidden admin-only">
+      <article class="card full">
+        <div class="card-header"><div><h3 class="card-title">🔐 Integrationen &amp; API-Schlüssel</h3><p class="card-subtitle">Schlüssel serverseitig verschlüsselt speichern, testen, ersetzen oder deaktivieren. Gespeicherte Werte werden nie erneut angezeigt.</p></div><button class="ghost-btn small-btn" onclick="loadIntegrationStatus()">Status prüfen</button></div>
+        <div class="ops-grid" id="integrationCards"></div>
+      </article>
+      <article class="card full" style="margin-top:12px">
+        <div class="card-header"><div><h3 class="card-title">Meta / Facebook / WhatsApp / Instagram</h3><p class="card-subtitle">Nur die geänderten Werte eingeben. Leere Felder lassen bestehende Geheimnisse unverändert.</p></div><span id="metaStatus" class="badge-waiting">Einrichtung prüfen</span></div>
+        <div class="secret-grid">
+          <div class="secret-field"><label>Meta-App-ID</label><input class="input" id="metaAppId" autocomplete="off" disabled placeholder="Tresor wird eingerichtet"></div>
+          <div class="secret-field"><label>App Secret</label><input class="input" id="metaAppSecret" type="password" autocomplete="new-password" disabled placeholder="Tresor wird eingerichtet"></div>
+          <div class="secret-field"><label>WhatsApp Business Account ID</label><input class="input" id="metaWabaId" autocomplete="off" disabled placeholder="Tresor wird eingerichtet"></div>
+          <div class="secret-field"><label>WhatsApp-Telefonnummer-ID</label><input class="input" id="metaPhoneId" autocomplete="off" disabled placeholder="Tresor wird eingerichtet"></div>
+          <div class="secret-field"><label>Facebook-Seiten-ID</label><input class="input" id="metaPageId" autocomplete="off" disabled placeholder="Tresor wird eingerichtet"></div>
+          <div class="secret-field"><label>Instagram-Business-Konto-ID</label><input class="input" id="metaInstagramId" autocomplete="off" disabled placeholder="Tresor wird eingerichtet"></div>
+          <div class="secret-field"><label>Zugriffstoken / System-User-Token</label><input class="input" id="metaAccessToken" type="password" autocomplete="new-password" disabled placeholder="Tresor wird eingerichtet"></div>
+          <div class="secret-field"><label>Webhook-Verifizierungstoken</label><input class="input" id="metaWebhookToken" type="password" autocomplete="new-password" disabled placeholder="Tresor wird eingerichtet"></div>
+        </div>
+        <div class="provider-actions"><button class="primary-btn small-btn" onclick="saveMetaSettings()" disabled>Sicher speichern &amp; anwenden</button><button class="ghost-btn small-btn" onclick="testIntegration('meta')">Meta-Verbindungen testen</button></div>
+        <div id="metaMessage" class="status-message"></div>
+      </article>
+      <article class="card full" style="margin-top:12px">
+        <div class="card-header"><div><h3 class="card-title">🔗 Webhooks</h3><p class="card-subtitle">Adressen und Erreichbarkeit der wichtigsten Eingänge.</p></div><button class="ghost-btn small-btn" onclick="checkWebhooks()">Alle prüfen</button></div>
+        <div class="table-wrap"><table><thead><tr><th>Dienst</th><th>Webhook-Adresse</th><th>Status</th></tr></thead><tbody id="webhooksBody"></tbody></table></div>
+      </article>
+      <article class="card full" style="margin-top:12px"><div class="card-header"><div><h3 class="card-title">📜 Änderungsverlauf</h3><p class="card-subtitle">Wer hat wann eine Verbindung geändert oder getestet?</p></div></div><div id="integrationAudit" class="audit-list"><div class="subtle">Noch keine Einträge geladen.</div></div></article>
+    </section>
+
+    <section id="panel-finance" class="panel hidden admin-only">
+      <article class="card full">
+        <div class="card-header"><div><h3 class="card-title">💶 Finanzen &amp; Steuern</h3><p class="card-subtitle">Banken, Belege, automatische Zuordnung, EÜR, Steuerprognosen, Abschreibungen und DATEV-Export.</p></div><a class="primary-btn small-btn" href="buchhaltung.html" target="_blank" rel="noopener">In neuem Fenster öffnen</a></div>
+        <div class="ops-grid" style="margin-bottom:16px">
+          <div class="ops-card"><h4>Banken &amp; Stripe</h4><p>Qonto, N26 und Stripe verbinden; Umsätze sicher synchronisieren.</p></div>
+          <div class="ops-card"><h4>Belege &amp; KI-Prüfung</h4><p>PDF, Foto oder Scan hochladen, auslesen, prüfen und einer Zahlung zuordnen.</p></div>
+          <div class="ops-card"><h4>Steuern &amp; Gewinn</h4><p>Umsatzsteuer, Vorsteuer, EÜR und monatliche Prognose mit Prüfhinweisen.</p></div>
+          <div class="ops-card"><h4>Abschreibungen</h4><p>Betriebsausgaben, Nutzungsdauer und AfA-Verlauf vorbereiten.</p></div>
+          <div class="ops-card"><h4>Offene Posten</h4><p>Rechnungen, Zahlungseingänge, Fälligkeiten und Mahnungen überwachen.</p></div>
+          <div class="ops-card"><h4>Export</h4><p>DATEV-, CSV-, EÜR- und Belegexport für den Steuerberater.</p></div>
+        </div>
+        <iframe class="finance-frame" src="buchhaltung.html" title="LeoLan Finanzen und Steuern"></iframe>
+      </article>
+    </section>
+
   </main>
 
   <div id="userChip" class="user-chip hidden">👤 <span id="userName">Leo</span> · <span id="userChipRole">viewer</span></div>
@@ -390,8 +461,28 @@
     const LOGIN_URL = 'https://n8n.leolan.net/webhook/dashboard-login';
     const ADD_USER_URL = 'https://n8n.leolan.net/webhook/dashboard-add-user';
     const AUTOMATION_CONTROL_URL = 'https://n8n.leolan.net/webhook/dashboard-automation-control';
+    const OPERATIONS_URL = 'https://n8n.leolan.net/webhook/admin-operations';
+    const INTEGRATIONS_URL = 'https://n8n.leolan.net/webhook/admin-integrations';
     const SESSION_TOKEN_KEY = 'dashboard_token';
     const SESSION_USER_KEY = 'dashboard_user';
+    const integrationCatalog = [
+      {key:'openai',name:'OpenAI',fields:'API-Schlüssel'},
+      {key:'stripe',name:'Stripe',fields:'Secret Key, Webhook Secret'},
+      {key:'brevo',name:'Brevo',fields:'API-Schlüssel, Absender'},
+      {key:'mews',name:'Mews PMS',fields:'Client Token, Access Token'},
+      {key:'cloudbeds',name:'Cloudbeds PMS',fields:'OAuth-Zugang'},
+      {key:'apaleo',name:'Apaleo PMS',fields:'Client ID, Client Secret'},
+      {key:'protel',name:'protel / Planet PMS',fields:'API-Zugang'},
+      {key:'opera',name:'Oracle OPERA',fields:'OHIP-Zugang'},
+      {key:'meta',name:'Meta',fields:'Facebook, Instagram, WhatsApp'}
+    ];
+    const webhookCatalog = [
+      ['Stripe','https://n8n.leolan.net/webhook/stripe-webhook'],
+      ['Meta / WhatsApp','https://n8n.leolan.net/webhook/meta-webhook'],
+      ['Brevo','https://n8n.leolan.net/webhook/brevo-events'],
+      ['Hotel-Onboarding','https://n8n.leolan.net/webhook/kunden-register'],
+      ['PMS-Ereignisse','https://n8n.leolan.net/webhook/pms-events']
+    ];
 
     const automationCatalog = {
       instagramFeed: { key: 'instagramFeed', label: 'Instagram Feed', description: 'Feed-Post Workflow', defaultTime: '10:00' },
@@ -893,12 +984,38 @@
         automationStatusMessage.textContent = error.message || 'Änderung konnte nicht gespeichert werden';
       }
     }
+    function safeText(value) { const n=document.createElement('span');n.textContent=String(value??'');return n.innerHTML; }
+    function statusBadge(active, label) { return active ? '<span class="badge-success">✅ '+safeText(label||'Aktiv')+'</span>' : '<span class="badge-waiting">⏳ '+safeText(label||'Einrichtung erforderlich')+'</span>'; }
+    function renderIntegrationCards(statuses={}) {
+      const host=document.getElementById('integrationCards'); if(!host)return;
+      host.innerHTML=integrationCatalog.map(item=>{const s=statuses[item.key]||{};return `<div class="ops-card"><div style="display:flex;justify-content:space-between;gap:8px"><h4>${safeText(item.name)}</h4>${statusBadge(!!s.connected,s.connected?'Verbunden':'Einrichtung')}</div><p>${safeText(item.fields)}</p><div class="provider-actions"><button class="ghost-btn small-btn" onclick="explainSecretSetup('${item.key}')">Schlüssel verwalten</button><button class="ghost-btn small-btn" onclick="testIntegration('${item.key}')">Status testen</button></div></div>`}).join('');
+    }
+    function explainSecretSetup(provider){document.getElementById('metaMessage').textContent=provider+': Der verschlüsselte Server-Tresor muss vor dem ersten Speichern aktiviert werden. Es wurde kein Schlüssel übertragen.';}
+    async function readIntegrationData(action,provider='all'){
+      const response=await fetch(INTEGRATIONS_URL,{method:'POST',headers:authHeaders(),body:JSON.stringify({action,provider})});const data=await response.json().catch(()=>({}));if(!response.ok||data.success===false)throw new Error(data.error||'Statusdienst noch nicht eingerichtet');return data;
+    }
+    async function loadIntegrationStatus(){renderIntegrationCards({});renderWebhooks();try{const data=await readIntegrationData('status');renderIntegrationCards(data.integrations||{});renderAudit(data.audit||[]);}catch(e){document.getElementById('metaMessage').textContent='Oberfläche ist bereit. Der verschlüsselte Server-Tresor muss noch aktiviert werden.';}}
+    async function testIntegration(provider){try{const data=await readIntegrationData('test',provider);document.getElementById('metaMessage').textContent=data.message||provider+': Verbindung erreichbar.';}catch(e){document.getElementById('metaMessage').textContent=provider+': '+e.message;}}
+    function saveMetaSettings(){document.getElementById('metaMessage').textContent='Sicherheitsstopp: Noch nichts gesendet. Zuerst wird der verschlüsselte Server-Tresor eingerichtet und geprüft.';}
+    function renderWebhooks(statuses={}){const body=document.getElementById('webhooksBody');if(!body)return;body.innerHTML=webhookCatalog.map(([name,url])=>`<tr><td>${safeText(name)}</td><td><code>${safeText(url)}</code></td><td>${statusBadge(!!statuses[name],statuses[name]?'Erreichbar':'Nicht geprüft')}</td></tr>`).join('');}
+    async function checkWebhooks(){try{const data=await readIntegrationData('check-webhooks');renderWebhooks(data.webhooks||{});}catch(e){document.getElementById('metaMessage').textContent=e.message;}}
+    function renderAudit(items){const el=document.getElementById('integrationAudit');if(!el)return;el.innerHTML=items.length?items.map(x=>`<div class="audit-item"><span>${safeText(x.action||'Geändert')} · ${safeText(x.provider||'System')}</span><span class="subtle">${safeText(x.actor||'Admin')} · ${safeText(x.createdAt?new Date(x.createdAt).toLocaleString('de-DE'):'')}</span></div>`).join(''):'<div class="subtle">Noch keine serverseitigen Einträge vorhanden.</div>';}
+    async function loadOperations(){
+      const body=document.getElementById('operationsBody'),status=document.getElementById('operationsStatus');status.textContent='Betriebsdaten werden geladen …';
+      try{const r=await fetch(OPERATIONS_URL,{method:'POST',headers:authHeaders(),body:JSON.stringify({action:'overview'})});const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||'Betriebsdaten nicht erreichbar');const rows=d.hotels||d.customers||[];
+        const counts={customers:rows.length,monthly:rows.filter(x=>x.billingCycle==='monthly').length,annual:rows.filter(x=>x.billingCycle==='annual').length,active:rows.filter(x=>x.subscriptionStatus==='active').length,onboarding:rows.filter(x=>x.onboardingStatus&&x.onboardingStatus!=='complete').length,pms:rows.filter(x=>x.pmsStatus==='connected').length,support:rows.filter(x=>Number(x.openTickets)>0).length,email:rows.filter(x=>x.emailAutomationStatus==='active').length};
+        document.getElementById('opCustomers').textContent=counts.customers+' Kunden mit Paket';document.getElementById('opBilling').textContent=counts.monthly+' monatlich · '+counts.annual+' jährlich';document.getElementById('opStripe').textContent=counts.active+' aktive Abonnements';document.getElementById('opOnboarding').textContent=counts.onboarding+' Einrichtungen offen';document.getElementById('opPms').textContent=counts.pms+' PMS verbunden';document.getElementById('opUsage').textContent=(d.usageTotal||0).toLocaleString('de-DE')+' Nachrichten verbraucht';document.getElementById('opSupport').textContent=counts.support+' Kunden mit offenen Fällen';document.getElementById('opEmail').textContent=counts.email+' Automationen aktiv';
+        body.innerHTML=rows.length?rows.map(x=>`<tr><td>${safeText(x.hotelName||x.name||'—')}</td><td>${safeText(x.package||'—')}</td><td>${statusBadge(x.subscriptionStatus==='active',x.subscriptionStatus||'—')}</td><td>${safeText(x.onboardingProgress??0)}%</td><td>${safeText(x.pmsProvider||x.pmsStatus||'—')}</td><td>${safeText(x.messagesUsed??0)} / ${safeText(x.messageLimit??'—')}</td><td>${safeText(x.openTickets??0)} offen</td><td>${safeText(x.emailAutomationStatus||'—')}</td></tr>`).join(''):'<tr><td colspan="8" class="subtle">Noch keine Hotels vorhanden.</td></tr>';status.textContent='Betriebsdaten aktualisiert.';
+      }catch(e){status.textContent='Die Ansicht ist fertig; der gemeinsame Betriebsdaten-Endpunkt muss noch aktiviert werden.';body.innerHTML='<tr><td colspan="8" class="subtle">Noch keine verbundenen Betriebsdaten.</td></tr>';}
+    }
     function showTab(tab) {
       document.querySelectorAll('.tab-btn').forEach((button) => button.classList.toggle('active', button.dataset.tab === tab));
       document.querySelectorAll('.panel').forEach((panel) => panel.classList.add('hidden'));
       document.getElementById(`panel-${tab}`).classList.remove('hidden');
       if (tab === 'users') loadUsers();
       if (tab === 'customers') loadCustomers();
+      if (tab === 'operations') loadOperations();
+      if (tab === 'integrations') loadIntegrationStatus();
     }
     loginForm.addEventListener('submit', async (event) => {
       event.preventDefault();
@@ -957,7 +1074,7 @@
 </body>
 </html>
 <script>
-async function loadCustomers(){const t=document.getElementById('customersBody'),k=document.getElementById('customersKpis');if(!t)return;t.innerHTML='<tr><td colspan="5" style="text-align:center;padding:30px;color:#8b949e;">Lade...</td></tr>';try{const r=await fetch('https://n8n.leolan.net/webhook/admin-customers?key=LeoLan2026Admin!',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({})});const d=await r.json();const cs=d.customers||d||[];if(k){const s=[['Gesamt','#e8eaed',cs.length],['Aktiv','#4cd97b',cs.filter(c=>c.status==='active').length],['Einrichten','#ffd60a',cs.filter(c=>c.status==='setup_pending').length],['WA Connected','#5e81f4',cs.filter(c=>c.waStatus==='connected').length]];k.innerHTML=s.map(([l,c,v])=>'<div style="background:rgba(255,255,255,0.04);border-radius:10px;padding:14px;text-align:center;"><div style="font-size:22px;font-weight:800;color:'+c+'">'+v+'</div><div style="font-size:11px;color:#8b949e;margin-top:4px;">'+l+'</div></div>').join('');}if(!cs.length){t.innerHTML='<tr><td colspan="5" style="text-align:center;padding:30px;color:#8b949e;">Keine Kunden</td></tr>';return;}const st=s=>s==='active'?'<span style="background:rgba(76,217,122,.15);color:#4cd97b;padding:2px 8px;border-radius:6px;font-size:11px;">Aktiv</span>':s==='setup_pending'?'<span style="background:rgba(255,214,10,.15);color:#ffd60a;padding:2px 8px;border-radius:6px;font-size:11px;">Einrichten</span>':'<span style="background:rgba(255,69,58,.15);color:#ff453a;padding:2px 8px;border-radius:6px;font-size:11px;">Inaktiv</span>';const wa=w=>w==='connected'?'<span style="color:#4cd97b;">&#x1F7E2; Connected</span>':w==='pending'?'<span style="color:#ffd60a;">&#x23F3; Pending</span>':'<span style="color:#8b949e;">&#x26AB; Nein</span>';t.innerHTML=cs.map(c=>'<tr style="border-bottom:1px solid rgba(255,255,255,0.05);"><td style="padding:10px 12px;"><b style="color:#f0f6fc;">'+(c.name||c.restaurantName||'-')+'</b><br><span style="font-size:11px;color:#8b949e;">'+(c.email||'')+' &middot; '+(c.customerCode||'')+'</span></td><td style="padding:10px 12px;"><span style="background:rgba(94,129,244,.15);color:#5e81f4;padding:2px 8px;border-radius:6px;font-size:11px;">'+(c.paket||'').toUpperCase()+'</span></td><td style="padding:10px 12px;">'+st(c.status)+'</td><td style="padding:10px 12px;">'+wa(c.waStatus)+'</td><td style="padding:10px 12px;color:#8b949e;">'+(c.createdAt?new Date(c.createdAt).toLocaleDateString('de-DE'):'—')+'</td></tr>').join('');}catch(e){t.innerHTML='<tr><td colspan="5" style="text-align:center;padding:30px;color:#ff453a;">Fehler: '+e.message+'</td></tr>';}}
+async function loadCustomers(){const t=document.getElementById('customersBody'),k=document.getElementById('customersKpis');if(!t)return;t.innerHTML='<tr><td colspan="5" style="text-align:center;padding:30px;color:#8b949e;">Lade...</td></tr>';try{const r=await fetch('https://n8n.leolan.net/webhook/admin-customers',{method:'POST',headers:authHeaders(),body:JSON.stringify({action:'list'})});const d=await r.json();const cs=d.customers||d||[];if(k){const s=[['Gesamt','#e8eaed',cs.length],['Aktiv','#4cd97b',cs.filter(c=>c.status==='active').length],['Einrichten','#ffd60a',cs.filter(c=>c.status==='setup_pending').length],['WA Connected','#5e81f4',cs.filter(c=>c.waStatus==='connected').length]];k.innerHTML=s.map(([l,c,v])=>'<div style="background:rgba(255,255,255,0.04);border-radius:10px;padding:14px;text-align:center;"><div style="font-size:22px;font-weight:800;color:'+c+'">'+v+'</div><div style="font-size:11px;color:#8b949e;margin-top:4px;">'+l+'</div></div>').join('');}if(!cs.length){t.innerHTML='<tr><td colspan="5" style="text-align:center;padding:30px;color:#8b949e;">Keine Kunden</td></tr>';return;}const st=s=>s==='active'?'<span style="background:rgba(76,217,122,.15);color:#4cd97b;padding:2px 8px;border-radius:6px;font-size:11px;">Aktiv</span>':s==='setup_pending'?'<span style="background:rgba(255,214,10,.15);color:#ffd60a;padding:2px 8px;border-radius:6px;font-size:11px;">Einrichten</span>':'<span style="background:rgba(255,69,58,.15);color:#ff453a;padding:2px 8px;border-radius:6px;font-size:11px;">Inaktiv</span>';const wa=w=>w==='connected'?'<span style="color:#4cd97b;">&#x1F7E2; Connected</span>':w==='pending'?'<span style="color:#ffd60a;">&#x23F3; Pending</span>':'<span style="color:#8b949e;">&#x26AB; Nein</span>';t.innerHTML=cs.map(c=>'<tr style="border-bottom:1px solid rgba(255,255,255,0.05);"><td style="padding:10px 12px;"><b style="color:#f0f6fc;">'+(c.name||c.restaurantName||'-')+'</b><br><span style="font-size:11px;color:#8b949e;">'+(c.email||'')+' &middot; '+(c.customerCode||'')+'</span></td><td style="padding:10px 12px;"><span style="background:rgba(94,129,244,.15);color:#5e81f4;padding:2px 8px;border-radius:6px;font-size:11px;">'+(c.paket||'').toUpperCase()+'</span></td><td style="padding:10px 12px;">'+st(c.status)+'</td><td style="padding:10px 12px;">'+wa(c.waStatus)+'</td><td style="padding:10px 12px;color:#8b949e;">'+(c.createdAt?new Date(c.createdAt).toLocaleDateString('de-DE'):'—')+'</td></tr>').join('');}catch(e){t.innerHTML='<tr><td colspan="5" style="text-align:center;padding:30px;color:#ff453a;">Fehler: '+e.message+'</td></tr>';}}
 // Hook showTab für customers
 const _origST=window.showTab||function(){};
 document.addEventListener('DOMContentLoaded',()=>{const ob=document.querySelectorAll('.tab-btn[data-tab="customers"]');ob.forEach(b=>b.addEventListener('click',()=>loadCustomers()));});
