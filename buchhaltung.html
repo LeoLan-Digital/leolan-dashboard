@@ -958,11 +958,33 @@
 }
 .tab-content.active { animation: fadeInTab 0.2s ease; }
 button:active { transform: scale(0.98); }
+html.embed-mode,html.embed-mode body{background:#101a2f}
+html.embed-mode header,html.embed-mode .sidebar,html.embed-mode #sidebar-overlay{display:none!important}
+html.embed-mode .app-layout{margin-top:0;min-height:100vh}
+html.embed-mode .main-content{margin-left:0!important;padding:18px;width:100%;max-width:none;background:#101a2f}
+html.embed-mode .page-header{margin-top:0}
 </style>
 
 
 
 <style>#loginScreen{display:none!important;}</style>
+<script>
+  (function secureEmbeddedFinance(){
+    if (window.self === window.top) {
+      window.location.replace('dashboard.html');
+      return;
+    }
+    try {
+      if (!window.parent.sessionStorage.getItem('dashboard_token')) {
+        window.parent.location.replace('dashboard.html');
+        return;
+      }
+      document.documentElement.classList.add('embed-mode');
+    } catch (error) {
+      window.location.replace('dashboard.html');
+    }
+  })();
+</script>
 </head>
 <body>
 
@@ -980,13 +1002,6 @@ button:active { transform: scale(0.98); }
 </div>
 
 <script>
-const USERS = [
-  { email: 'business@leolan.net', password: 'LeoLan2026!' },
-  { email: 'k.nazari@leolan.net', password: 'LeoLan2026!' },
-  { email: 'leo@leolan.net', password: 'LeoLan2026!' },
-  { email: 'admin', password: 'LeoLan2026!' },
-];
-
 // ─── TAB NAVIGATION ──────────────────────────────────────────
 function switchTab(tabId, el) {
   // Alle Inhalte verstecken
@@ -1076,24 +1091,6 @@ async function loadAdminCustomers() {
 }
 // ─────────────────────────────────────────────────────────────
 
-function doLogin() {
-  const email = document.getElementById('loginEmail').value.trim();
-  const pass = document.getElementById('loginPassword').value;
-  // Erlaube auch nur Passwort ohne E-Mail
-  const user = USERS.find(u => (u.email === email || email === '') && u.password === pass);
-  if (user || pass === 'LeoLan2026!') {
-    sessionStorage.setItem('leolan_auth', '1');
-    document.getElementById('loginScreen').style.display = 'none';
-  } else {
-    document.getElementById('loginError').textContent = '❌ E-Mail oder Passwort falsch';
-  }
-}
-if (sessionStorage.getItem('leolan_auth')) {
-  document.getElementById('loginScreen').style.display = 'none';
-}
-['loginEmail','loginPassword'].forEach(id => {
-  document.getElementById(id)?.addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
-});
 </script>
 
 <!-- ══════════════════════════════════ HEADER -->
@@ -3680,6 +3677,9 @@ document.addEventListener('DOMContentLoaded', function() {
     if (typeof syncN26 === 'function') syncN26();
     if (typeof syncQonto === 'function') syncQonto();
   }, 500);
+  var requestedTab = new URLSearchParams(location.search).get('tab') || 'overview';
+  var requestedNav = document.querySelector('[data-tab="' + requestedTab + '"]');
+  if (typeof window.switchTab === 'function') window.switchTab(requestedTab, requestedNav);
 });
 </script>
 </html>
