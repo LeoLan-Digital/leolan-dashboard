@@ -2493,6 +2493,25 @@ function financeAuthHeaders() {
   return headers;
 }
 
+var financeSessionRedirecting = false;
+async function financeFetch(url, options) {
+  options = options || {};
+  options.headers = Object.assign({}, financeAuthHeaders(), options.headers || {});
+  var response = await fetch(url, options);
+  if ((response.status === 401 || response.status === 403) && !financeSessionRedirecting) {
+    financeSessionRedirecting = true;
+    try {
+      window.parent.sessionStorage.removeItem('dashboard_token');
+      window.parent.sessionStorage.removeItem('dashboard_user');
+      window.top.location.replace('login.html?reason=session-expired');
+    } catch (error) {
+      sessionStorage.removeItem('dashboard_token');
+      window.location.replace('login.html?reason=session-expired');
+    }
+  }
+  return response;
+}
+
 function bankMessage(text, isError) {
   var el = document.getElementById('bank-connection-message');
   if (!el) return;
@@ -2521,7 +2540,7 @@ function renderBankConnection(provider, info) {
 
 async function loadBankConnections() {
   try {
-    var response = await fetch(BANK_CONNECTIONS_URL, {headers:financeAuthHeaders(), signal:AbortSignal.timeout(8000)});
+    var response = await financeFetch(BANK_CONNECTIONS_URL, {signal:AbortSignal.timeout(8000)});
     if (!response.ok) throw new Error('HTTP ' + response.status);
     var data = await response.json();
     renderBankConnection('qonto', data.qonto);
@@ -2536,8 +2555,8 @@ async function loadBankConnections() {
     }
   } catch (e) {
     var checks = await Promise.all([
-      fetch(QONTO_BALANCE_URL, {headers:financeAuthHeaders(), signal:AbortSignal.timeout(5000)}).then(function(r){return r.ok;}).catch(function(){return false;}),
-      fetch(N26_REMOTE, {headers:financeAuthHeaders(), signal:AbortSignal.timeout(5000)}).then(function(r){return r.ok;}).catch(function(){return false;})
+      financeFetch(QONTO_BALANCE_URL, {signal:AbortSignal.timeout(5000)}).then(function(r){return r.ok;}).catch(function(){return false;}),
+      financeFetch(N26_REMOTE, {signal:AbortSignal.timeout(5000)}).then(function(r){return r.ok;}).catch(function(){return false;})
     ]);
     renderBankConnection('qonto', {connected:checks[0]});
     renderBankConnection('n26', {connected:checks[1]});
@@ -2636,8 +2655,8 @@ async function syncQonto() {
   try {
     // Balance + Transaktionen parallel holen
     var [balResp, txResp] = await Promise.all([
-      fetch(QONTO_BALANCE_URL, {headers:financeAuthHeaders(), signal: AbortSignal.timeout(8000)}).then(r => r.ok ? r.json() : null).catch(() => null),
-      fetch(QONTO_TX_URL,      {headers:financeAuthHeaders(), signal: AbortSignal.timeout(8000)}).then(r => r.ok ? r.json() : null).catch(() => null)
+      financeFetch(QONTO_BALANCE_URL, {signal: AbortSignal.timeout(8000)}).then(r => r.ok ? r.json() : null).catch(() => null),
+      financeFetch(QONTO_TX_URL,      {signal: AbortSignal.timeout(8000)}).then(r => r.ok ? r.json() : null).catch(() => null)
     ]);
 
     QONTO_DATA = txResp;
@@ -2716,7 +2735,7 @@ async function qontoWidgetRefresh() {
   if (meta) meta.textContent = 'Verbinde mit Qonto...';
 
   try {
-    var r = await fetch(QONTO_BALANCE_URL, {headers:financeAuthHeaders(), signal: AbortSignal.timeout(10000)});
+    var r = await financeFetch(QONTO_BALANCE_URL, {signal: AbortSignal.timeout(10000)});
     if (r.ok) {
       var d = await r.json();
       var balance = d.balance !== undefined ? d.balance : 0;
@@ -2964,7 +2983,7 @@ async function loadInvoiceMatches() {
   if (!summaryEl || !listEl) return;
   summaryEl.textContent = 'Automatische Belegprüfung wird geladen …';
   try {
-    var response = await fetch(INVOICE_MATCHES_REMOTE, {headers:financeAuthHeaders(), signal:AbortSignal.timeout(15000)});
+    var response = await financeFetch(INVOICE_MATCHES_REMOTE, {signal:AbortSignal.timeout(15000)});
     if (!response.ok) throw new Error('Abruf nicht möglich');
     var report = await response.json();
     INVOICE_REVIEW_DATA = report;
@@ -3017,7 +3036,7 @@ function closeInvoiceReview() {
 
 async function saveInvoiceDecision(invoiceId, action) {
   try {
-    var response = await fetch(INVOICE_CONFIRMATION_REMOTE, {method:'POST', headers:financeAuthHeaders(), body:JSON.stringify({invoiceId:invoiceId, action:action}), signal:AbortSignal.timeout(10000)});
+    var response = await financeFetch(INVOICE_CONFIRMATION_REMOTE, {method:'POST', body:JSON.stringify({invoiceId:invoiceId, action:action}), signal:AbortSignal.timeout(10000)});
     if (!response.ok) throw new Error('Speichern fehlgeschlagen');
     closeInvoiceReview();
     await loadInvoiceMatches();
@@ -3028,7 +3047,7 @@ async function saveInvoiceDecision(invoiceId, action) {
 
 async function fetchN26Data() {
   try {
-    var r2 = await fetch(N26_REMOTE, {headers:financeAuthHeaders(), signal: AbortSignal.timeout(15000)});
+    var r2 = await financeFetch(N26_REMOTE, {signal: AbortSignal.timeout(15000)});
     if (r2.ok) return r2.json();
   } catch(e) {}
   return null;
