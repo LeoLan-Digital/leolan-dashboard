@@ -2461,7 +2461,7 @@ function financeAuthHeaders() {
   var headers = {'Accept':'application/json','Content-Type':'application/json'};
   try {
     var token = window.parent.sessionStorage.getItem('dashboard_token');
-    if (token) headers.Authorization = 'Bearer ' + token;
+    if (token) headers['X-Dashboard-Token'] = token;
   } catch (e) {}
   return headers;
 }

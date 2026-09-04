@@ -1064,7 +1064,7 @@
       document.getElementById('financeWorkspaceTitle').textContent = financeLabels[tab] || 'Finanz-Dashboard';
       const frame = document.getElementById('financeFrame');
       const loading = document.getElementById('financeLoading');
-      const next = `buchhaltung.html?embed=1&build=20260904-3&tab=${encodeURIComponent(tab)}`;
+      const next = `buchhaltung.html?embed=1&build=20260904-4&tab=${encodeURIComponent(tab)}`;
       if (loading) loading.classList.remove('hidden');
       let loadingTimer = window.setTimeout(() => loading?.classList.add('hidden'), 4500);
       frame.onload = () => { window.clearTimeout(loadingTimer); if (loading) loading.classList.add('hidden'); };
