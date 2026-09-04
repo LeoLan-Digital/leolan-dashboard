@@ -2499,10 +2499,14 @@ async function loadBankConnections() {
     var data = await response.json();
     renderBankConnection('qonto', data.qonto);
     renderBankConnection('n26', data.n26);
+    if (data.n26 && data.n26.connected) {
+      bankMessage('N26 ist verbunden. Kontostand und Transaktionen werden synchronisiert.', false);
+      await syncN26();
+    }
   } catch (e) {
     var checks = await Promise.all([
       fetch(QONTO_BALANCE_URL, {signal:AbortSignal.timeout(5000)}).then(function(r){return r.ok;}).catch(function(){return false;}),
-      fetch(N26_REMOTE, {signal:AbortSignal.timeout(5000)}).then(function(r){return r.ok;}).catch(function(){return false;})
+      fetch(N26_REMOTE, {headers:financeAuthHeaders(), signal:AbortSignal.timeout(5000)}).then(function(r){return r.ok;}).catch(function(){return false;})
     ]);
     renderBankConnection('qonto', {connected:checks[0]});
     renderBankConnection('n26', {connected:checks[1]});
@@ -2946,14 +2950,16 @@ async function syncN26() {
   var data = await fetchN26Data();
   N26_DATA = data;
   if (!data) {
-    if (balEl) balEl.textContent = 'Noch nicht verbunden';
-    bankMessage('N26 muss einmal über die sichere PSD2-Verbindung freigegeben werden.', false);
+    if (balEl) balEl.textContent = 'Daten nicht verfügbar';
+    bankMessage('N26 ist verbunden, aber die Kontodaten konnten gerade nicht geladen werden. Bitte erneut synchronisieren.', true);
     return;
   }
   if (balEl) balEl.textContent = '€' + (data.balance || 0).toLocaleString('de-DE', {minimumFractionDigits:2, maximumFractionDigits:2});
   renderN26Transactions(data);
   var tsEl = document.getElementById('n26-sync-info');
   if (tsEl && data.updated) tsEl.textContent = 'Stand: ' + new Date(data.updated).toLocaleString('de-DE');
+  renderBankConnection('n26', {connected:true, accountName:data.accountName || 'N26 Business', lastSync:data.updated});
+  bankMessage('N26-Kontostand und ' + ((data.transactions || []).length) + ' Transaktionen wurden aktualisiert.', false);
 }
 
 function openPDF() {
