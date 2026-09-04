@@ -157,7 +157,8 @@
     .finance-workspace-bar{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:13px 16px;background:rgba(245,166,35,.1);border-bottom:1px solid rgba(255,255,255,.08)}
     .finance-workspace-bar strong{color:#ffd487}.finance-workspace-bar span{color:var(--muted);font-size:.88rem}
     .finance-frame{display:block;width:100%;height:76vh;min-height:680px;border:0;background:#101a2f}
-    .finance-loading{display:grid;place-items:center;min-height:680px;color:var(--muted);text-align:center;padding:32px}
+    .finance-loading{position:absolute;inset:0;z-index:2;display:grid;place-items:center;min-height:680px;color:var(--muted);text-align:center;padding:32px;background:#101a2f;pointer-events:none;transition:opacity .2s ease}
+    .finance-workspace{position:relative}
     .modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,0.75); z-index:999; display:none; align-items:center; justify-content:center; padding:18px; }
     .modal-backdrop.visible { display:flex; }
     .modal { background:#1a2744; border-radius:20px; padding:2rem; width:min(460px, 100%); border:1px solid rgba(255,255,255,0.1); box-shadow: var(--shadow); }
@@ -458,7 +459,7 @@
         <div class="finance-workspace">
           <div class="finance-workspace-bar"><strong id="financeWorkspaceTitle">Finanz-Dashboard</strong><span>Bereich oben auswählen</span></div>
           <div id="financeLoading" class="finance-loading"><div><strong style="color:#ffd487">Finanzbereich wird geladen …</strong><p>Konten, Umsätze, Belege und Steuerdaten erscheinen gleich hier.</p></div></div>
-          <iframe id="financeFrame" class="finance-frame hidden" src="about:blank" title="LeoLan Finanzen und Steuern" loading="lazy"></iframe>
+          <iframe id="financeFrame" class="finance-frame" src="about:blank" title="LeoLan Finanzen und Steuern"></iframe>
         </div>
       </article>
     </section>
@@ -921,7 +922,12 @@
       try {
         const response = await fetch(API_URL, { method: 'GET', headers: authHeaders(), cache: 'no-store' });
         if (!response.ok) throw new Error('HTTP ' + response.status);
-        const payload = await response.json();
+        const responseText = await response.text();
+        if (!responseText.trim()) {
+          apiStatus.textContent = 'System erreichbar · noch keine Live-Daten';
+          return;
+        }
+        const payload = JSON.parse(responseText);
         const data = mergeKnownShapes(payload);
         applyData(data);
         lastUpdated.textContent = formatDateTime(data.updatedAt);
@@ -1060,8 +1066,9 @@
       const loading = document.getElementById('financeLoading');
       const next = `buchhaltung.html?embed=1&tab=${encodeURIComponent(tab)}`;
       if (loading) loading.classList.remove('hidden');
-      frame.classList.add('hidden');
-      frame.onload = () => { if (loading) loading.classList.add('hidden'); frame.classList.remove('hidden'); };
+      let loadingTimer = window.setTimeout(() => loading?.classList.add('hidden'), 4500);
+      frame.onload = () => { window.clearTimeout(loadingTimer); if (loading) loading.classList.add('hidden'); };
+      frame.onerror = () => { window.clearTimeout(loadingTimer); if (loading) { loading.classList.remove('hidden'); loading.innerHTML = '<div><strong style="color:#ffabab">Finanzansicht konnte nicht geladen werden.</strong><p>Bitte den Bereich erneut auswählen.</p></div>'; } };
       if (!frame.src.endsWith(next)) frame.src = next; else frame.onload();
       document.querySelector('.finance-workspace')?.scrollIntoView({ behavior:'smooth', block:'start' });
     }
