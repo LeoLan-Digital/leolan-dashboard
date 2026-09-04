@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>LeoLan Dashboard – Anmeldung</title>
+  <style>
+    *{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}body{min-height:100vh;display:grid;place-items:center;padding:24px;background:#0b1426;color:#fff}.card{width:min(390px,100%);padding:30px;border:1px solid #314567;border-radius:20px;background:#172541;box-shadow:0 18px 60px #0008}.icon{width:48px;height:48px;margin:0 auto 16px;display:grid;place-items:center;border-radius:14px;background:#2b3a58;font-size:24px}h1{text-align:center;font-size:25px;margin:0 0 8px}p{text-align:center;color:#bec9dc;font-size:14px;line-height:1.45;margin:0 0 24px}label{display:block;font-size:13px;color:#dce4f2;margin:12px 0 6px}input{width:100%;padding:13px 14px;border:1px solid #405273;border-radius:10px;background:#22304b;color:#fff;font-size:16px;outline:none}input:focus{border-color:#f5aa2b;box-shadow:0 0 0 3px #f5aa2b22}button{width:100%;margin-top:18px;padding:13px;border:0;border-radius:10px;background:#ffb22f;color:#111827;font-size:15px;font-weight:750;cursor:pointer}button:disabled{opacity:.6;cursor:wait}.error{min-height:20px;margin-top:12px;text-align:center;color:#ff8585;font-size:13px}.forgot{display:block;text-align:center;margin-top:10px;color:#ffc45f;text-decoration:none;font-size:13px}
+  </style>
+</head>
+<body>
+  <main class="card">
+    <div class="icon">🔐</div>
+    <h1>LeoLan Dashboard</h1>
+    <p>Geschützter Bereich für interne Kennzahlen.</p>
+    <form id="form">
+      <label for="email">E-Mail</label>
+      <input id="email" type="email" autocomplete="username" required>
+      <label for="password">Passwort</label>
+      <input id="password" type="password" autocomplete="current-password" required>
+      <button id="submit" type="submit">Anmelden</button>
+      <div id="error" class="error" role="alert"></div>
+    </form>
+    <a class="forgot" href="reset-password.html">Passwort vergessen?</a>
+  </main>
+  <script>
+    const LOGIN_URL='https://n8n.leolan.net/webhook/dashboard-login';
+    if(sessionStorage.getItem('dashboard_token')) location.replace('dashboard.html');
+    document.getElementById('form').addEventListener('submit',async event=>{
+      event.preventDefault();
+      const button=document.getElementById('submit'),error=document.getElementById('error');
+      button.disabled=true;button.textContent='Anmeldung läuft…';error.textContent='';
+      try{
+        const email=document.getElementById('email').value.trim();
+        const body=new URLSearchParams({email,password:document.getElementById('password').value});
+        const response=await fetch(LOGIN_URL,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},body});
+        const payload=await response.json().catch(()=>({}));
+        if(!response.ok||payload.success===false||!payload.token)throw new Error(payload.error||'Anmeldung fehlgeschlagen');
+        const user={name:payload.name||payload.user?.name||'Leo',email:payload.email||payload.user?.email||email,role:payload.role||payload.user?.role||'viewer'};
+        sessionStorage.setItem('dashboard_token',payload.token);
+        sessionStorage.setItem('dashboard_user',JSON.stringify(user));
+        location.replace('dashboard.html');
+      }catch(err){
+        error.textContent=/load failed|failed to fetch|network/i.test(err.message)?'Der Anmeldedienst ist gerade nicht erreichbar.':err.message;
+        document.getElementById('password').value='';button.disabled=false;button.textContent='Anmelden';
+      }
+    });
+  </script>
+</body>
+</html>
