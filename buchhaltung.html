@@ -249,16 +249,17 @@
   }
 
   /* ── N26 Balance Widget ─────────────────────────────────── */
-  #n26-balance-widget {
+  #bank-balance-widgets { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:20px; }
+  .bank-balance-widget {
     background: linear-gradient(135deg, rgba(10,132,255,0.12) 0%, rgba(10,132,255,0.05) 100%);
     border: 1px solid rgba(10,132,255,0.25);
     border-radius: 14px;
     padding: 14px 20px;
-    margin-bottom: 20px;
+    margin-bottom: 0;
     position: relative;
     overflow: hidden;
   }
-  #n26-balance-widget::before {
+  .bank-balance-widget::before {
     content: '';
     position: absolute;
     top: 0; left: 0; right: 0; height: 2px;
@@ -316,6 +317,7 @@
   .n26-status-dot.manual { background: #ffd60a; }
   .n26-status-dot.error  { background: #ff453a; }
   .n26-widget-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  @media (max-width: 820px) { #bank-balance-widgets { grid-template-columns:1fr; } }
   .n26-btn {
     background: rgba(255,255,255,.08);
     border: 1px solid rgba(255,255,255,.12);
@@ -1199,33 +1201,39 @@ async function loadAdminCustomers() {
   <div class="main-content">
   <main>
 
-  <!-- ════════════════════════════════ N26 KONTOSTAND WIDGET ════ -->
-  <div id="n26-balance-widget">
+  <!-- ════════════════════════════════ BANK-KONTOSTÄNDE ════ -->
+  <div id="bank-balance-widgets">
+  <div id="n26-balance-widget" class="bank-balance-widget">
+    <div class="n26-widget-inner">
+      <div class="n26-widget-left">
+        <div class="n26-widget-icon">🏦</div>
+        <div>
+          <div class="n26-widget-label">N26 Kontostand</div>
+          <div class="n26-widget-amount" id="n26w-amount">— €</div>
+          <div class="n26-widget-meta">
+            <span class="n26-status-dot" id="n26w-dot"></span>
+            <span id="n26w-meta">Noch nicht abgerufen</span>
+          </div>
+        </div>
+      </div>
+      <div class="n26-widget-right">
+        <button class="n26-btn primary" id="n26w-refresh-btn" onclick="syncN26()">🔄 Aktualisieren</button>
+      </div>
+    </div>
+  </div>
+  <div id="qonto-balance-widget" class="bank-balance-widget">
     <div class="n26-widget-inner">
       <div class="n26-widget-left">
         <div class="n26-widget-icon">🏦</div>
         <div>
           <div class="n26-widget-label">Qonto Kontostand</div>
-          <div class="n26-widget-amount" id="n26w-amount">— €</div>
-          <div class="n26-widget-meta">
-            <span class="n26-status-dot" id="n26w-dot"></span>
-            <span id="n26w-meta">Noch nicht abgerufen</span>
-            <span class="n26-iban"> · DE40 1001 0123 9845 0754 49</span>
-          </div>
+          <div class="n26-widget-amount" id="qontow-amount">— €</div>
+          <div class="n26-widget-meta"><span class="n26-status-dot" id="qontow-dot"></span><span id="qontow-meta">Noch nicht abgerufen</span></div>
         </div>
       </div>
-      <div class="n26-widget-right">
-        <button class="n26-btn primary" id="n26w-refresh-btn" onclick="qontoWidgetRefresh()">🔄 Aktualisieren</button>
-        <button class="n26-btn" onclick="n26WidgetToggleManual()">✏️ Manuell eingeben</button>
-      </div>
+      <div class="n26-widget-right"><button class="n26-btn primary" id="qontow-refresh-btn" onclick="qontoWidgetRefresh()">🔄 Aktualisieren</button></div>
     </div>
-    <div class="n26-manual-row" id="n26w-manual-row">
-      <span style="font-size:12px;color:rgba(255,255,255,.45);white-space:nowrap">Kontostand manuell:</span>
-      <input type="number" class="n26-input" id="n26w-input" placeholder="z.B. 1234.56" step="0.01" min="-999999" max="9999999"
-        onkeydown="if(event.key==='Enter')n26WidgetSaveManual()">
-      <button class="n26-btn primary" onclick="n26WidgetSaveManual()">✓ Speichern</button>
-      <button class="n26-btn" onclick="n26WidgetToggleManual()">Abbrechen</button>
-    </div>
+  </div>
   </div>
 
   <!-- ════════════════════════════════ TAB: DASHBOARD -->
@@ -2686,9 +2694,9 @@ function qontoWidgetFmtAmount(val) {
 }
 
 function qontoWidgetSetBalance(amount, mode, timeLabel) {
-  var amtEl  = document.getElementById('n26w-amount');
-  var dotEl  = document.getElementById('n26w-dot');
-  var metaEl = document.getElementById('n26w-meta');
+  var amtEl  = document.getElementById('qontow-amount');
+  var dotEl  = document.getElementById('qontow-dot');
+  var metaEl = document.getElementById('qontow-meta');
   if (!amtEl) return;
   amtEl.textContent = qontoWidgetFmtAmount(amount);
   amtEl.style.color = amount >= 0 ? '#fff' : '#ff453a';
@@ -2702,8 +2710,8 @@ function qontoWidgetSetBalance(amount, mode, timeLabel) {
 }
 
 async function qontoWidgetRefresh() {
-  var btn  = document.getElementById('n26w-refresh-btn');
-  var meta = document.getElementById('n26w-meta');
+  var btn  = document.getElementById('qontow-refresh-btn');
+  var meta = document.getElementById('qontow-meta');
   if (btn)  { btn.textContent = '⏳ Lade...'; btn.disabled = true; }
   if (meta) meta.textContent = 'Verbinde mit Qonto...';
 
@@ -2722,10 +2730,9 @@ async function qontoWidgetRefresh() {
       throw new Error('HTTP ' + r.status);
     }
   } catch(e) {
-    var dotEl = document.getElementById('n26w-dot');
+    var dotEl = document.getElementById('qontow-dot');
     if (dotEl) dotEl.className = 'n26-status-dot error';
     if (meta) meta.textContent = 'Fehler — ' + (e.message || 'Verbindung fehlgeschlagen');
-    document.getElementById('n26w-manual-row').classList.add('open');
   }
 
   if (btn) { btn.textContent = '🔄 Aktualisieren'; btn.disabled = false; }
@@ -2767,6 +2774,7 @@ function qontoWidgetInit() {
 window.addEventListener('load', function() {
   qontoWidgetInit();
   updateTicker();
+  setTimeout(function(){ qontoWidgetRefresh(); syncN26(); }, 500);
 });
 </script>
 
@@ -3047,15 +3055,31 @@ function renderN26Transactions(data) {
 
 async function syncN26() {
   var balEl = document.getElementById('n26-balance-display');
+  var topBalEl = document.getElementById('n26w-amount');
+  var topMetaEl = document.getElementById('n26w-meta');
+  var topDotEl = document.getElementById('n26w-dot');
+  var topBtnEl = document.getElementById('n26w-refresh-btn');
   if (balEl) balEl.textContent = 'Lade...';
+  if (topBalEl) topBalEl.textContent = 'Lade...';
+  if (topMetaEl) topMetaEl.textContent = 'Verbinde mit N26...';
+  if (topBtnEl) { topBtnEl.disabled = true; topBtnEl.textContent = '⏳ Lade...'; }
   var data = await fetchN26Data();
   N26_DATA = data;
   if (!data) {
     if (balEl) balEl.textContent = 'Daten nicht verfügbar';
+    if (topBalEl) topBalEl.textContent = 'Daten nicht verfügbar';
+    if (topMetaEl) topMetaEl.textContent = 'Abruf fehlgeschlagen';
+    if (topDotEl) topDotEl.className = 'n26-status-dot error';
+    if (topBtnEl) { topBtnEl.disabled = false; topBtnEl.textContent = '🔄 Aktualisieren'; }
     bankMessage('N26 ist verbunden, aber die Kontodaten konnten gerade nicht geladen werden. Bitte erneut synchronisieren.', true);
     return;
   }
-  if (balEl) balEl.textContent = '€' + (data.balance || 0).toLocaleString('de-DE', {minimumFractionDigits:2, maximumFractionDigits:2});
+  var formattedBalance = '€ ' + Number(data.balance || 0).toLocaleString('de-DE', {minimumFractionDigits:2, maximumFractionDigits:2});
+  if (balEl) balEl.textContent = formattedBalance;
+  if (topBalEl) topBalEl.textContent = formattedBalance;
+  if (topMetaEl) topMetaEl.textContent = 'Live · ' + (data.updated ? new Date(data.updated).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}) : 'jetzt');
+  if (topDotEl) topDotEl.className = 'n26-status-dot live';
+  if (topBtnEl) { topBtnEl.disabled = false; topBtnEl.textContent = '🔄 Aktualisieren'; }
   renderN26Transactions(data);
   var tsEl = document.getElementById('n26-sync-info');
   if (tsEl && data.updated) tsEl.textContent = 'Stand: ' + new Date(data.updated).toLocaleString('de-DE');
