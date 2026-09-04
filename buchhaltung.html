@@ -2502,6 +2502,10 @@ async function loadBankConnections() {
     if (data.n26 && data.n26.connected) {
       bankMessage('N26 ist verbunden. Kontostand und Transaktionen werden synchronisiert.', false);
       await syncN26();
+    } else if (data.n26 && data.n26.status === 'expired') {
+      var balEl = document.getElementById('n26-balance-display');
+      if (balEl) balEl.textContent = 'Freigabe abgelaufen';
+      bankMessage('Die N26-Bankfreigabe ist abgelaufen. Bitte „N26 verbinden“ anklicken und die Freigabe erneut bei N26 bestätigen.', true);
     }
   } catch (e) {
     var checks = await Promise.all([
