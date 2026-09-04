@@ -73,9 +73,9 @@
     .error-message { min-height: 22px; margin-top: 14px; font-size: 0.95rem; color: var(--danger); font-weight: 600; }
     .forgot-link { display:inline-block; margin-top:14px; color:#ffd487; font-weight:700; text-decoration:none; }
     .forgot-link:hover { text-decoration:underline; }
-    .app { max-width: 1380px; margin: 0 auto; padding: 28px 18px 40px; opacity: 0; pointer-events: none; transform: translateY(14px); transition: opacity 0.35s ease, transform 0.35s ease; }
+    .app { max-width: 1760px; margin: 0 auto; padding: 24px 24px 40px 308px; opacity: 0; pointer-events: none; transform: translateY(14px); transition: opacity 0.35s ease, transform 0.35s ease; }
     .app.unlocked { opacity: 1; pointer-events: auto; transform: translateY(0); }
-    .topbar { display: flex; justify-content: space-between; align-items: center; gap: 18px; margin-bottom: 28px; padding: 24px; border-radius: 26px; background: linear-gradient(135deg, rgba(26, 39, 68, 0.92), rgba(18, 30, 54, 0.92)); border: 1px solid rgba(255,255,255,0.08); box-shadow: var(--shadow); position: sticky; top: 18px; backdrop-filter: blur(12px); z-index: 10; }
+    .topbar { display: flex; justify-content: space-between; align-items: center; gap: 18px; margin-bottom: 22px; padding: 18px 22px; border-radius: 18px; background: linear-gradient(135deg, rgba(26, 39, 68, 0.96), rgba(18, 30, 54, 0.96)); border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 14px 35px rgba(0,0,0,.24); position: sticky; top: 16px; backdrop-filter: blur(12px); z-index: 10; }
     .brand { display: flex; align-items: center; gap: 18px; }
     .brand-mark { width: 58px; height: 58px; border-radius: 18px; display: grid; place-items: center; background: linear-gradient(135deg, rgba(245,166,35,0.22), rgba(245,166,35,0.08)); border: 1px solid rgba(245,166,35,0.32); font-size: 28px; }
     .brand h2 { margin: 0; font-size: clamp(1.4rem, 2vw, 2rem); }
@@ -104,9 +104,18 @@
     .badge-success { background: rgba(45,216,129,0.14); color: #99f2c3; border: 1px solid rgba(45,216,129,0.22); }
     .badge-waiting { background: rgba(255,209,102,0.14); color: #ffe4a6; border: 1px solid rgba(255,209,102,0.24); }
     .badge-off { background: rgba(255,92,92,0.14); color: #ffabab; border: 1px solid rgba(255,92,92,0.24); }
-    .section-toggle { display:flex; gap:8px; flex-wrap:wrap; margin: 0 0 12px; }
-    .tab-btn { padding:10px 14px; border-radius:999px; border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.05); color:var(--text); cursor:pointer; font-weight:700; }
-    .tab-btn.active { background:rgba(245,166,35,0.16); border-color:rgba(245,166,35,0.35); color:#ffd487; }
+    .section-toggle { position:fixed; inset:18px auto 18px 18px; width:266px; z-index:30; display:flex; flex-direction:column; gap:6px; padding:18px 14px; border-radius:22px; background:linear-gradient(180deg,#172541 0%,#101a2e 100%); border:1px solid rgba(255,255,255,.09); box-shadow:0 24px 70px rgba(0,0,0,.42); overflow-y:auto; }
+    .sidebar-head{padding:6px 8px 20px;margin-bottom:10px;border-bottom:1px solid rgba(255,255,255,.08);display:flex;align-items:center;gap:12px}
+    .sidebar-logo{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;background:linear-gradient(135deg,#f5a623,#ffca68);color:#101a2e;font-size:21px;box-shadow:0 10px 24px rgba(245,166,35,.2)}
+    .sidebar-head strong{display:block;font-size:1rem}.sidebar-head small{display:block;color:var(--muted);margin-top:3px}
+    .sidebar-label{padding:12px 12px 5px;color:rgba(255,255,255,.38);font-size:.68rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase}
+    .tab-btn { width:100%;display:flex;align-items:center;gap:11px;padding:12px 13px;border-radius:12px;border:1px solid transparent;background:transparent;color:rgba(255,255,255,.74);cursor:pointer;font-weight:700;text-align:left;transition:.18s ease; }
+    .tab-btn:hover{background:rgba(255,255,255,.055);color:#fff;transform:translateX(2px)}
+    .tab-btn.active { background:linear-gradient(90deg,rgba(245,166,35,.19),rgba(245,166,35,.06));border-color:rgba(245,166,35,.28);color:#ffd487;box-shadow:inset 3px 0 #f5a623; }
+    .sidebar-spacer{flex:1;min-height:14px}.sidebar-account{padding:14px 12px 4px;border-top:1px solid rgba(255,255,255,.08);color:var(--muted);font-size:.78rem;line-height:1.5}
+    .sidebar-account strong{color:#fff;display:block;font-size:.88rem}
+    .menu-toggle{display:none;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:#fff;border-radius:11px;padding:10px 12px;font-size:1.1rem;cursor:pointer}
+    .sidebar-overlay{display:none}
     .panel.hidden, .hidden { display:none !important; }
     .table-wrap { overflow:auto; border-radius:18px; border:1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03); }
     table { width:100%; border-collapse:collapse; min-width:640px; }
@@ -157,8 +166,10 @@
     .footer-content { display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; text-align: center; }
     .footer-link-button { background: none; border: none; color: var(--accent); cursor: pointer; font-size: 0.85rem; font-weight: 700; padding: 0; }
     footer a { color: var(--accent); text-decoration: none; font-weight: 700; }
-    @media (max-width: 1100px) { .card, .card.wide { grid-column: span 6; } .automation-control { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 1100px) { .card, .card.wide { grid-column: span 6; } .automation-control { grid-template-columns: 1fr 1fr; } .app{padding-left:264px}.section-toggle{width:224px}.tab-btn{font-size:.86rem} }
     @media (max-width: 760px) {
+      .app{padding:14px 12px 34px}.section-toggle{transform:translateX(-115%);transition:transform .24s ease;inset:10px auto 10px 10px;width:min(290px,calc(100vw - 40px))}.section-toggle.open{transform:translateX(0)}
+      .sidebar-overlay.open{display:block;position:fixed;inset:0;background:rgba(4,8,16,.72);z-index:25}.menu-toggle{display:inline-grid;place-items:center}.brand-mark{display:none}
       .topbar { position: static; flex-direction: column; align-items: flex-start; }
       .card, .card.wide, .card.full { grid-column: span 12; }
       .charts-grid { grid-template-columns: 1fr; }
@@ -187,6 +198,7 @@
   <main class="app" id="app">
     <header class="topbar">
       <div class="brand">
+        <button id="menuToggle" class="menu-toggle" type="button" aria-label="Navigation öffnen" aria-expanded="false">☰</button>
         <div class="brand-mark">📊</div>
         <div>
           <h2>LeoLan Digital Dashboard</h2>
@@ -199,15 +211,21 @@
       </div>
     </header>
 
-    <section class="section-toggle">
+    <div id="sidebarOverlay" class="sidebar-overlay"></div>
+    <nav class="section-toggle" id="sidebar" aria-label="Hauptnavigation">
+      <div class="sidebar-head"><div class="sidebar-logo">N</div><div><strong>LeoLan Digital</strong><small>Control Center</small></div></div>
+      <div class="sidebar-label">Arbeitsbereich</div>
       <button class="tab-btn active" data-tab="overview">📈 Übersicht</button>
+      <button class="tab-btn admin-only hidden" data-tab="operations">🏨 Hotelbetrieb</button>
+      <button class="tab-btn admin-only hidden" data-tab="customers">👥 Kunden</button>
+      <div class="sidebar-label admin-only hidden">Verwaltung</div>
       <button class="tab-btn admin-only hidden" data-tab="users">👥 Nutzer verwalten</button>
       <button class="tab-btn admin-only hidden" data-tab="automation">⚙️ Automatisierungen</button>
-      <button class="tab-btn admin-only hidden" data-tab="customers">👥 Kunden</button>
-      <button class="tab-btn admin-only hidden" data-tab="operations">🏨 Hotelbetrieb</button>
       <button class="tab-btn admin-only hidden" data-tab="integrations">🔐 Integrationen &amp; API</button>
       <button class="tab-btn admin-only hidden" data-tab="finance">💶 Finanzen &amp; Steuern</button>
-    </section>
+      <div class="sidebar-spacer"></div>
+      <div class="sidebar-account"><strong id="sidebarUserName">Leo</strong><span id="sidebarUserRole">viewer</span> · Sicher angemeldet</div>
+    </nav>
 
     <section id="panel-overview" class="panel">
       <div class="grid">
@@ -871,6 +889,8 @@
       userName.textContent = currentUser.name;
       userRoleLabel.textContent = currentUser.role;
       userChipRole.textContent = currentUser.role;
+      document.getElementById('sidebarUserName').textContent = currentUser.name;
+      document.getElementById('sidebarUserRole').textContent = currentUser.role;
       userChip.classList.remove('hidden');
       updateAdminVisibility();
     }
@@ -1056,6 +1076,7 @@
         openFinanceArea('payments', firstFinanceButton);
       }
       window.scrollTo({ top: 0, behavior: 'smooth' });
+      closeSidebar();
     }
     loginForm.addEventListener('submit', async (event) => {
       event.preventDefault();
@@ -1099,6 +1120,13 @@
       }
     });
     document.querySelectorAll('.tab-btn').forEach((btn) => btn.addEventListener('click', () => showTab(btn.dataset.tab)));
+    const sidebar = document.getElementById('sidebar');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
+    const menuToggle = document.getElementById('menuToggle');
+    function closeSidebar(){ sidebar.classList.remove('open'); sidebarOverlay.classList.remove('open'); menuToggle.setAttribute('aria-expanded','false'); }
+    function toggleSidebar(){ const open=!sidebar.classList.contains('open'); sidebar.classList.toggle('open',open); sidebarOverlay.classList.toggle('open',open); menuToggle.setAttribute('aria-expanded',String(open)); }
+    menuToggle.addEventListener('click',toggleSidebar);
+    sidebarOverlay.addEventListener('click',closeSidebar);
     document.getElementById('refreshUsersButton').addEventListener('click', loadUsers);
     document.getElementById('openAddUserButton').addEventListener('click', () => document.getElementById('addUserModal').classList.add('visible'));
     document.getElementById('submitAddUserButton').addEventListener('click', submitAddUser);
