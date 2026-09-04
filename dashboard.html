@@ -112,6 +112,8 @@
     .tab-btn { width:100%;display:flex;align-items:center;gap:11px;padding:12px 13px;border-radius:12px;border:1px solid transparent;background:transparent;color:rgba(255,255,255,.74);cursor:pointer;font-weight:700;text-align:left;transition:.18s ease; }
     .tab-btn:hover{background:rgba(255,255,255,.055);color:#fff;transform:translateX(2px)}
     .tab-btn.active { background:linear-gradient(90deg,rgba(245,166,35,.19),rgba(245,166,35,.06));border-color:rgba(245,166,35,.28);color:#ffd487;box-shadow:inset 3px 0 #f5a623; }
+    .tab-btn.finance-primary{margin:4px 0 8px;background:rgba(45,216,129,.075);border-color:rgba(45,216,129,.16);color:#baf5d3}
+    .tab-btn.finance-primary:hover,.tab-btn.finance-primary.active{background:linear-gradient(90deg,rgba(45,216,129,.18),rgba(45,216,129,.06));border-color:rgba(45,216,129,.34);color:#d7ffe8;box-shadow:inset 3px 0 #2dd881}
     .sidebar-spacer{flex:1;min-height:14px}.sidebar-account{padding:14px 12px 4px;border-top:1px solid rgba(255,255,255,.08);color:var(--muted);font-size:.78rem;line-height:1.5}
     .sidebar-account strong{color:#fff;display:block;font-size:.88rem}
     .menu-toggle{display:none;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:#fff;border-radius:11px;padding:10px 12px;font-size:1.1rem;cursor:pointer}
@@ -216,13 +218,13 @@
       <div class="sidebar-head"><div class="sidebar-logo">N</div><div><strong>LeoLan Digital</strong><small>Control Center</small></div></div>
       <div class="sidebar-label">Arbeitsbereich</div>
       <button class="tab-btn active" data-tab="overview">📈 Übersicht</button>
+      <button class="tab-btn finance-primary admin-only hidden" data-tab="finance">💶 Finanzen &amp; Steuern</button>
       <button class="tab-btn admin-only hidden" data-tab="operations">🏨 Hotelbetrieb</button>
       <button class="tab-btn admin-only hidden" data-tab="customers">👥 Kunden</button>
       <div class="sidebar-label admin-only hidden">Verwaltung</div>
       <button class="tab-btn admin-only hidden" data-tab="users">👥 Nutzer verwalten</button>
       <button class="tab-btn admin-only hidden" data-tab="automation">⚙️ Automatisierungen</button>
       <button class="tab-btn admin-only hidden" data-tab="integrations">🔐 Integrationen &amp; API</button>
-      <button class="tab-btn admin-only hidden" data-tab="finance">💶 Finanzen &amp; Steuern</button>
       <div class="sidebar-spacer"></div>
       <div class="sidebar-account"><strong id="sidebarUserName">Leo</strong><span id="sidebarUserRole">viewer</span> · Sicher angemeldet</div>
     </nav>
@@ -1071,9 +1073,13 @@
       if (tab === 'customers') loadCustomers();
       if (tab === 'operations') loadOperations();
       if (tab === 'integrations') loadIntegrationStatus();
-      if (tab === 'finance' && document.getElementById('financeFrame').src === 'about:blank') {
+      if (tab === 'finance') {
         const firstFinanceButton = document.querySelector('.finance-area-btn[data-finance-tab="payments"]');
-        openFinanceArea('payments', firstFinanceButton);
+        const frame = document.getElementById('financeFrame');
+        if (!frame.dataset.loaded) {
+          frame.dataset.loaded = 'true';
+          openFinanceArea('payments', firstFinanceButton);
+        }
       }
       window.scrollTo({ top: 0, behavior: 'smooth' });
       closeSidebar();
