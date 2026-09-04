@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>LeoLan Digital Dashboard</title>
   <script>
+    if (/^((?!chrome|android).)*safari/i.test(navigator.userAgent)) document.documentElement.classList.add('safari-lite');
     if (!sessionStorage.getItem('dashboard_token')) location.replace('login.html');
   </script>
   <style>
@@ -45,6 +46,9 @@
       pointer-events: none;
       mask-image: radial-gradient(circle at center, black 40%, transparent 100%);
     }
+    html.safari-lite body::before{display:none}
+    html.safari-lite *{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+    html.safari-lite .chart-wrap{display:none!important}
     .lock-screen { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; padding: 24px; background: rgba(7, 12, 24, 0.86); backdrop-filter: blur(18px); z-index: 1000; }
     .lock-card { width: min(460px, 100%); padding: 32px; border-radius: 28px; background: linear-gradient(180deg, rgba(26, 39, 68, 0.95), rgba(14, 24, 44, 0.95)); border: 1px solid rgba(245, 166, 35, 0.22); box-shadow: var(--shadow); text-align: center; }
     .lock-badge { width: 72px; height: 72px; margin: 0 auto 18px; border-radius: 20px; display: grid; place-items: center; background: linear-gradient(135deg, rgba(245,166,35,0.2), rgba(245,166,35,0.08)); border: 1px solid rgba(245,166,35,0.35); font-size: 34px; }
@@ -726,6 +730,7 @@
       };
     }
     function renderCharts(data) {
+      if (document.documentElement.classList.contains('safari-lite')) return;
       const defaults = chartDefaults();
 
       createOrReplaceChart('followersChart', {
