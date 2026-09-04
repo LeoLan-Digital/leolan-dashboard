@@ -25,7 +25,6 @@
   </main>
   <script>
     const LOGIN_URL='https://n8n.leolan.net/webhook/dashboard-login';
-    if(sessionStorage.getItem('dashboard_token')) location.replace('dashboard.html');
     document.getElementById('form').addEventListener('submit',async event=>{
       event.preventDefault();
       const button=document.getElementById('submit'),error=document.getElementById('error');

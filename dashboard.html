@@ -499,12 +499,12 @@
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
-    const API_URL = 'https://n8n.leolan.net/webhook/dashboard-data';
+    const API_URL = 'https://api.leolan.net/dashboard-data';
     const LOGIN_URL = 'https://n8n.leolan.net/webhook/dashboard-login';
     const ADD_USER_URL = 'https://n8n.leolan.net/webhook/dashboard-add-user';
-    const AUTOMATION_CONTROL_URL = 'https://n8n.leolan.net/webhook/dashboard-automation-control';
-    const OPERATIONS_URL = 'https://n8n.leolan.net/webhook/admin-operations';
-    const INTEGRATIONS_URL = 'https://n8n.leolan.net/webhook/admin-integrations';
+    const AUTOMATION_CONTROL_URL = 'https://api.leolan.net/automation-control';
+    const OPERATIONS_URL = '';
+    const INTEGRATIONS_URL = '';
     const SESSION_TOKEN_KEY = 'dashboard_token';
     const SESSION_USER_KEY = 'dashboard_user';
     const integrationCatalog = [
@@ -535,36 +535,31 @@
     };
 
     const fallbackData = {
-      instagram: { followers: 'Lade...', postsTotal: 3, likesToday: 'Lade...', storyActive: 'Lade...' },
-      facebook: { pageLikes: 'Lade...', postsToday: 'Lade...', reach: 'Lade...' },
-      whatsapp: { conversationsToday: 'Lade...', activeUsers: 'Lade...', stampsIssued: 'Lade...', activeCoupons: 'Lade...' },
-      reviews: { average: 'Lade...', newReviews: 'Lade...', unanswered: 'Lade...' },
-      emails: { business: 'Lade...', knazari: 'Lade...', gmail: 'Lade...' },
+      instagram: { followers: 'Nicht verbunden', postsTotal: 'Nicht verbunden', likesToday: 'Nicht verbunden', storyActive: 'Nicht verbunden' },
+      facebook: { pageLikes: 'Nicht verbunden', postsToday: 'Nicht verbunden', reach: 'Nicht verbunden' },
+      whatsapp: { conversationsToday: 'Nicht verbunden', activeUsers: 'Nicht verbunden', stampsIssued: 'Nicht verbunden', activeCoupons: 'Nicht verbunden' },
+      reviews: { average: 'Nicht verbunden', newReviews: 'Nicht verbunden', unanswered: 'Nicht verbunden' },
+      emails: { business: 'Nicht verbunden', knazari: 'Nicht verbunden', gmail: 'Nicht verbunden' },
       charts: {
         followers: {
-          labels: ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'],
-          instagram: [62, 63, 63, 64, 64, 64, 64],
-          facebook: [47, 47, 48, 48, 48, 48, 48]
+          labels: [], instagram: [], facebook: []
         },
         whatsapp: {
-          labels: ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'],
-          conversations: [3, 7, 5, 12, 8, 4, 2]
+          labels: [], conversations: []
         },
         ratings: {
-          labels: ['5★', '4★', '3★', '2★', '1★'],
-          data: [45, 30, 15, 7, 3]
+          labels: [], data: []
         },
         revenue: {
-          labels: ['Nov', 'Dez', 'Jan', 'Feb', 'Mär', 'Apr'],
-          data: [0, 0, 0, 0, 0, 149]
+          labels: [], data: []
         }
       },
       automation: {
-        instagramFeed: { active: true, time: '10:00', label: 'Instagram Feed' },
-        instagramStory: { active: true, time: '18:00', label: 'Instagram Story' },
-        facebookPost: { active: true, time: '11:00', label: 'Facebook Post' },
-        reviewManagement: { active: true, time: '06:00', label: 'Bewertungsmanagement' },
-        whatsappBot: { active: true, time: '00:00', label: 'WhatsApp Bot' }
+        instagramFeed: { active: false, time: '10:00', label: 'Instagram Feed' },
+        instagramStory: { active: false, time: '18:00', label: 'Instagram Story' },
+        facebookPost: { active: false, time: '11:00', label: 'Facebook Post' },
+        reviewManagement: { active: false, time: '06:00', label: 'Bewertungsmanagement' },
+        whatsappBot: { active: false, time: '00:00', label: 'WhatsApp Bot' }
       }
     };
 
@@ -921,6 +916,7 @@
       lastUpdated.textContent = formatDateTime();
       try {
         const response = await fetch(API_URL, { method: 'GET', headers: authHeaders(), cache: 'no-store' });
+        if (response.status === 401 || response.status === 403) { clearSession(); location.replace('login.html'); return; }
         if (!response.ok) throw new Error('HTTP ' + response.status);
         const responseText = await response.text();
         if (!responseText.trim()) {
@@ -1050,6 +1046,20 @@
     function renderWebhooks(statuses={}){const body=document.getElementById('webhooksBody');if(!body)return;body.innerHTML=webhookCatalog.map(([name,url])=>`<tr><td>${safeText(name)}</td><td><code>${safeText(url)}</code></td><td>${statusBadge(!!statuses[name],statuses[name]?'Erreichbar':'Nicht geprüft')}</td></tr>`).join('');}
     async function checkWebhooks(){try{const data=await readIntegrationData('check-webhooks');renderWebhooks(data.webhooks||{});}catch(e){document.getElementById('metaMessage').textContent=e.message;}}
     function renderAudit(items){const el=document.getElementById('integrationAudit');if(!el)return;el.innerHTML=items.length?items.map(x=>`<div class="audit-item"><span>${safeText(x.action||'Geändert')} · ${safeText(x.provider||'System')}</span><span class="subtle">${safeText(x.actor||'Admin')} · ${safeText(x.createdAt?new Date(x.createdAt).toLocaleString('de-DE'):'')}</span></div>`).join(''):'<div class="subtle">Noch keine serverseitigen Einträge vorhanden.</div>';}
+    async function loadCustomers(){
+      const body=document.getElementById('customersBody'),kpis=document.getElementById('customersKpis');
+      body.innerHTML='<tr><td colspan="5" class="subtle">Kundendaten werden geladen …</td></tr>';
+      try{
+        const r=await fetch('https://api.leolan.net/customers',{headers:authHeaders(),cache:'no-store'});
+        if(r.status===401||r.status===403){clearSession();location.replace('login.html');return;}
+        const d=await r.json().catch(()=>({})); if(!r.ok)throw new Error('Kundendaten nicht erreichbar');
+        const rows=d.customers||d.data||[];
+        const active=rows.filter(x=>String(x.status||x.subscriptionStatus).toLowerCase()==='active').length;
+        const linked=rows.filter(x=>x.whatsappConnected||x.whatsappStatus==='connected').length;
+        kpis.innerHTML=`<div class="ops-card"><h4>Gesamt</h4><p>${rows.length}</p></div><div class="ops-card"><h4>Aktiv</h4><p>${active}</p></div><div class="ops-card"><h4>WhatsApp verbunden</h4><p>${linked}</p></div><div class="ops-card"><h4>Datenquelle</h4><p>Server</p></div>`;
+        body.innerHTML=rows.length?rows.map(x=>`<tr><td>${safeText(x.name||x.hotelName||x.email||'—')}</td><td>${safeText(x.package||x.plan||'—')}</td><td>${safeText(x.status||x.subscriptionStatus||'—')}</td><td>${safeText(x.whatsappStatus||(x.whatsappConnected?'Verbunden':'Nicht verbunden'))}</td><td>${safeText(x.createdAt?new Date(x.createdAt).toLocaleDateString('de-DE'):'—')}</td></tr>`).join(''):'<tr><td colspan="5" class="subtle">Keine echten Kundendaten vorhanden.</td></tr>';
+      }catch(e){kpis.innerHTML='';body.innerHTML='<tr><td colspan="5" class="subtle">Kundendatenquelle ist nicht verbunden.</td></tr>';}
+    }
     async function loadOperations(){
       const body=document.getElementById('operationsBody'),status=document.getElementById('operationsStatus');status.textContent='Betriebsdaten werden geladen …';
       try{const r=await fetch(OPERATIONS_URL,{method:'POST',headers:authHeaders(),body:JSON.stringify({action:'overview'})});const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||'Betriebsdaten nicht erreichbar');const rows=d.hotels||d.customers||[];

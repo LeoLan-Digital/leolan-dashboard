@@ -2248,7 +2248,7 @@ const DEFAULT_EXPENSES = [
 
 // State initalisieren mit Daten
 // ── Server API ──────────────────────────────────────────────────────────────
-var API_BASE = 'https://n8n.leolan.net/webhook';
+var API_BASE = 'https://api.leolan.net';
 var API_SAVE_PENDING = false;
 var API_SAVE_TIMER = null;
 
@@ -2265,7 +2265,7 @@ function loadState() {
     version: DATA_VERSION,
     usdRate: 0.9259,
     income: [],
-    expenses: DEFAULT_EXPENSES,
+    expenses: [],
     settings: {
       company:'LeoLan Digital', owner:'Kamaleddin Nazari',
       street:'Reicker Straße 132', city:'01237 Dresden',
