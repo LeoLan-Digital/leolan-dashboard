@@ -2494,7 +2494,7 @@ function renderBankConnection(provider, info) {
 
 async function loadBankConnections() {
   try {
-    var response = await fetch(BANK_CONNECTIONS_URL, {credentials:'include', signal:AbortSignal.timeout(8000)});
+    var response = await fetch(BANK_CONNECTIONS_URL, {signal:AbortSignal.timeout(8000)});
     if (!response.ok) throw new Error('HTTP ' + response.status);
     var data = await response.json();
     renderBankConnection('qonto', data.qonto);
@@ -2502,11 +2502,11 @@ async function loadBankConnections() {
   } catch (e) {
     var checks = await Promise.all([
       fetch(QONTO_BALANCE_URL, {signal:AbortSignal.timeout(5000)}).then(function(r){return r.ok;}).catch(function(){return false;}),
-      fetch(N26_REMOTE, {credentials:'include', signal:AbortSignal.timeout(5000)}).then(function(r){return r.ok;}).catch(function(){return false;})
+      fetch(N26_REMOTE, {signal:AbortSignal.timeout(5000)}).then(function(r){return r.ok;}).catch(function(){return false;})
     ]);
     renderBankConnection('qonto', {connected:checks[0]});
     renderBankConnection('n26', {connected:checks[1]});
-    bankMessage('Die sichere Bankverbindung ist vorbereitet. Für die Aktivierung werden noch die Anbieter-Zugangsdaten im Server hinterlegt.', false);
+    bankMessage('Der Bankstatus konnte gerade nicht geladen werden. Die bestehende Verbindung wurde nicht verändert. Bitte erneut auf „Status prüfen“ klicken.', true);
   }
 }
 
@@ -2915,7 +2915,7 @@ var N26_DATA   = null;
 
 async function fetchN26Data() {
   try {
-    var r2 = await fetch(N26_REMOTE, {credentials:'include', signal: AbortSignal.timeout(8000)});
+    var r2 = await fetch(N26_REMOTE, {signal: AbortSignal.timeout(8000)});
     if (r2.ok) return r2.json();
   } catch(e) {}
   return null;
