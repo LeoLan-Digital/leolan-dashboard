@@ -1027,6 +1027,7 @@ function switchTab(tabId, el) {
     if (typeof renderChart === 'function') setTimeout(renderChart, 50);
     if (typeof makeGrowthChart === 'function') setTimeout(() => { makeGrowthChart(window.DATA?.april||{}); makeDonut?.(); makeCashflow?.(); }, 100);
   }
+  if (tabId === 'belege' && typeof loadInvoiceMatches === 'function') setTimeout(loadInvoiceMatches, 50);
 }
 // Hook: load customers-overview when tab opens
   const origSwitch_cov = switchTab;
@@ -1840,7 +1841,16 @@ async function loadAdminCustomers() {
         <input type="file" id="belegUpload" accept=".pdf,.jpg,.jpeg,.png" multiple style="display:none" onchange="handleBelegUpload(event)">
       </div>
     </div>
-    <div class="info-box">Alle Buchungsbelege, Rechnungen und Quittungen. PDFs werden im Browser-Speicher gehalten (kein Backend).</div>
+    <div class="info-box">Alle Buchungsbelege, Rechnungen und Quittungen. Automatisch erkannte E-Mail-Belege werden sicher vom LeoLan-Server geladen.</div>
+
+    <div style="margin-bottom:20px">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px">
+        <div style="font-size:13px;font-weight:700;color:var(--text-dim)">🤖 Automatischer E-Mail- und Bankabgleich</div>
+        <button class="btn btn-outline btn-sm" onclick="loadInvoiceMatches()">🔄 Aktualisieren</button>
+      </div>
+      <div id="invoice-match-summary" class="info-box">Automatische Belegprüfung wird geladen …</div>
+      <div id="invoice-match-list"></div>
+    </div>
 
     <!-- Bekannte Belege aus Buchhaltungsordner -->
     <div style="margin-bottom:20px">
@@ -2926,7 +2936,38 @@ function closeModalOutside(event) {
 }
 
 var N26_REMOTE = 'https://n8n.leolan.net/webhook/n26-data';
+var INVOICE_MATCHES_REMOTE = 'https://n8n.leolan.net/webhook/invoice-matches';
 var N26_DATA   = null;
+
+async function loadInvoiceMatches() {
+  var summaryEl = document.getElementById('invoice-match-summary');
+  var listEl = document.getElementById('invoice-match-list');
+  if (!summaryEl || !listEl) return;
+  summaryEl.textContent = 'Automatische Belegprüfung wird geladen …';
+  try {
+    var response = await fetch(INVOICE_MATCHES_REMOTE, {headers:financeAuthHeaders(), signal:AbortSignal.timeout(15000)});
+    if (!response.ok) throw new Error('Abruf nicht möglich');
+    var report = await response.json();
+    var summary = report.summary || {};
+    var matchByInvoice = {};
+    (report.matches || []).forEach(function(match){ matchByInvoice[match.invoiceId] = match; });
+    summaryEl.textContent = (summary.invoices || 0) + ' Belege erkannt · ' + (summary.matched || 0) + ' Banktreffer · ' + (summary.open || 0) + ' offen · Letzte Prüfung: ' + (report.generatedAt ? new Date(report.generatedAt).toLocaleString('de-DE') : 'noch nicht erfolgt');
+    listEl.innerHTML = (report.invoices || []).slice(0, 100).map(function(item){
+      var match = matchByInvoice[item.id];
+      var status = match ? (match.status === 'zugeordnet' ? 'Zugeordnet' : 'Prüfen') : 'Offen';
+      var color = status === 'Zugeordnet' ? 'var(--green)' : status === 'Prüfen' ? 'var(--orange)' : 'var(--text-muted)';
+      var amount = item.amounts && item.amounts.length ? item.amounts[0].toLocaleString('de-DE',{style:'currency',currency:'EUR'}) : 'Betrag nicht erkannt';
+      return '<div class="beleg-card"><div class="beleg-icon">📧</div><div class="beleg-info">'
+        + '<div class="beleg-name">'+_esc(item.vendor || 'Unbekannter Anbieter')+'</div>'
+        + '<div class="beleg-meta">'+_esc(item.subject || 'Rechnung')+' · '+amount+' · '+new Date(item.date).toLocaleDateString('de-DE')+'</div>'
+        + (match ? '<div class="beleg-meta">'+_esc(match.bank)+' · '+_esc(match.counterparty || '')+'</div>' : '')
+        + '</div><span class="badge" style="color:'+color+'">'+status+'</span></div>';
+    }).join('') || '<div class="info-box">Noch keine Belege gefunden.</div>';
+  } catch (error) {
+    summaryEl.textContent = 'Die automatische Belegprüfung ist momentan nicht erreichbar.';
+    listEl.innerHTML = '';
+  }
+}
 
 async function fetchN26Data() {
   try {
