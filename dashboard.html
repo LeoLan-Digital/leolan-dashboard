@@ -64,6 +64,8 @@
     }
     .primary-btn:hover, .password-row button:hover, .ghost-btn:hover { transform: translateY(-1px); }
     .error-message { min-height: 22px; margin-top: 14px; font-size: 0.95rem; color: var(--danger); font-weight: 600; }
+    .forgot-link { display:inline-block; margin-top:14px; color:#ffd487; font-weight:700; text-decoration:none; }
+    .forgot-link:hover { text-decoration:underline; }
     .app { max-width: 1380px; margin: 0 auto; padding: 28px 18px 40px; opacity: 0; pointer-events: none; transform: translateY(14px); transition: opacity 0.35s ease, transform 0.35s ease; }
     .app.unlocked { opacity: 1; pointer-events: auto; transform: translateY(0); }
     .topbar { display: flex; justify-content: space-between; align-items: center; gap: 18px; margin-bottom: 28px; padding: 24px; border-radius: 26px; background: linear-gradient(135deg, rgba(26, 39, 68, 0.92), rgba(18, 30, 54, 0.92)); border: 1px solid rgba(255,255,255,0.08); box-shadow: var(--shadow); position: sticky; top: 18px; backdrop-filter: blur(12px); z-index: 10; }
@@ -163,6 +165,7 @@
         <input id="passwordInput" type="password" placeholder="Passwort eingeben" autocomplete="current-password" required />
         <button id="loginButton" type="submit">Anmelden</button>
       </form>
+      <a class="forgot-link" href="/reset-password.html">Passwort vergessen?</a>
       <div id="errorMessage" class="error-message"></div>
     </div>
   </div>
@@ -1082,11 +1085,3 @@
   </script>
 </body>
 </html>
-<script>
-async function loadCustomers(){const t=document.getElementById('customersBody'),k=document.getElementById('customersKpis');if(!t)return;t.innerHTML='<tr><td colspan="5" style="text-align:center;padding:30px;color:#8b949e;">Lade...</td></tr>';try{const r=await fetch('https://n8n.leolan.net/webhook/admin-customers',{method:'POST',headers:authHeaders(),body:JSON.stringify({action:'list'})});const d=await r.json();const cs=d.customers||d||[];if(k){const s=[['Gesamt','#e8eaed',cs.length],['Aktiv','#4cd97b',cs.filter(c=>c.status==='active').length],['Einrichten','#ffd60a',cs.filter(c=>c.status==='setup_pending').length],['WA Connected','#5e81f4',cs.filter(c=>c.waStatus==='connected').length]];k.innerHTML=s.map(([l,c,v])=>'<div style="background:rgba(255,255,255,0.04);border-radius:10px;padding:14px;text-align:center;"><div style="font-size:22px;font-weight:800;color:'+c+'">'+v+'</div><div style="font-size:11px;color:#8b949e;margin-top:4px;">'+l+'</div></div>').join('');}if(!cs.length){t.innerHTML='<tr><td colspan="5" style="text-align:center;padding:30px;color:#8b949e;">Keine Kunden</td></tr>';return;}const st=s=>s==='active'?'<span style="background:rgba(76,217,122,.15);color:#4cd97b;padding:2px 8px;border-radius:6px;font-size:11px;">Aktiv</span>':s==='setup_pending'?'<span style="background:rgba(255,214,10,.15);color:#ffd60a;padding:2px 8px;border-radius:6px;font-size:11px;">Einrichten</span>':'<span style="background:rgba(255,69,58,.15);color:#ff453a;padding:2px 8px;border-radius:6px;font-size:11px;">Inaktiv</span>';const wa=w=>w==='connected'?'<span style="color:#4cd97b;">&#x1F7E2; Connected</span>':w==='pending'?'<span style="color:#ffd60a;">&#x23F3; Pending</span>':'<span style="color:#8b949e;">&#x26AB; Nein</span>';t.innerHTML=cs.map(c=>'<tr style="border-bottom:1px solid rgba(255,255,255,0.05);"><td style="padding:10px 12px;"><b style="color:#f0f6fc;">'+(c.name||c.restaurantName||'-')+'</b><br><span style="font-size:11px;color:#8b949e;">'+(c.email||'')+' &middot; '+(c.customerCode||'')+'</span></td><td style="padding:10px 12px;"><span style="background:rgba(94,129,244,.15);color:#5e81f4;padding:2px 8px;border-radius:6px;font-size:11px;">'+(c.paket||'').toUpperCase()+'</span></td><td style="padding:10px 12px;">'+st(c.status)+'</td><td style="padding:10px 12px;">'+wa(c.waStatus)+'</td><td style="padding:10px 12px;color:#8b949e;">'+(c.createdAt?new Date(c.createdAt).toLocaleDateString('de-DE'):'—')+'</td></tr>').join('');}catch(e){t.innerHTML='<tr><td colspan="5" style="text-align:center;padding:30px;color:#ff453a;">Fehler: '+e.message+'</td></tr>';}}
-// Hook showTab für customers
-const _origST=window.showTab||function(){};
-document.addEventListener('DOMContentLoaded',()=>{const ob=document.querySelectorAll('.tab-btn[data-tab="customers"]');ob.forEach(b=>b.addEventListener('click',()=>loadCustomers()));});
-</script>
-<!-- KUNDEN-SECTION -->
-<style>#tab-customers.tab-section{display:none}#tab-customers.tab-section.active{display:block}</style>
