@@ -2458,10 +2458,10 @@ document.addEventListener('DOMContentLoaded', function() {
 //   Balance:      https://n8n.leolan.net/webhook/qonto-balance
 //   Transaktionen: https://n8n.leolan.net/webhook/qonto-transactions
 // ══════════════════════════════════════════════════════
-var QONTO_BALANCE_URL = 'https://n8n.leolan.net/webhook/qonto-balance';
-var QONTO_TX_URL      = 'https://n8n.leolan.net/webhook/qonto-transactions';
+var QONTO_BALANCE_URL = 'https://api.leolan.net/qonto-balance';
+var QONTO_TX_URL      = 'https://api.leolan.net/qonto-transactions';
 var QONTO_DATA        = null; // Cache
-var BANK_CONNECTIONS_URL = 'https://n8n.leolan.net/webhook/bank-connections-status';
+var BANK_CONNECTIONS_URL = 'https://api.leolan.net/bank-connections-status';
 var BANK_CONNECT_URL = {
   qonto: 'https://n8n.leolan.net/webhook/bank-connect-qonto',
   n26: 'https://n8n.leolan.net/webhook/bank-connect-n26'
@@ -2504,7 +2504,7 @@ function renderBankConnection(provider, info) {
 
 async function loadBankConnections() {
   try {
-    var response = await fetch(BANK_CONNECTIONS_URL, {signal:AbortSignal.timeout(8000)});
+    var response = await fetch(BANK_CONNECTIONS_URL, {headers:financeAuthHeaders(), signal:AbortSignal.timeout(8000)});
     if (!response.ok) throw new Error('HTTP ' + response.status);
     var data = await response.json();
     renderBankConnection('qonto', data.qonto);
@@ -2519,7 +2519,7 @@ async function loadBankConnections() {
     }
   } catch (e) {
     var checks = await Promise.all([
-      fetch(QONTO_BALANCE_URL, {signal:AbortSignal.timeout(5000)}).then(function(r){return r.ok;}).catch(function(){return false;}),
+      fetch(QONTO_BALANCE_URL, {headers:financeAuthHeaders(), signal:AbortSignal.timeout(5000)}).then(function(r){return r.ok;}).catch(function(){return false;}),
       fetch(N26_REMOTE, {headers:financeAuthHeaders(), signal:AbortSignal.timeout(5000)}).then(function(r){return r.ok;}).catch(function(){return false;})
     ]);
     renderBankConnection('qonto', {connected:checks[0]});
@@ -2619,8 +2619,8 @@ async function syncQonto() {
   try {
     // Balance + Transaktionen parallel holen
     var [balResp, txResp] = await Promise.all([
-      fetch(QONTO_BALANCE_URL, {signal: AbortSignal.timeout(8000)}).then(r => r.ok ? r.json() : null).catch(() => null),
-      fetch(QONTO_TX_URL,      {signal: AbortSignal.timeout(8000)}).then(r => r.ok ? r.json() : null).catch(() => null)
+      fetch(QONTO_BALANCE_URL, {headers:financeAuthHeaders(), signal: AbortSignal.timeout(8000)}).then(r => r.ok ? r.json() : null).catch(() => null),
+      fetch(QONTO_TX_URL,      {headers:financeAuthHeaders(), signal: AbortSignal.timeout(8000)}).then(r => r.ok ? r.json() : null).catch(() => null)
     ]);
 
     QONTO_DATA = txResp;
@@ -2699,7 +2699,7 @@ async function qontoWidgetRefresh() {
   if (meta) meta.textContent = 'Verbinde mit Qonto...';
 
   try {
-    var r = await fetch(QONTO_BALANCE_URL, {signal: AbortSignal.timeout(10000)});
+    var r = await fetch(QONTO_BALANCE_URL, {headers:financeAuthHeaders(), signal: AbortSignal.timeout(10000)});
     if (r.ok) {
       var d = await r.json();
       var balance = d.balance !== undefined ? d.balance : 0;
@@ -2935,8 +2935,8 @@ function closeModalOutside(event) {
   }
 }
 
-var N26_REMOTE = 'https://n8n.leolan.net/webhook/n26-data';
-var INVOICE_MATCHES_REMOTE = 'https://n8n.leolan.net/webhook/invoice-matches';
+var N26_REMOTE = 'https://api.leolan.net/n26-data';
+var INVOICE_MATCHES_REMOTE = 'https://api.leolan.net/invoice-matches';
 var N26_DATA   = null;
 
 async function loadInvoiceMatches() {
