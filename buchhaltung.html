@@ -2915,7 +2915,7 @@ var N26_DATA   = null;
 
 async function fetchN26Data() {
   try {
-    var r2 = await fetch(N26_REMOTE, {signal: AbortSignal.timeout(8000)});
+    var r2 = await fetch(N26_REMOTE, {headers:financeAuthHeaders(), signal: AbortSignal.timeout(15000)});
     if (r2.ok) return r2.json();
   } catch(e) {}
   return null;
