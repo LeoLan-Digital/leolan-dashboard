@@ -1851,6 +1851,15 @@ async function loadAdminCustomers() {
       <div id="invoice-match-summary" class="info-box">Automatische Belegprüfung wird geladen …</div>
       <div id="invoice-match-list"></div>
     </div>
+    <div id="invoice-review-modal" onclick="if(event.target===this)closeInvoiceReview()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:12000;align-items:center;justify-content:center;padding:18px">
+      <div style="width:min(680px,96vw);max-height:90vh;overflow:auto;background:#17243d;border:1px solid var(--border);border-radius:16px;padding:22px;box-shadow:0 24px 80px #000a">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:16px">
+          <strong style="font-size:18px">Beleg und Bankbuchung prüfen</strong>
+          <button class="btn btn-outline btn-sm" onclick="closeInvoiceReview()">✕ Schließen</button>
+        </div>
+        <div id="invoice-review-content"></div>
+      </div>
+    </div>
 
     <!-- Bekannte Belege aus Buchhaltungsordner -->
     <div style="margin-bottom:20px">
@@ -2937,7 +2946,9 @@ function closeModalOutside(event) {
 
 var N26_REMOTE = 'https://api.leolan.net/n26-data';
 var INVOICE_MATCHES_REMOTE = 'https://api.leolan.net/invoice-matches';
+var INVOICE_CONFIRMATION_REMOTE = 'https://api.leolan.net/invoice-confirmation';
 var N26_DATA   = null;
+var INVOICE_REVIEW_DATA = {invoices:[], matches:[], confirmations:{}};
 
 async function loadInvoiceMatches() {
   var summaryEl = document.getElementById('invoice-match-summary');
@@ -2948,24 +2959,62 @@ async function loadInvoiceMatches() {
     var response = await fetch(INVOICE_MATCHES_REMOTE, {headers:financeAuthHeaders(), signal:AbortSignal.timeout(15000)});
     if (!response.ok) throw new Error('Abruf nicht möglich');
     var report = await response.json();
+    INVOICE_REVIEW_DATA = report;
     var summary = report.summary || {};
     var matchByInvoice = {};
     (report.matches || []).forEach(function(match){ matchByInvoice[match.invoiceId] = match; });
     summaryEl.textContent = (summary.invoices || 0) + ' Belege erkannt · ' + (summary.matched || 0) + ' Banktreffer · ' + (summary.open || 0) + ' offen · Letzte Prüfung: ' + (report.generatedAt ? new Date(report.generatedAt).toLocaleString('de-DE') : 'noch nicht erfolgt');
     listEl.innerHTML = (report.invoices || []).slice(0, 100).map(function(item){
       var match = matchByInvoice[item.id];
-      var status = match ? (match.status === 'zugeordnet' ? 'Zugeordnet' : 'Prüfen') : 'Offen';
-      var color = status === 'Zugeordnet' ? 'var(--green)' : status === 'Prüfen' ? 'var(--orange)' : 'var(--text-muted)';
+      var confirmation = (report.confirmations || {})[item.id];
+      var status = confirmation && confirmation.action === 'confirmed' ? 'Bestätigt' : confirmation && confirmation.action === 'rejected' ? 'Nicht zugeordnet' : match ? 'Vorschlag prüfen' : 'Offen';
+      var color = status === 'Bestätigt' ? 'var(--green)' : status === 'Vorschlag prüfen' ? 'var(--orange)' : 'var(--text-muted)';
       var amount = item.amounts && item.amounts.length ? item.amounts[0].toLocaleString('de-DE',{style:'currency',currency:'EUR'}) : 'Betrag nicht erkannt';
-      return '<div class="beleg-card"><div class="beleg-icon">📧</div><div class="beleg-info">'
+      return '<div class="beleg-card" role="button" tabindex="0" onclick="openInvoiceReview(\''+item.id+'\')" onkeydown="if(event.key===\'Enter\')openInvoiceReview(\''+item.id+'\')" style="cursor:pointer"> <div class="beleg-icon">📧</div><div class="beleg-info">'
         + '<div class="beleg-name">'+_esc(item.vendor || 'Unbekannter Anbieter')+'</div>'
         + '<div class="beleg-meta">'+_esc(item.subject || 'Rechnung')+' · '+amount+' · '+new Date(item.date).toLocaleDateString('de-DE')+'</div>'
         + (match ? '<div class="beleg-meta">'+_esc(match.bank)+' · '+_esc(match.counterparty || '')+'</div>' : '')
-        + '</div><span class="badge" style="color:'+color+'">'+status+'</span></div>';
+        + '</div><span class="badge" style="color:'+color+'">'+status+'</span><span style="margin-left:8px;opacity:.55">›</span></div>';
     }).join('') || '<div class="info-box">Noch keine Belege gefunden.</div>';
   } catch (error) {
     summaryEl.textContent = 'Die automatische Belegprüfung ist momentan nicht erreichbar.';
     listEl.innerHTML = '';
+  }
+}
+
+function openInvoiceReview(invoiceId) {
+  var item = (INVOICE_REVIEW_DATA.invoices || []).find(function(row){return row.id === invoiceId;});
+  if (!item) return;
+  var match = (INVOICE_REVIEW_DATA.matches || []).find(function(row){return row.invoiceId === invoiceId;});
+  var confirmation = (INVOICE_REVIEW_DATA.confirmations || {})[invoiceId];
+  var amount = item.amounts && item.amounts.length ? item.amounts.map(function(value){return value.toLocaleString('de-DE',{style:'currency',currency:'EUR'});}).join(', ') : 'Nicht erkannt';
+  var bankAmount = match ? Number(match.amount || 0).toLocaleString('de-DE',{style:'currency',currency:'EUR'}) : 'Keine passende Buchung';
+  var content = document.getElementById('invoice-review-content');
+  content.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'
+    + '<div class="info-box"><strong>E-Mail-Beleg</strong><br><br>Anbieter: '+_esc(item.vendor || 'Unbekannt')+'<br>Datum: '+new Date(item.date).toLocaleDateString('de-DE')+'<br>Betrag: '+_esc(amount)+'<br>Rechnungsnummer: '+_esc(item.invoiceNumber || 'Nicht erkannt')+'<br><br><span style="opacity:.7">'+_esc(item.subject || '')+'</span></div>'
+    + '<div class="info-box"><strong>Bankbuchung</strong><br><br>Bank: '+_esc(match ? match.bank : '–')+'<br>Datum: '+_esc(match ? new Date(match.transactionDate).toLocaleDateString('de-DE') : '–')+'<br>Betrag: '+_esc(bankAmount)+'<br>Empfänger: '+_esc(match ? match.counterparty : '–')+'<br><br><span style="opacity:.7">'+(match ? 'Automatischer Zuordnungsvorschlag' : 'Noch keine passende Buchung gefunden')+'</span></div>'
+    + '</div><div class="info-box" style="margin-top:12px">Aktueller Prüfstatus: <strong>'+(confirmation && confirmation.action === 'confirmed' ? 'Bestätigt' : confirmation && confirmation.action === 'rejected' ? 'Nicht zugeordnet' : 'Noch nicht bestätigt')+'</strong></div>'
+    + '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px">'
+    + (match ? '<button class="btn btn-primary" onclick="saveInvoiceDecision(\''+invoiceId+'\',\'confirmed\')">✓ Gehört zusammen</button>' : '')
+    + '<button class="btn btn-outline" onclick="saveInvoiceDecision(\''+invoiceId+'\',\'rejected\')">✕ Gehört nicht zusammen</button>'
+    + '<button class="btn btn-outline" onclick="saveInvoiceDecision(\''+invoiceId+'\',\'open\')">Entscheidung zurücksetzen</button></div>';
+  var modal = document.getElementById('invoice-review-modal');
+  modal.style.display = 'flex';
+}
+
+function closeInvoiceReview() {
+  var modal = document.getElementById('invoice-review-modal');
+  if (modal) modal.style.display = 'none';
+}
+
+async function saveInvoiceDecision(invoiceId, action) {
+  try {
+    var response = await fetch(INVOICE_CONFIRMATION_REMOTE, {method:'POST', headers:financeAuthHeaders(), body:JSON.stringify({invoiceId:invoiceId, action:action}), signal:AbortSignal.timeout(10000)});
+    if (!response.ok) throw new Error('Speichern fehlgeschlagen');
+    closeInvoiceReview();
+    await loadInvoiceMatches();
+  } catch (error) {
+    alert('Die Entscheidung konnte nicht gespeichert werden. Bitte erneut versuchen.');
   }
 }
 
