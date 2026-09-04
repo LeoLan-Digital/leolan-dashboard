@@ -2630,11 +2630,18 @@ async function syncQonto() {
       }
       // Widget oben auch aktualisieren
       qontoWidgetSetBalance(bal, 'live', balResp.lastSync ? new Date(balResp.lastSync).toLocaleTimeString('de-DE', {hour:'2-digit',minute:'2-digit'}) : 'Live');
+      renderBankConnection('qonto', {
+        connected: true,
+        accountName: balResp.accountName || 'Qonto Hauptkonto',
+        ibanMasked: balResp.ibanMasked,
+        lastSync: balResp.lastSync || new Date().toISOString()
+      });
     }
 
     // Transaktionen rendern
     if (txResp) {
       renderQontoTransactions(txResp);
+      if (!balResp) renderBankConnection('qonto', {connected:true, accountName:'Qonto Hauptkonto'});
     }
 
     updateTicker();
