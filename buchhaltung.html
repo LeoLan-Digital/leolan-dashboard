@@ -1043,9 +1043,9 @@ async function loadAdminCustomers() {
   if (!tbody) return;
   tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:32px;opacity:.4">Lädt…</td></tr>';
   try {
-    const res = await fetch('https://n8n.leolan.net/webhook/admin-customers?key=LeoLan2026Admin!', {
+    const res = await fetch('https://n8n.leolan.net/webhook/admin-customers', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: financeAuthHeaders(),
       body: '{}'
     });
     const data = await res.json();
@@ -1347,7 +1347,7 @@ async function loadAdminCustomers() {
     function loadCostReport() {
       const container = document.getElementById('cost-report-container');
       container.innerHTML = '<div style="color:var(--text-dim);padding:32px;text-align:center">Lade Daten…</div>';
-      fetch('https://n8n.leolan.net/webhook/cost-report?key=LeoLan2026Admin!')
+      fetch('https://n8n.leolan.net/webhook/cost-report', {headers:financeAuthHeaders(), signal:AbortSignal.timeout(10000)})
         .then(r => r.json())
         .then(data => {
           if (!data.ok || !data.rows || data.rows.length === 0) {
@@ -2251,7 +2251,7 @@ function loadState() {
 
 function loadStateFromAPI() {
   // Async: Server-State laden (überschreibt lokalen State)
-  fetch(API_BASE + '/buch-data')
+  fetch(API_BASE + '/buch-data', {headers:financeAuthHeaders(), signal:AbortSignal.timeout(10000)})
     .then(function(r){ return r.json(); })
     .then(function(data) {
       if (!data || !data.expenses) return;
@@ -2282,7 +2282,7 @@ function saveState() {
   API_SAVE_TIMER = setTimeout(function() {
     fetch(API_BASE + '/buch-save', {
       method: 'POST',
-      headers: {'Content-Type':'application/json'},
+      headers: financeAuthHeaders(),
       body: JSON.stringify(state)
     }).catch(function(e) { console.warn('API Save fehlgeschlagen:', e); });
   }, 2000);
@@ -2457,6 +2457,15 @@ var BANK_CONNECT_URL = {
   n26: 'https://n8n.leolan.net/webhook/bank-connect-n26'
 };
 
+function financeAuthHeaders() {
+  var headers = {'Accept':'application/json','Content-Type':'application/json'};
+  try {
+    var token = window.parent.sessionStorage.getItem('dashboard_token');
+    if (token) headers.Authorization = 'Bearer ' + token;
+  } catch (e) {}
+  return headers;
+}
+
 function bankMessage(text, isError) {
   var el = document.getElementById('bank-connection-message');
   if (!el) return;
@@ -2507,6 +2516,10 @@ async function connectBank(provider) {
   if (!url || !btn) return;
   btn.disabled = true; btn.textContent = '⏳ Verbindung wird vorbereitet …';
   try {
+    if (provider === 'n26') {
+      window.top.location.assign(url);
+      return;
+    }
     var response = await fetch(url, {method:'POST', credentials:'include', headers:{'Content-Type':'application/json'}, body:JSON.stringify({returnUrl:location.origin + location.pathname + '?tab=payments'})});
     var data = await response.json().catch(function(){return {};});
     if (!response.ok || !data.authorizationUrl) throw new Error(data.message || 'Verbindung noch nicht freigeschaltet');
@@ -2715,22 +2728,11 @@ function qontoWidgetInit() {
       qontoWidgetSetBalance(saved.amount, saved.mode, ts);
     }
   } catch(e) {}
-  qontoWidgetRefresh().catch(function(){});
 }
-
-// Auto-Refresh: Balance alle 60 Sek, TX alle 5 Min
-setInterval(function() { qontoWidgetRefresh().catch(function(){}); }, 60000);
-setInterval(function() {
-  var tab = document.getElementById('tab-payments');
-  if (tab && tab.classList.contains('active')) syncQonto();
-}, 300000);
 
 window.addEventListener('load', function() {
   qontoWidgetInit();
-  setTimeout(function() {
-    syncQonto();
-    updateTicker();
-  }, 800);
+  updateTicker();
 });
 </script>
 
@@ -3665,21 +3667,16 @@ document.addEventListener('DOMContentLoaded', function() {
   // header date
   var hd = document.getElementById('headerDate');
   if (hd) hd.textContent = 'GJ ' + new Date().getFullYear();
-  if (typeof loadBankConnections === 'function') loadBankConnections();
   var bankParams = new URLSearchParams(location.search);
   if (bankParams.get('bank') && bankParams.get('status') === 'connected') {
     bankMessage((bankParams.get('bank') === 'n26' ? 'N26' : 'Qonto') + ' wurde erfolgreich verbunden.', false);
   } else if (bankParams.get('bank_error')) {
     bankMessage('Bankverbindung konnte nicht abgeschlossen werden. Bitte erneut versuchen.', true);
   }
-  // Auto-sync N26 + Qonto on load
-  setTimeout(function() {
-    if (typeof syncN26 === 'function') syncN26();
-    if (typeof syncQonto === 'function') syncQonto();
-  }, 500);
   var requestedTab = new URLSearchParams(location.search).get('tab') || 'overview';
   var requestedNav = document.querySelector('[data-tab="' + requestedTab + '"]');
   if (typeof window.switchTab === 'function') window.switchTab(requestedTab, requestedNav);
+  if (requestedTab === 'payments' && typeof loadBankConnections === 'function') loadBankConnections();
 });
 </script>
 </html>
